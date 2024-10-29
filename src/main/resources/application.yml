@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/collawork?useSSL=false&serverTimezone=UTC
+    username: gangnam
+    password: gangnam
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+  type-aliases-package: com.collawork.back.model
+
+jwt:
+  secret: "myJwtSecretKey"
+  expiration: 86400000
+
+oauth:
+  google:
+    client-id: "${GOOGLE_CLIENT_ID}"
+    client-secret: "${GOOGLE_CLIENT_SECRET}"
+  kakao:
+    client-id: "${KAKAO_CLIENT_ID}"
+  naver:
+    client-id: "${NAVER_CLIENT_ID}"
+    client-secret: "${NAVER_CLIENT_SECRET}"
