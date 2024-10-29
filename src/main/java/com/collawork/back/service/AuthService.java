@@ -1,5 +1,6 @@
 package com.collawork.back.service;
 
+import com.collawork.back.dto.LoginRequest;
 import com.collawork.back.dto.SignupRequest;
 import com.collawork.back.model.User;
 import com.collawork.back.repository.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -29,7 +31,20 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+
     private final RestTemplate restTemplate = new RestTemplate();
+
+    public String login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail());
+        if (user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return jwtTokenProvider.generateToken(user.getEmail());
+        } else {
+            throw new RuntimeException("Invalid email or password");
+        }
+    }
 
     public void registerUser(SignupRequest signupRequest) {
         User user = new User();
@@ -104,5 +119,17 @@ public class AuthService {
         Map<String, Object> naverResponse = (Map<String, Object>) response.getBody().get("response");
 
         return (String) naverResponse.get("email");
+    }
+
+    public boolean isUsernameTaken(String username) {
+        return userRepository.findByUsername(username) != null;
+    }
+
+    public boolean isEmailTaken(String email) {
+        return userRepository.findByEmail(email) != null;
+    }
+
+    public boolean isPhoneTaken(String phone) {
+        return userRepository.findByPhone(phone) != null;
     }
 }
