@@ -10,7 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /*
 * 작성자 : 김동규 / 2024-10-29 최초작성
-* 설명 : 비밀번호 암호화
+* 설명 : 비밀번호 암호화 및 소셜 로그인 설정
 * */
 @Configuration
 @EnableWebSecurity
