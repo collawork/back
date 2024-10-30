@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()  // 로그인 엔드포인트 명시적 허용
                         .requestMatchers("/api/auth/register").permitAll() // 회원가입 엔드포인트 허용
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/social").permitAll()
                         .anyRequest().authenticated()
                 );
 
