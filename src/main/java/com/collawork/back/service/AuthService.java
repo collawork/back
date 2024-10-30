@@ -4,24 +4,24 @@ import com.collawork.back.dto.LoginRequest;
 import com.collawork.back.dto.SignupRequest;
 import com.collawork.back.model.User;
 import com.collawork.back.repository.UserRepository;
+import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import com.collawork.back.security.JwtTokenProvider;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
-/*
-* 작성자 : 김동규 / 2024-10-29 최초작성
-* 설명 : 사용자 회원가입 및 소셜 로직 구현
-* */
 @Service
 public class AuthService {
 
@@ -34,19 +34,39 @@ public class AuthService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
-
     private final RestTemplate restTemplate = new RestTemplate();
+    private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
 
     public String login(LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail());
-        if (user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return jwtTokenProvider.generateToken(user.getEmail());
-        } else {
-            throw new RuntimeException("Invalid email or password");
+        try {
+            // 입력된 이메일 로그
+            System.out.println("로그인 시도 - 이메일: " + loginRequest.getEmail());
+
+            User user = userRepository.findByEmail(loginRequest.getEmail());
+            if (user == null) {
+                System.out.println("사용자를 찾을 수 없음: " + loginRequest.getEmail());
+                throw new RuntimeException("이메일 또는 비밀번호가 유효하지 않습니다");
+            }
+
+            boolean passwordMatch = passwordEncoder.matches(
+                    loginRequest.getPassword(),
+                    user.getPassword()
+            );
+
+            System.out.println("비밀번호 매치 결과: " + passwordMatch);
+
+            if (passwordMatch) {
+                return jwtTokenProvider.generateToken(user.getEmail());
+            } else {
+                throw new RuntimeException("이메일 또는 비밀번호가 유효하지 않습니다");
+            }
+        } catch (Exception e) {
+            System.out.println("로그인 처리 중 에러 발생: " + e.getMessage());
+            throw e;
         }
     }
 
-    public void registerUser(SignupRequest signupRequest) {
+    public void registerUser(SignupRequest signupRequest, MultipartFile profileImage) throws IOException {
         User user = new User();
         user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
@@ -55,7 +75,27 @@ public class AuthService {
         user.setPosition(signupRequest.getPosition());
         user.setPhone(signupRequest.getPhone());
         user.setFax(signupRequest.getFax());
+
+        // 프로필 이미지 저장
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String profileImagePath = saveProfileImage(profileImage);
+            user.setProfileImage(profileImagePath);
+        }
+
         userRepository.save(user);
+    }
+
+    private String saveProfileImage(MultipartFile profileImage) throws IOException {
+        if (profileImage == null || profileImage.isEmpty()) {
+            return null;
+        }
+
+        Files.createDirectories(fileStorageLocation);
+        String fileName = System.currentTimeMillis() + "_" + profileImage.getOriginalFilename();
+        Path targetLocation = fileStorageLocation.resolve(fileName);
+        Files.copy(profileImage.getInputStream(), targetLocation);
+
+        return "/uploads/" + fileName;
     }
 
     public User registerOrLoginSocialUser(String provider, String token) {
@@ -71,21 +111,12 @@ public class AuthService {
     }
 
     private String fetchEmailFromProvider(String provider, String token) {
-        String email = null;
         switch (provider.toLowerCase()) {
-            case "google":
-                email = fetchGoogleEmail(token);
-                break;
-            case "kakao":
-                email = fetchKakaoEmail(token);
-                break;
-            case "naver":
-                email = fetchNaverEmail(token);
-                break;
-            default:
-                throw new IllegalArgumentException("지원되지 않는 소셜 로그인 제공자입니다: " + provider);
+            case "google": return fetchGoogleEmail(token);
+            case "kakao": return fetchKakaoEmail(token);
+            case "naver": return fetchNaverEmail(token);
+            default: throw new IllegalArgumentException("지원되지 않는 소셜 로그인 제공자입니다: " + provider);
         }
-        return email;
     }
 
     private String fetchGoogleEmail(String token) {
@@ -98,38 +129,22 @@ public class AuthService {
 
     private String fetchKakaoEmail(String token) {
         String kakaoApiUrl = "https://kapi.kakao.com/v2/user/me";
-        Map<String, Object> response = restTemplate.getForObject(
-                kakaoApiUrl,
-                Map.class,
-                "Bearer " + token
-        );
+        Map<String, Object> response = restTemplate.getForObject(kakaoApiUrl, Map.class, "Bearer " + token);
         Map<String, Object> kakaoAccount = (Map<String, Object>) response.get("kakao_account");
         return (String) kakaoAccount.get("email");
     }
 
     private String fetchNaverEmail(String token) {
         String naverApiUrl = "https://openapi.naver.com/v1/nid/me";
-
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
-
         HttpEntity<String> entity = new HttpEntity<>(headers);
-
         ResponseEntity<Map> response = restTemplate.exchange(naverApiUrl, HttpMethod.GET, entity, Map.class);
         Map<String, Object> naverResponse = (Map<String, Object>) response.getBody().get("response");
-
         return (String) naverResponse.get("email");
     }
 
-    public boolean isUsernameTaken(String username) {
-        return userRepository.findByUsername(username) != null;
-    }
-
-    public boolean isEmailTaken(String email) {
-        return userRepository.findByEmail(email) != null;
-    }
-
-    public boolean isPhoneTaken(String phone) {
-        return userRepository.findByPhone(phone) != null;
-    }
+    public boolean isUsernameTaken(String username) { return userRepository.findByUsername(username) != null; }
+    public boolean isEmailTaken(String email) { return userRepository.findByEmail(email) != null; }
+    public boolean isPhoneTaken(String phone) { return userRepository.findByPhone(phone) != null; }
 }
