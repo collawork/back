@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.Base64;
 
 @Component
 public class JwtTokenProvider {
@@ -23,9 +22,7 @@ public class JwtTokenProvider {
 
     @PostConstruct
     public void init() {
-        // 키를 Base64로 디코딩하여 객체로 변환
-        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(decodedKey);
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
     public String generateToken(String email) {
@@ -33,7 +30,7 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(key) // 생성된 키로 서명
+                .signWith(key)
                 .compact();
     }
 
