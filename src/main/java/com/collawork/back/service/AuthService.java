@@ -38,11 +38,31 @@ public class AuthService {
     private final Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
 
     public String login(LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail());
-        if (user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return jwtTokenProvider.generateToken(user.getEmail());
-        } else {
-            throw new RuntimeException("Invalid email or password");
+        try {
+            // 입력된 이메일 로그
+            System.out.println("로그인 시도 - 이메일: " + loginRequest.getEmail());
+
+            User user = userRepository.findByEmail(loginRequest.getEmail());
+            if (user == null) {
+                System.out.println("사용자를 찾을 수 없음: " + loginRequest.getEmail());
+                throw new RuntimeException("이메일 또는 비밀번호가 유효하지 않습니다");
+            }
+
+            boolean passwordMatch = passwordEncoder.matches(
+                    loginRequest.getPassword(),
+                    user.getPassword()
+            );
+
+            System.out.println("비밀번호 매치 결과: " + passwordMatch);
+
+            if (passwordMatch) {
+                return jwtTokenProvider.generateToken(user.getEmail());
+            } else {
+                throw new RuntimeException("이메일 또는 비밀번호가 유효하지 않습니다");
+            }
+        } catch (Exception e) {
+            System.out.println("로그인 처리 중 에러 발생: " + e.getMessage());
+            throw e;
         }
     }
 

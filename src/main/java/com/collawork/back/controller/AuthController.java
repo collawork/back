@@ -5,6 +5,7 @@ import com.collawork.back.dto.SignupRequest;
 import com.collawork.back.model.User;
 import com.collawork.back.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,16 +16,26 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody LoginRequest loginRequest) {
-        String token = authService.login(loginRequest);
-        return ResponseEntity.ok(token);
+    public ResponseEntity<Map<String, String>> loginUser(@RequestBody LoginRequest loginRequest) {
+        try {
+            String token = authService.login(loginRequest);
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "이메일 혹은 비밀번호가 유효하지 않습니다");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);  // 401 응답
+        }
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(

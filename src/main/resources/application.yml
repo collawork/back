@@ -84,5 +84,5 @@ mybatis:
   type-aliases-package: com.collawork.back.model
 
 jwt:
-  secret: "myJwtSecretKey"
-  expiration: 86400000 # JWT 토큰 만료 시간 (밀리초 단위)
+  secret: "GENERATED_BASE64_KEY"
+  expiration: 86400000
