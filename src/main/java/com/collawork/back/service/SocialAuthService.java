@@ -5,9 +5,19 @@ import com.collawork.back.repository.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class SocialAuthService {
@@ -20,31 +30,115 @@ public class SocialAuthService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public Map<String, String> handleSocialLogin(String provider, String accessToken) {
-        Map<String, String> userInfo = getSocialUserInfo(provider, accessToken);
-        User user = registerOrLoginUser(userInfo);
-        String token = jwtTokenProvider.generateToken(user.getEmail());
-
-        return Map.of("token", token);
-    }
-
-    private Map<String, String> getSocialUserInfo(String provider, String accessToken) {
-        // 인증 제공자별 API URL
-        String url = switch (provider.toLowerCase()) {
-            case "google" -> "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + accessToken;
-            case "facebook" -> "https://graph.facebook.com/me?fields=id,name,email&access_token=" + accessToken;
-            default -> throw new IllegalArgumentException("지원하지 않는 소셜 제공자입니다: " + provider);
-        };
-
-        Map<String, String> response = restTemplate.getForObject(url, Map.class);
-        if (response == null || !response.containsKey("email")) {
-            throw new IllegalArgumentException("잘못된 토큰입니다.");
+    public String handleSocialLogin(String provider, String code, String accessToken) {
+        String accessTokenFromCode = null;
+        if (code != null && (provider.equalsIgnoreCase("kakao") || provider.equalsIgnoreCase("naver"))) {
+            accessTokenFromCode = getAccessTokenFromCode(provider, code);
         }
 
-        return response;
+        Map<String, String> userInfo = getSocialUserInfo(provider, accessTokenFromCode != null ? accessTokenFromCode : accessToken);
+        User user = registerOrLoginUser(userInfo, provider);
+
+        String token = jwtTokenProvider.generateToken(user.getEmail());
+
+        System.out.println("생성된 JWT Token: " + token);
+
+        return token;
     }
 
-    private User registerOrLoginUser(Map<String, String> userInfo) {
+
+    private String getAccessTokenFromCode(String provider, String code) {
+        String url;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        if (provider.equalsIgnoreCase("kakao")) {
+            url = "https://kauth.kakao.com/oauth/token";
+            params.add("grant_type", "authorization_code");
+            params.add("client_id", "f851b2331a5966daafc3644d19ed1b77");
+            params.add("redirect_uri", "http://localhost:8080/login/oauth2/code/kakao");
+            params.add("code", code);
+        } else if (provider.equalsIgnoreCase("naver")) {
+            url = "https://nid.naver.com/oauth2.0/token";
+            params.add("grant_type", "authorization_code");
+            params.add("client_id", "IBhJHFFQ0L0ZWvyW0IUQ");
+            params.add("client_secret", "aFV3IPKHcQ");
+            params.add("redirect_uri", "http://localhost:8080/login/oauth2/code/naver");
+            params.add("code", code);
+            params.add("state", "RANDOM_STATE_STRING");  // 상태 값 추가
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 소셜 제공자입니다: " + provider);
+        }
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> body = response.getBody();
+                return (String) body.get("access_token");
+            }
+            throw new RuntimeException("토큰 반환 실패: " + provider);
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("HTTP 오류 발생 - 상태 코드: " + e.getStatusCode() + ", 메시지: " + e.getResponseBodyAsString());
+        }
+    }
+
+
+    private Map<String, String> getSocialUserInfo(String provider, String accessToken) {
+        String url;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);  // Bearer 토큰 설정
+
+        if (provider.equalsIgnoreCase("google")) {
+            url = "https://www.googleapis.com/oauth2/v3/userinfo";
+        } else if (provider.equalsIgnoreCase("kakao")) {
+            url = "https://kapi.kakao.com/v2/user/me";
+        } else if (provider.equalsIgnoreCase("naver")) {
+            url = "https://openapi.naver.com/v1/nid/me";
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 소셜 제공자입니다: " + provider);
+        }
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> responseBody = response.getBody();
+                return extractUserInfo(provider, responseBody); // Helper method for extracting user info
+            }
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException("소셜 제공자의 사용자 정보 요청 실패: " + e.getMessage());
+        }
+        throw new RuntimeException("소셜 제공자에서 사용자 정보를 가져올 수 없습니다.");
+    }
+
+    private Map<String, String> extractUserInfo(String provider, Map<String, Object> responseBody) {
+        Map<String, String> userInfo = new HashMap<>();
+
+        if (provider.equalsIgnoreCase("google")) {
+            userInfo.put("email", Optional.ofNullable((String) responseBody.get("email")).orElse("unknown"));
+            userInfo.put("name", Optional.ofNullable((String) responseBody.get("name")).orElse("unknown"));
+        } else if (provider.equalsIgnoreCase("kakao")) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) responseBody.get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            userInfo.put("email", Optional.ofNullable((String) kakaoAccount.get("email")).orElse("unknown"));
+            userInfo.put("name", Optional.ofNullable((String) profile.get("nickname")).orElse("unknown"));
+        } else if (provider.equalsIgnoreCase("naver")) {
+            Map<String, Object> naverAccount = (Map<String, Object>) responseBody.get("response");
+            userInfo.put("email", Optional.ofNullable((String) naverAccount.get("email")).orElse("unknown"));
+            userInfo.put("name", Optional.ofNullable((String) naverAccount.get("name")).orElse("unknown"));
+        }
+
+        return userInfo;
+    }
+
+
+    private User registerOrLoginUser(Map<String, String> userInfo, String provider) {
         String email = userInfo.get("email");
         User user = userRepository.findByEmail(email);
 
@@ -52,9 +146,9 @@ public class SocialAuthService {
             user = new User();
             user.setEmail(email);
             user.setUsername(userInfo.get("name"));
+            user.setOauthProvider(provider);
             userRepository.save(user);
         }
-
         return user;
     }
-}
+    }
