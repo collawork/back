@@ -84,5 +84,6 @@ mybatis:
   type-aliases-package: com.collawork.back.model
 
 jwt:
-  secret: "GENERATED_BASE64_KEY"
+  secret: BkpvPlUkH4wZ2va5ZpGZWsEpTdBnE5+YSzWT+r6/2bPnVgOjd/9zLBvkmOzl8RaKSKjOAO9baL+b1poYkvU69g==
   expiration: 86400000
+
