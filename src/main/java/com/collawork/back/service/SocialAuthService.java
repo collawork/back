@@ -1,9 +1,11 @@
 package com.collawork.back.service;
 
+import com.collawork.back.dto.LoginRequest;
 import com.collawork.back.model.User;
 import com.collawork.back.repository.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -28,28 +30,36 @@ public class SocialAuthService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public String handleSocialLogin(String provider, String code, String accessToken) {
-        String accessTokenFromCode = null;
-        if (code != null && (provider.equalsIgnoreCase("kakao") || provider.equalsIgnoreCase("naver"))) {
-            accessTokenFromCode = getAccessTokenFromCode(provider, code);
+    public String login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail());
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid email or password");
         }
+        return jwtTokenProvider.generateToken(user.getEmail());
+    }
 
-        Map<String, String> userInfo = getSocialUserInfo(provider, accessTokenFromCode != null ? accessTokenFromCode : accessToken);
+    public String processSocialLogin(String provider, String code) {
+        String accessToken = getAccessTokenFromCode(provider, code);
+
+        Map<String, String> userInfo = getSocialUserInfo(provider, accessToken);
+
         User user = registerOrLoginUser(userInfo, provider);
 
-        String token = jwtTokenProvider.generateToken(user.getEmail());
+        return jwtTokenProvider.generateToken(user.getEmail());
+    }
 
-        System.out.println("생성된 JWT Token: " + token);
-
-        return token;
+    public boolean validateToken(String token) {
+        return jwtTokenProvider.validateToken(token);
     }
 
 
     private String getAccessTokenFromCode(String provider, String code) {
         String url;
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -60,37 +70,44 @@ public class SocialAuthService {
             params.add("client_id", "f851b2331a5966daafc3644d19ed1b77");
             params.add("redirect_uri", "http://localhost:8080/login/oauth2/code/kakao");
             params.add("code", code);
-        } else if (provider.equalsIgnoreCase("naver")) {
-            url = "https://nid.naver.com/oauth2.0/token";
-            params.add("grant_type", "authorization_code");
-            params.add("client_id", "IBhJHFFQ0L0ZWvyW0IUQ");
-            params.add("client_secret", "aFV3IPKHcQ");
-            params.add("redirect_uri", "http://localhost:8080/login/oauth2/code/naver");
-            params.add("code", code);
-            params.add("state", "RANDOM_STATE_STRING");  // 상태 값 추가
         } else {
             throw new IllegalArgumentException("지원하지 않는 소셜 제공자입니다: " + provider);
         }
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+        System.out.println("카카오 토큰 요청: URL=" + url + ", PARAMS=" + params);
+
         try {
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+            System.out.println("카카오 응답 코드: " + response.getStatusCode() + ", 본문: " + response.getBody());
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
-                return (String) body.get("access_token");
+                String accessToken = (String) body.get("access_token");
+                if (accessToken != null) {
+                    System.out.println("카카오에서 받은 액세스 토큰: " + accessToken);
+                    return accessToken;
+                } else {
+                    System.out.println("Error: 액세스 토큰 없음, 응답 본문: " + body);
+                    throw new RuntimeException("카카오로부터 액세스 토큰을 받지 못했습니다.");
+                }
+            } else {
+                System.out.println("Error: 응답 코드 " + response.getStatusCode() + ", 응답 본문: " + response.getBody());
+                throw new RuntimeException("카카오에서 유효한 응답을 받지 못했습니다.");
             }
-            throw new RuntimeException("토큰 반환 실패: " + provider);
         } catch (HttpClientErrorException e) {
-            throw new RuntimeException("HTTP 오류 발생 - 상태 코드: " + e.getStatusCode() + ", 메시지: " + e.getResponseBodyAsString());
+            System.out.println("HTTP 오류 발생 - 상태 코드: " + e.getStatusCode() + ", 메시지: " + e.getResponseBodyAsString());
+            throw new RuntimeException("카카오 액세스 토큰 요청 중 오류 발생: " + e.getMessage());
         }
     }
+
+
 
 
     private Map<String, String> getSocialUserInfo(String provider, String accessToken) {
         String url;
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);  // Bearer 토큰 설정
+        headers.setBearerAuth(accessToken);
 
         if (provider.equalsIgnoreCase("google")) {
             url = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -109,7 +126,7 @@ public class SocialAuthService {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
-                return extractUserInfo(provider, responseBody); // Helper method for extracting user info
+                return extractUserInfo(provider, responseBody);
             }
         } catch (HttpClientErrorException e) {
             throw new RuntimeException("소셜 제공자의 사용자 정보 요청 실패: " + e.getMessage());
@@ -151,4 +168,5 @@ public class SocialAuthService {
         }
         return user;
     }
-    }
+
+}

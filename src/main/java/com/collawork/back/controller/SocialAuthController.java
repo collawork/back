@@ -1,27 +1,38 @@
 package com.collawork.back.controller;
 
+import com.collawork.back.model.User;
+import com.collawork.back.service.AuthService;
+import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.SocialAuthService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/login/oauth2/code")
+@RequestMapping("/login/oauth2")
+@CrossOrigin(origins = "http://localhost:3000")
 public class SocialAuthController {
 
     @Autowired
     private SocialAuthService socialAuthService;
 
-    // SocialAuthController.java
-    @GetMapping("/{provider}")
-    public void socialLogin(@PathVariable String provider, @RequestParam String code, HttpServletResponse response) throws IOException {
-        String token = socialAuthService.handleSocialLogin(provider, code, null);
-        response.sendRedirect("http://localhost:3000/social-login?token=" + token);
+    @GetMapping("/code/{provider}")
+    public ResponseEntity<?> socialLogin(
+            @PathVariable String provider,
+            @RequestParam String code) {
+        try {
+            String token = socialAuthService.processSocialLogin(provider, code);
+            return ResponseEntity.ok().body(Map.of(
+                    "token", token,
+                    "message", "Successfully authenticated with " + provider
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
     }
-
-
 }
-
