@@ -6,7 +6,6 @@ import com.collawork.back.model.User;
 import com.collawork.back.repository.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -33,12 +32,10 @@ public class AuthService {
     private UserRepository userRepository;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
-    private final Path UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads");
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private final Path UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads");
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String login(LoginRequest loginRequest) {
@@ -62,7 +59,7 @@ public class AuthService {
 
     public void register(SignupRequest signupRequest, MultipartFile profileImage) {
         User user = new User();
-        user.setUsername(signupRequest.getUsername());
+        user.setUsername(generateUniqueUsername(signupRequest.getUsername()));
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setCompany(signupRequest.getCompany());
@@ -70,7 +67,6 @@ public class AuthService {
         user.setPhone(signupRequest.getPhone());
         user.setFax(signupRequest.getFax());
 
-        // 이미지 처리
         if (profileImage != null && !profileImage.isEmpty()) {
             String imagePath = saveProfileImage(profileImage);
             user.setProfileImage(imagePath);
@@ -97,8 +93,6 @@ public class AuthService {
 
     public Map<String, String> verifyAndProcessToken(String provider, String authorizationHeader) {
         String token = authorizationHeader.replace("Bearer ", "");
-
-        // JWT 유효성 검증
         if (!jwtTokenProvider.validateToken(token)) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
@@ -106,7 +100,6 @@ public class AuthService {
         String email = jwtTokenProvider.getEmailFromToken(token);
         User user = userRepository.findByEmail(email);
 
-        // 새로운 소셜 사용자 등록 또는 기존 사용자 로그인 처리
         if (user == null) {
             user = registerOrLoginSocialUser(provider, token);
         }
@@ -119,12 +112,16 @@ public class AuthService {
     }
 
     public User registerOrLoginSocialUser(String provider, String token) {
-        String email = fetchEmailFromProvider(provider, token);
+        Map<String, String> userInfo = fetchUserInfoFromProvider(provider, token);
+        String email = userInfo.get("email");
+        String username = generateUniqueUsername(userInfo.get("name"));
+
         User user = userRepository.findByEmail(email);
 
         if (user == null) {
             user = new User();
             user.setEmail(email);
+            user.setUsername(username);
             user.setOauthProvider(provider);
             userRepository.save(user);
         }
@@ -132,46 +129,77 @@ public class AuthService {
         return user;
     }
 
-    private String fetchEmailFromProvider(String provider, String token) {
-        // 기존에 구현된 fetchKakaoEmail, fetchGoogleEmail 등을 호출합니다.
+    private String generateUniqueUsername(String baseUsername) {
+        String uniqueUsername = baseUsername;
+        int counter = 1;
+
+        while (userRepository.findByUsername(uniqueUsername) != null) {
+            uniqueUsername = baseUsername + counter;
+            counter++;
+        }
+
+        return uniqueUsername;
+    }
+
+    private Map<String, String> fetchUserInfoFromProvider(String provider, String token) {
         switch (provider.toLowerCase()) {
             case "google":
-                return fetchGoogleEmail(token);
+                return fetchGoogleUserInfo(token);
             case "kakao":
-                return fetchKakaoEmail(token);
+                return fetchKakaoUserInfo(token);
             case "naver":
-                return fetchNaverEmail(token);
+                return fetchNaverUserInfo(token);
             default:
                 throw new IllegalArgumentException("지원되지 않는 소셜 제공자입니다.");
         }
     }
 
-    // 소셜 제공자의 이메일 요청 메소드들
-    private String fetchKakaoEmail(String token) {
+    private Map<String, String> fetchKakaoUserInfo(String token) {
         String kakaoApiUrl = "https://kapi.kakao.com/v2/user/me";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<Map> response = restTemplate.exchange(kakaoApiUrl, HttpMethod.GET, entity, Map.class);
+
         Map<String, Object> kakaoAccount = (Map<String, Object>) response.getBody().get("kakao_account");
-        return (String) kakaoAccount.get("email");
+        String email = (String) kakaoAccount.get("email");
+        String name = (String) ((Map<String, Object>) response.getBody().get("properties")).get("nickname");
+
+        Map<String, String> userInfo = new HashMap<>();
+        userInfo.put("email", email);
+        userInfo.put("name", name);
+        return userInfo;
     }
 
-    private String fetchGoogleEmail(String token) {
+    private Map<String, String> fetchGoogleUserInfo(String token) {
         String googleApiUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(googleApiUrl)
                 .queryParam("access_token", token);
         Map<String, Object> response = restTemplate.getForObject(builder.toUriString(), Map.class);
-        return (String) response.get("email");
+
+        String email = (String) response.get("email");
+        String name = (String) response.get("name");
+
+        Map<String, String> userInfo = new HashMap<>();
+        userInfo.put("email", email);
+        userInfo.put("name", name);
+        return userInfo;
     }
 
-    private String fetchNaverEmail(String token) {
+    private Map<String, String> fetchNaverUserInfo(String token) {
         String naverApiUrl = "https://openapi.naver.com/v1/nid/me";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<Map> response = restTemplate.exchange(naverApiUrl, HttpMethod.GET, entity, Map.class);
+
         Map<String, Object> naverResponse = (Map<String, Object>) response.getBody().get("response");
-        return (String) naverResponse.get("email");
+        String email = (String) naverResponse.get("email");
+        String name = (String) naverResponse.get("name");
+
+        Map<String, String> userInfo = new HashMap<>();
+        userInfo.put("email", email);
+        userInfo.put("name", name);
+        return userInfo;
     }
 }
