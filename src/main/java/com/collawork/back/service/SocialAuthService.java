@@ -57,7 +57,7 @@ public class SocialAuthService {
         return jwtTokenProvider.validateToken(token);
     }
 
-
+    // 액세스 토큰 획득
     private String getAccessTokenFromCode(String provider, String code) {
         String url;
         HttpHeaders headers = new HttpHeaders();
@@ -70,40 +70,45 @@ public class SocialAuthService {
             params.add("client_id", "f851b2331a5966daafc3644d19ed1b77");
             params.add("redirect_uri", "http://localhost:8080/login/oauth2/code/kakao");
             params.add("code", code);
+        } else if (provider.equalsIgnoreCase("google")) {
+            url = "https://oauth2.googleapis.com/token";
+            params.add("grant_type", "authorization_code");
+            params.add("client_id", "513947071243-9q3t9drntphf297pvojlktogpvua4tad.apps.googleusercontent.com");
+            params.add("client_secret", "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");
+            params.add("redirect_uri", "http://localhost:8080/login/oauth2/code/google");
+            params.add("code", code);
+        } else if (provider.equalsIgnoreCase("naver")) {
+            url = "https://nid.naver.com/oauth2.0/token";
+            params.add("grant_type", "authorization_code");
+            params.add("client_id", "IBhJHFFQ0L0ZWvyW0IUQ");
+            params.add("client_secret", "aFV3IPKHcQ");
+            params.add("code", code);
+            params.add("state", provider);
         } else {
             throw new IllegalArgumentException("지원하지 않는 소셜 제공자입니다: " + provider);
         }
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        System.out.println("카카오 토큰 요청: URL=" + url + ", PARAMS=" + params);
 
         try {
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
-            System.out.println("카카오 응답 코드: " + response.getStatusCode() + ", 본문: " + response.getBody());
-
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
                 String accessToken = (String) body.get("access_token");
                 if (accessToken != null) {
-                    System.out.println("카카오에서 받은 액세스 토큰: " + accessToken);
                     return accessToken;
                 } else {
-                    System.out.println("Error: 액세스 토큰 없음, 응답 본문: " + body);
-                    throw new RuntimeException("카카오로부터 액세스 토큰을 받지 못했습니다.");
+                    throw new RuntimeException("액세스 토큰을 받지 못했습니다.");
                 }
             } else {
-                System.out.println("Error: 응답 코드 " + response.getStatusCode() + ", 응답 본문: " + response.getBody());
-                throw new RuntimeException("카카오에서 유효한 응답을 받지 못했습니다.");
+                throw new RuntimeException("유효한 응답을 받지 못했습니다.");
             }
         } catch (HttpClientErrorException e) {
-            System.out.println("HTTP 오류 발생 - 상태 코드: " + e.getStatusCode() + ", 메시지: " + e.getResponseBodyAsString());
-            throw new RuntimeException("카카오 액세스 토큰 요청 중 오류 발생: " + e.getMessage());
+            throw new RuntimeException("액세스 토큰 요청 중 오류 발생: " + e.getMessage());
         }
     }
 
-
-
-
+    // 사용자 정보 가져오기
     private Map<String, String> getSocialUserInfo(String provider, String accessToken) {
         String url;
         HttpHeaders headers = new HttpHeaders();
@@ -134,6 +139,7 @@ public class SocialAuthService {
         throw new RuntimeException("소셜 제공자에서 사용자 정보를 가져올 수 없습니다.");
     }
 
+    // 사용자 정보 파싱
     private Map<String, String> extractUserInfo(String provider, Map<String, Object> responseBody) {
         Map<String, String> userInfo = new HashMap<>();
 
@@ -154,7 +160,7 @@ public class SocialAuthService {
         return userInfo;
     }
 
-
+    // 사용자 등록 또는 로그인 처리
     private User registerOrLoginUser(Map<String, String> userInfo, String provider) {
         String email = userInfo.get("email");
         User user = userRepository.findByEmail(email);
@@ -168,5 +174,4 @@ public class SocialAuthService {
         }
         return user;
     }
-
 }
