@@ -1,10 +1,12 @@
 package com.collawork.back.service;
 
 import com.collawork.back.dto.LoginRequest;
+import com.collawork.back.dto.SignupRequest;
 import com.collawork.back.model.User;
 import com.collawork.back.repository.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -12,10 +14,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -25,6 +34,8 @@ public class AuthService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    private final Path UPLOAD_DIR = Paths.get(System.getProperty("user.dir"), "uploads");
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -33,9 +44,55 @@ public class AuthService {
     public String login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
         if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException("이메일 또는 비밀번호가 유효하지 않습니다.");
         }
         return jwtTokenProvider.generateToken(user.getEmail());
+    }
+
+    public boolean checkDuplicates(Map<String, String> request) {
+        String email = request.get("email");
+        String username = request.get("username");
+        String phone = request.get("phone");
+
+        Optional<User> userByEmail = email != null ? Optional.ofNullable(userRepository.findByEmail(email)) : Optional.empty();
+        Optional<User> userByUsername = username != null ? Optional.ofNullable(userRepository.findByUsername(username)) : Optional.empty();
+        Optional<User> userByPhone = phone != null ? Optional.ofNullable(userRepository.findByPhone(phone)) : Optional.empty();
+        return userByEmail.isPresent() || userByUsername.isPresent() || userByPhone.isPresent();
+    }
+
+    public void register(SignupRequest signupRequest, MultipartFile profileImage) {
+        User user = new User();
+        user.setUsername(signupRequest.getUsername());
+        user.setEmail(signupRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+        user.setCompany(signupRequest.getCompany());
+        user.setPosition(signupRequest.getPosition());
+        user.setPhone(signupRequest.getPhone());
+        user.setFax(signupRequest.getFax());
+
+        // 이미지 처리
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String imagePath = saveProfileImage(profileImage);
+            user.setProfileImage(imagePath);
+        }
+
+        userRepository.save(user);
+    }
+
+    private String saveProfileImage(MultipartFile profileImage) {
+        try {
+            if (Files.notExists(UPLOAD_DIR)) {
+                Files.createDirectories(UPLOAD_DIR);
+            }
+
+            String originalFilename = profileImage.getOriginalFilename();
+            String filePath = UPLOAD_DIR.resolve(System.currentTimeMillis() + "_" + originalFilename).toString();
+            profileImage.transferTo(new File(filePath));
+
+            return filePath;
+        } catch (IOException e) {
+            throw new RuntimeException("프로필 이미지 저장 중 오류가 발생했습니다.", e);
+        }
     }
 
     public Map<String, String> verifyAndProcessToken(String provider, String authorizationHeader) {

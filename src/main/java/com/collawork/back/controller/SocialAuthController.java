@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Map;
 
@@ -20,19 +21,17 @@ public class SocialAuthController {
     private SocialAuthService socialAuthService;
 
     @GetMapping("/code/{provider}")
-    public ResponseEntity<?> socialLogin(
-            @PathVariable String provider,
-            @RequestParam String code) {
+    public RedirectView socialLogin(@PathVariable String provider, @RequestParam String code) {
         try {
             String token = socialAuthService.processSocialLogin(provider, code);
-            return ResponseEntity.ok().body(Map.of(
-                    "token", token,
-                    "message", "Successfully authenticated with " + provider
-            ));
+
+            RedirectView redirectView = new RedirectView();
+            redirectView.setUrl("http://localhost:3000/?token=" + token);
+            return redirectView;
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", e.getMessage()
-            ));
+            RedirectView redirectView = new RedirectView();
+            redirectView.setUrl("http://localhost:3000/login?error=" + e.getMessage());
+            return redirectView;
         }
     }
 }

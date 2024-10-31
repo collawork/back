@@ -1,5 +1,7 @@
 package com.collawork.back.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class SignupRequest {
     private String username;
     private String nickname;
@@ -9,6 +11,15 @@ public class SignupRequest {
     private String position;
     private String phone;
     private String fax;
+    private MultipartFile profileImage;
+
+    public MultipartFile getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(MultipartFile profileImage) {
+        this.profileImage = profileImage;
+    }
 
     public String getUsername() {
         return username;
