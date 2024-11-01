@@ -2,8 +2,13 @@ package com.collawork.back.controller;
 
 import com.collawork.back.dto.LoginRequest;
 import com.collawork.back.dto.SignupRequest;
+import com.collawork.back.model.User;
+import com.collawork.back.repository.UserRepository;
+import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,5 +42,6 @@ public class AuthController {
         authService.register(signupRequest, profileImage);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
+
 
 }

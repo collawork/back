@@ -23,6 +23,24 @@ public class User {
     private String fax;
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    public User() {
+    }
+
+    public User(Long id, String username, String email, String password, String oauthProvider, String oauthId, String profileImage, String company, String position, String phone, String fax, LocalDateTime createdAt) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.oauthProvider = oauthProvider;
+        this.oauthId = oauthId;
+        this.profileImage = profileImage;
+        this.company = company;
+        this.position = position;
+        this.phone = phone;
+        this.fax = fax;
+        this.createdAt = createdAt;
+    }
+
     public Long getId() {
         return id;
     }
@@ -117,5 +135,23 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", oauthProvider='" + oauthProvider + '\'' +
+                ", oauthId='" + oauthId + '\'' +
+                ", profileImage='" + profileImage + '\'' +
+                ", company='" + company + '\'' +
+                ", position='" + position + '\'' +
+                ", phone='" + phone + '\'' +
+                ", fax='" + fax + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }
