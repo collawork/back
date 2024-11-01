@@ -23,12 +23,6 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private UserRepository userRepository;
-
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
         String jwtToken = authService.login(loginRequest);
@@ -47,18 +41,6 @@ public class AuthController {
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
         authService.register(signupRequest, profileImage);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
-    }
-
-    @GetMapping("/user/info")
-    public ResponseEntity<User> getUserInfo(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").replace("Bearer ", "");
-        String email = jwtTokenProvider.getEmailFromToken(token);
-        User user = userRepository.findByEmail(email);
-
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.ok(user);
     }
 
 
