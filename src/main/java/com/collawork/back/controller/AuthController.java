@@ -62,4 +62,5 @@ public class AuthController {
 
         return ResponseEntity.ok().build(); // 중복이 없는 경우 성공 응답
     }
+
 }
