@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers("/api/auth/check-duplicates").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/user/info").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/social/**").permitAll()
                         .anyRequest().authenticated()
                 )
