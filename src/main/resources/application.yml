@@ -9,12 +9,13 @@ spring:
     level:
       org.springframework.security: DEBUG
       org.springframework.web: DEBUG
+      org.springframework.oauth2: DEBUG
+      com.collawork.back: DEBUG
 
   server:
     error:
       whitelabel:
         enabled: false
-
 
   jpa:
     hibernate:
@@ -36,19 +37,19 @@ spring:
 
           kakao:
             client-id: f851b2331a5966daafc3644d19ed1b77
-            scope: profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/kakao"
-            client-authentication-method: post
+            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+            client-authentication-method: POST
             authorization-grant-type: authorization_code
+            scope: profile
             provider: kakao
 
           naver:
             client-id: IBhJHFFQ0L0ZWvyW0IUQ
             client-secret: aFV3IPKHcQ
-            scope: profile
             redirect-uri: "{baseUrl}/login/oauth2/code/naver"
-            client-authentication-method: post
+            client-authentication-method: POST
             authorization-grant-type: authorization_code
+            scope: profile
             provider: naver
 
         provider:
@@ -73,12 +74,12 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 5MB   # 파일 하나의 최대 크기
-      max-request-size: 10MB # 전체 요청의 최대 크기
+      max-file-size: 5MB
+      max-request-size: 10MB
 
   web:
     resources:
-      static-locations: "classpath:/static/,file:uploads/"  # 새로운 정적 리소스 경로 설정
+      static-locations: "classpath:/static/,file:uploads/"
 
 mybatis:
   mapper-locations: classpath:/mapper/*.xml
@@ -87,4 +88,3 @@ mybatis:
 jwt:
   secret: Czy43Z6YL4xPDc6pmytWKLle6oQtdFPKQWKNAKhWvhQMLzZlyazjs+hB05JymnK0LdnmBj+88AOW6RQ0j1NzIg==
   expiration: 86400000
-
