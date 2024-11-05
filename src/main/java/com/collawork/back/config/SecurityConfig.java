@@ -56,6 +56,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/friends/accept").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/friends/reject").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/friends/remove").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/user/chatrooms").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/user/projects").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/notifications").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/notifications/unread").authenticated()
                         .requestMatchers("/chattingServer/**").permitAll()
 
 

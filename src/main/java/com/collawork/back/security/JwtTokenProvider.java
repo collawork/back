@@ -18,6 +18,9 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Value("${jwt.refreshExpiration}")         // .yml 파일에서 설정한 값 가져오는 방법 중 한가지 위에랑 다름
+    private long refreshExpiration;
+
     private Key key;
 
     @PostConstruct
@@ -30,6 +33,15 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(key)
                 .compact();
     }

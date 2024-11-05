@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     List<ChatRoom> findByRoomNameContaining(String roomName);
+    List<ChatRoom> findByCreatedBy(Long createdBy);
 }
