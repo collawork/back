@@ -3,6 +3,7 @@ package com.collawork.back.dto;
 public class LoginRequest {
     private String email;
     private String password;
+    private String username;
 
     public String getEmail() {
         return email;

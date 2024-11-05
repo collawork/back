@@ -5,24 +5,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
-
 @RestController
-@RequestMapping("/api/auth/social")
+@RequestMapping("/login/oauth2/code")
 @CrossOrigin(origins = "http://localhost:3000")
-public class SocialAuthController {
+public class OAuth2CallbackController {
 
     @Autowired
     private SocialAuthService socialAuthService;
 
     @GetMapping("/{provider}")
-    public RedirectView socialLogin(@PathVariable String provider, @RequestParam String code) {
+    public RedirectView handleOAuth2Callback(
+            @PathVariable String provider,
+            @RequestParam String code) {
         try {
-            String token = socialAuthService.processSocialLogin(provider, code);
+            String accessToken = socialAuthService.processSocialLogin(provider, code);
 
             RedirectView redirectView = new RedirectView();
-            redirectView.setUrl("http://localhost:3000/main?token=" + token + "&provider=" + provider);
-            System.out.println("발급된 토큰 : " + token);
+            redirectView.setUrl("http://localhost:3000/main?token=" + accessToken);
             return redirectView;
+
         } catch (Exception e) {
             RedirectView redirectView = new RedirectView();
             redirectView.setUrl("http://localhost:3000/login?error=" + e.getMessage());

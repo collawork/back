@@ -4,10 +4,14 @@ import com.collawork.back.dto.LoginRequest;
 import com.collawork.back.model.User;
 import com.collawork.back.repository.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +27,8 @@ import java.util.Optional;
 
 @Service
 public class SocialAuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SocialAuthService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -44,14 +50,19 @@ public class SocialAuthService {
     }
 
     public String processSocialLogin(String provider, String code) {
+        logger.debug("소셜 로그인 시작 - provider: {}, code: {}", provider, code);
         String accessToken = getAccessTokenFromCode(provider, code);
+        logger.debug("발급된 액세스 토큰: {}", accessToken);
 
         Map<String, String> userInfo = getSocialUserInfo(provider, accessToken);
+        logger.debug("받은 사용자 정보: {}", userInfo);
 
         User user = registerOrLoginUser(userInfo, provider);
+        logger.debug("사용자 등록 또는 로그인 성공 - user: {}", user);
 
         return jwtTokenProvider.generateToken(user.getEmail());
     }
+
 
     public boolean validateToken(String token) {
         return jwtTokenProvider.validateToken(token);
@@ -91,7 +102,14 @@ public class SocialAuthService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
         try {
+            logger.debug("토큰 요청 URL: {}", url);
+            logger.debug("요청 파라미터: {}", params);
+
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+
+            logger.debug("응답 상태 코드: {}", response.getStatusCode());
+            logger.debug("응답 본문: {}", response.getBody());
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
                 String accessToken = (String) body.get("access_token");
@@ -101,9 +119,16 @@ public class SocialAuthService {
                     throw new RuntimeException("액세스 토큰을 받지 못했습니다.");
                 }
             } else {
-                throw new RuntimeException("유효한 응답을 받지 못했습니다.");
+                throw new RuntimeException("유효한 응답을 받지 못했습니다. 상태 코드: " + response.getStatusCode());
             }
         } catch (HttpClientErrorException e) {
+            logger.error("HttpClientErrorException 발생: 상태 코드: {}, 응답 본문: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("액세스 토큰 요청 중 오류 발생: " + e.getMessage());
+        } catch (HttpServerErrorException e) {
+            logger.error("HttpServerErrorException 발생: 상태 코드: {}, 응답 본문: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("카카오 서버 오류 발생: " + e.getMessage());
+        } catch (RestClientException e) {
+            logger.error("RestClientException 발생: {}", e.getMessage());
             throw new RuntimeException("액세스 토큰 요청 중 오류 발생: " + e.getMessage());
         }
     }
