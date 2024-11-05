@@ -38,4 +38,22 @@ public class MainController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/user/detail")
+    public ResponseEntity<User> getUserByEmailOrId(
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "id", required = false) Long id) {
+
+        User user = null;
+        if (email != null) {
+            user = userRepository.findByEmail(email);
+        } else if (id != null) {
+            user = userRepository.findById(id).orElse(null);
+        }
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(user);
+    }
+
 }
