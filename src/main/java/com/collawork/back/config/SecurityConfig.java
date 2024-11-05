@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                         .requestMatchers("/chattingServer/**").permitAll()
+
                         .anyRequest().authenticated())  // 나머지 경로는 인증 필요
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
