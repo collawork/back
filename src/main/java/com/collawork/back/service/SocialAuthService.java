@@ -44,7 +44,7 @@ public class SocialAuthService {
     public String login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
         if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException("이메일 혹은 비밀번호가 유효하지 않습니다.");
         }
         return jwtTokenProvider.generateToken(user.getEmail());
     }
