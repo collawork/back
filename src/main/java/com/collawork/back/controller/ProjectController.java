@@ -55,6 +55,9 @@ public class ProjectController {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
+
+        System.out.println(title);
+        System.out.println(context);
         User user = new User();
         System.out.println(user.getId());
         projectService.insertProject(title, context);
