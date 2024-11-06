@@ -1,5 +1,6 @@
 package com.collawork.back.model;
 
+import com.collawork.back.utils.StatusConverter;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -34,6 +35,7 @@ public class Friend {
         }
     }
 
+    @Convert(converter = StatusConverter.class)
     public enum Status {
         PENDING,
         ACCEPTED,
