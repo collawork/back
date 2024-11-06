@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/collawork?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/collawork?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     username: gangnam
     password: gangnam
     driver-class-name: com.mysql.cj.jdbc.Driver
