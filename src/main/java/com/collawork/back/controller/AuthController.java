@@ -33,7 +33,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
         String jwtToken = authService.login(loginRequest);
-        return ResponseEntity.ok(Map.of("token", jwtToken));
+        String refreshToken = jwtTokenProvider.generateRefreshToken(loginRequest.getEmail());
+        return ResponseEntity.ok(Map.of("token", jwtToken, "refreshToken", refreshToken));
     }
 
     @PostMapping("/check-duplicates")
@@ -53,19 +54,21 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshAccessToken(@RequestHeader("Authorization") String refreshToken) {
         try {
-            String email = jwtTokenProvider.getEmailFromToken(refreshToken.replace("Bearer ", ""));
+            String token = refreshToken.replace("Bearer ", "");
+            String email = jwtTokenProvider.getEmailFromToken(token);
 
             Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(403).body("사용자를 찾을 수 없습니다.");
             }
-            String newAccessToken = jwtTokenProvider.generateToken(email);
 
+            String newAccessToken = jwtTokenProvider.generateToken(email);
             return ResponseEntity.ok(Map.of("token", newAccessToken));
         } catch (Exception e) {
             return ResponseEntity.status(403).body("유효하지 않은 리프레시 토큰입니다.");
         }
     }
+
 
 
 }
