@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/social/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/user/info").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/api/user/projects/newproject").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/friends/status").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/friends/accept").permitAll()

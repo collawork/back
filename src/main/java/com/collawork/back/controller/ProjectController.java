@@ -1,6 +1,7 @@
 package com.collawork.back.controller;
 
 import com.collawork.back.model.Project;
+import com.collawork.back.model.User;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectService;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user/projects")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ProjectController {
 
     @Autowired
@@ -39,9 +41,27 @@ public class ProjectController {
     @PostMapping("/newproject")
     public ResponseEntity<String> newProject(
             @RequestPart("title") String title,
-            @RequestPart("text") String context){
+            @RequestPart("text") String context, HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        User user = new User();
+        System.out.println(user.getId());
         projectService.insertProject(title, context);
         System.out.println("test");
         return ResponseEntity.ok("프로젝트 생성이 완료되었습니다.");
     }
+
+//    @PostMapping("/selectProject")
+//    public ResponseEntity<String> selectProject(@Re)
 }
