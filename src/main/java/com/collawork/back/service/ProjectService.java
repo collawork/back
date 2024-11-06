@@ -2,6 +2,7 @@ package com.collawork.back.service;
 
 import com.collawork.back.dto.MessageDTO;
 import com.collawork.back.model.Project;
+import com.collawork.back.model.User;
 import com.collawork.back.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,11 @@ public class ProjectService {
 
     public void insertProject(String title, String context) {
 
-        MessageDTO messageDTO = new MessageDTO();
+        User user = new User();
         Project project = new Project();
 
         project.setProjectName(title); // 프로젝트 이름
-        Long createdBy = (long) messageDTO.getId();
+        Long createdBy = user.getId();
         project.setCreatedBy(createdBy); // 생성자 id
         project.setProjectCode(context); // 프로젝트 설명
         LocalDate now = LocalDate.now();
