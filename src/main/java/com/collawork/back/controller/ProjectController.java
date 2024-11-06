@@ -3,6 +3,7 @@ package com.collawork.back.controller;
 import com.collawork.back.model.Project;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
+import com.collawork.back.service.ProjectService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,9 @@ public class ProjectController {
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private ProjectService projectService;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -30,5 +34,14 @@ public class ProjectController {
         }
 
         return ResponseEntity.ok(project);
+    }
+
+    @PostMapping("/newproject")
+    public ResponseEntity<String> newProject(
+            @RequestPart("title") String title,
+            @RequestPart("text") String context){
+        projectService.insertProject(title, context);
+        System.out.println("test");
+        return ResponseEntity.ok("프로젝트 생성이 완료되었습니다.");
     }
 }
