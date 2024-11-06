@@ -61,12 +61,14 @@ public class FriendController {
                 friend.setRequester(requester.get());
                 friend.setResponder(responder.get());
                 friend.setStatus(Friend.Status.PENDING);
-                friendRepository.save(friend);
+                Friend savedFriend = friendRepository.save(friend); // 저장 후 ID 생성
 
+                // 알림 생성
                 Notification notification = new Notification();
                 notification.setUser(responder.get());
                 notification.setType(Notification.Type.FRIEND_REQUEST);
                 notification.setMessage(requester.get().getUsername() + "님이 친구 요청을 보냈습니다.");
+                notification.setRequestId(savedFriend.getId()); // friend의 ID를 requestId로 설정
                 notificationRepository.save(notification);
 
                 return "친구 요청을 보냈습니다.";
@@ -80,11 +82,14 @@ public class FriendController {
 
 
 
+
     @PostMapping("/accept")
     public String acceptFriendRequest(@RequestParam Long requestId) {
+        System.out.println("수신된 requestId: " + requestId);
         Optional<Friend> friendship = friendRepository.findById(requestId);
         if (friendship.isPresent()) {
             Friend friend = friendship.get();
+            System.out.println("찾은 친구 요청: " + friend);
             friend.setStatus(Friend.Status.ACCEPTED);
             friendRepository.save(friend);
 
@@ -92,10 +97,12 @@ public class FriendController {
             notification.setUser(friend.getRequester());
             notification.setType(Notification.Type.FRIEND_REQUEST);
             notification.setMessage(friend.getResponder().getUsername() + "님이 친구 요청을 수락했습니다.");
+            notification.setRequestId(requestId);
             notificationRepository.save(notification);
 
             return "친구 요청 승인";
         }
+        System.out.println("친구 요청을 찾을 수 없습니다.");
         return "친구 요청을 찾을 수 없습니다.";
     }
 
