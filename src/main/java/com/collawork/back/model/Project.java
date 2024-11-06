@@ -17,6 +17,7 @@ public class Project {
     @Column(name = "created_by")
     private Long createdBy;
 
+    // 프로젝트 설명
     @Column(name = "project_code", unique = true)
     private String projectCode;
 
