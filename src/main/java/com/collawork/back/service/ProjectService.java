@@ -16,19 +16,20 @@ public class ProjectService {
     @Autowired
     private ProjectRepository projectRepository;
 
-    public void insertProject(String title, Long context) {
+    public void insertProject(String title, String context) {
 
         User user = new User();
-        ProjectDTO projectDTO = new ProjectDTO();
+        Project project = new Project();
 
-        projectDTO.setProjectName(title); // 프로젝트 이름
+        project.setProjectName(title); // 프로젝트 이름
         Long createdBy = user.getId();
-        projectDTO.setUserId(createdBy); // 생성자 id
-        projectDTO.setProject_code(context); // 프로젝트 설명
+        project.setId(createdBy); // 생성자 id
+        project.setProjectCode(context); // 프로젝트 설명
         LocalDate localDate = LocalDate.now();
-        projectDTO.setCreatesAt(localDate);
+        project.setCreatedAt(localDate.atStartOfDay());
+
          // 프로젝트 생성일
-        projectRepository.save(projectDTO);
+        projectRepository.save(project);
 
     }
 }
