@@ -28,12 +28,16 @@ public class Notification {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "request_id")
+    private Long requestId;
+
     public enum Type {
         FRIEND_REQUEST,
         MESSAGE,
         ALERT
     }
 
+    // Getter와 Setter 추가
     public Long getId() {
         return id;
     }
@@ -81,4 +85,13 @@ public class Notification {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public Long getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(Long requestId) {
+        this.requestId = requestId;
+    }
 }
+
