@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/user/projects")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -40,8 +42,9 @@ public class ProjectController {
 
     @PostMapping("/newproject")
     public ResponseEntity<String> newProject(
-            @RequestPart("title") String title,
-            @RequestPart("text") String context, HttpServletRequest request){
+            @RequestBody Map<String, String> params, HttpServletRequest request){
+
+        System.out.println(params);
 
         String token = request.getHeader("Authorization");
         if (token == null || !token.startsWith("Bearer ")) {
@@ -56,15 +59,14 @@ public class ProjectController {
         }
 
 
-        System.out.println(title);
-        System.out.println(context);
+//        System.out.println(title);
+//        System.out.println(context);
+
         User user = new User();
         System.out.println(user.getId());
-        projectService.insertProject(title, context);
+//        projectService.insertProject();
         System.out.println("test");
         return ResponseEntity.ok("프로젝트 생성이 완료되었습니다.");
-    }
 
-//    @PostMapping("/selectProject")
-//    public ResponseEntity<String> selectProject(@Re)
+    }
 }
