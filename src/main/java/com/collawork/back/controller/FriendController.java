@@ -111,19 +111,22 @@ public class FriendController {
         Optional<Friend> friendship = friendRepository.findById(requestId);
         if (friendship.isPresent()) {
             Friend friend = friendship.get();
-            friend.setStatus(Friend.Status.REJECTED);
-            friendRepository.save(friend);
+            friendRepository.delete(friend);
 
             Notification notification = new Notification();
             notification.setUser(friend.getRequester());
             notification.setType(Notification.Type.FRIEND_REQUEST);
             notification.setMessage(friend.getResponder().getUsername() + "님이 친구 요청을 거절했습니다.");
+            notification.setRequestId(requestId);
             notificationRepository.save(notification);
 
             return "친구 요청이 거절되었습니다.";
         }
         return "친구 요청을 찾을 수 없습니다.";
     }
+
+
+
 
     @DeleteMapping("/remove")
     public String removeFriend(@RequestParam Long requestId) {
