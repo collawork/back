@@ -63,8 +63,6 @@ public class ProjectController {
         projectService.insertProject(title, context);
         System.out.println("test");
         return ResponseEntity.ok("프로젝트 생성이 완료되었습니다.");
-    }
 
-//    @PostMapping("/selectProject")
-//    public ResponseEntity<String> selectProject(@Re)
+    }
 }

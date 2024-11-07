@@ -1,6 +1,7 @@
 package com.collawork.back.service;
 
 import com.collawork.back.dto.MessageDTO;
+import com.collawork.back.dto.ProjectDTO;
 import com.collawork.back.model.Project;
 import com.collawork.back.model.User;
 import com.collawork.back.repository.ProjectRepository;
@@ -15,18 +16,19 @@ public class ProjectService {
     @Autowired
     private ProjectRepository projectRepository;
 
-    public void insertProject(String title, String context) {
+    public void insertProject(String title, Long context) {
 
         User user = new User();
-        Project project = new Project();
+        ProjectDTO projectDTO = new ProjectDTO();
 
-        project.setProjectName(title); // 프로젝트 이름
+        projectDTO.setProjectName(title); // 프로젝트 이름
         Long createdBy = user.getId();
-        project.setCreatedBy(createdBy); // 생성자 id
-        project.setProjectCode(context); // 프로젝트 설명
-        LocalDate now = LocalDate.now();
-        project.setCreatedAt(now.atStartOfDay()); // 프로젝트 생성일
-        projectRepository.save(project);
+        projectDTO.setUserId(createdBy); // 생성자 id
+        projectDTO.setProject_code(context); // 프로젝트 설명
+        LocalDate localDate = LocalDate.now();
+        projectDTO.setCreatesAt(localDate);
+         // 프로젝트 생성일
+        projectRepository.save(projectDTO);
 
     }
 }
