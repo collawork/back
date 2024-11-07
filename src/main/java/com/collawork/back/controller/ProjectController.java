@@ -42,31 +42,37 @@ public class ProjectController {
 
     @PostMapping("/newproject")
     public ResponseEntity<String> newProject(
-            @RequestBody Map<String, String> params, HttpServletRequest request){
+            @RequestParam("title") String title,
+            @RequestParam("context") String context,
+            @RequestParam(value = "userId", required = false) Long userId,
+            HttpServletRequest request){
 
-        System.out.println(params);
+        System.out.println("request : " + request);
+        System.out.println("params : " + title);
+        System.out.println("context : " + context);
+        System.out.println("userId : " + userId);
 
         String token = request.getHeader("Authorization");
+
+        System.out.println("token : " + token);
+
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
         }
-
         token = token.replace("Bearer ", "");
-
         String email = jwtTokenProvider.getEmailFromToken(token);
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-
-//        System.out.println(title);
-//        System.out.println(context);
-
-        User user = new User();
-        System.out.println(user.getId());
-//        projectService.insertProject();
-        System.out.println("test");
-        return ResponseEntity.ok("프로젝트 생성이 완료되었습니다.");
+        boolean result = projectService.insertProject(title, email, userId);
+        String ret = null;
+        if(result){
+            ret = "프로젝트가 생성되었습니다.";
+        }else{
+            ret="프로젝트 생성 실패";
+        }
+        return ResponseEntity.ok(ret);
 
     }
 }

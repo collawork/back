@@ -16,20 +16,23 @@ public class ProjectService {
     @Autowired
     private ProjectRepository projectRepository;
 
-    public void insertProject(String title, String context) {
+    public Boolean insertProject(String title, String context, Long userId) {
 
-        User user = new User();
+
         Project project = new Project();
 
         project.setProjectName(title); // 프로젝트 이름
-        Long createdBy = user.getId();
-        project.setId(createdBy); // 생성자 id
+        project.setId(userId); // 생성자 id
         project.setProjectCode(context); // 프로젝트 설명
         LocalDate localDate = LocalDate.now();
         project.setCreatedAt(localDate.atStartOfDay());
 
          // 프로젝트 생성일
-        projectRepository.save(project);
+        if(projectRepository.save(project) != null){
+            return true;
+        }else{
+            return false;
+        }
 
     }
 }
