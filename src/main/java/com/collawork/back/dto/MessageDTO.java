@@ -1,38 +1,32 @@
 package com.collawork.back.dto;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+
+import java.util.Date;
+
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageDTO {
 
-    private int id;                 // 메시지 고유 ID
     private String senderId;           // 보낸 사용자 ID
     private String chatRoomId;         // 채팅방 ID
-    private String content;          // 메시지 내용
-    private String messageType;      // 메시지 유형 ('text', 'image', 'file')
+    private String message;          // 메시지 내용
+    private String type;    // 메시지 유형 ('text', 'image', 'file')
     private String fileUrl;          // 파일 URL
-    private LocalDateTime createdAt; // 메시지 보낸 시간
-    private String type;
+    private String time; // 메시지 보낸 시간
+
 
     public MessageDTO() {
     }
 
-    public MessageDTO(int id, String senderId, String chatRoomId, String content, String messageType, String fileUrl, LocalDateTime createdAt, String type) {
-        this.id = id;
+    public MessageDTO(String senderId, String chatRoomId, String message, String type, String fileUrl, String time) {
         this.senderId = senderId;
         this.chatRoomId = chatRoomId;
-        this.content = content;
-        this.messageType = messageType;
-        this.fileUrl = fileUrl;
-        this.createdAt = createdAt;
+        this.message = message;
         this.type = type;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+        this.fileUrl = fileUrl;
+        this.time = time;
     }
 
     public String getSenderId() {
@@ -51,36 +45,12 @@ public class MessageDTO {
         this.chatRoomId = chatRoomId;
     }
 
-    public String getContent() {
-        return content;
+    public String getMessage() {
+        return message;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getMessageType() {
-        return messageType;
-    }
-
-    public void setMessageType(String messageType) {
-        this.messageType = messageType;
-    }
-
-    public String getFileUrl() {
-        return fileUrl;
-    }
-
-    public void setFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public String getType() {
@@ -91,17 +61,31 @@ public class MessageDTO {
         this.type = type;
     }
 
+    public String getFileUrl() {
+        return fileUrl;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
     @Override
     public String toString() {
         return "MessageDTO{" +
-                "id=" + id +
-                ", senderId='" + senderId + '\'' +
+                "senderId='" + senderId + '\'' +
                 ", chatRoomId='" + chatRoomId + '\'' +
-                ", content='" + content + '\'' +
-                ", messageType='" + messageType + '\'' +
-                ", fileUrl='" + fileUrl + '\'' +
-                ", createdAt=" + createdAt +
+                ", message='" + message + '\'' +
                 ", type='" + type + '\'' +
+                ", fileUrl='" + fileUrl + '\'' +
+                ", time=" + time +
                 '}';
     }
 }
