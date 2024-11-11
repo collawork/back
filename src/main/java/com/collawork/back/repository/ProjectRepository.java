@@ -10,7 +10,9 @@ import java.util.List;
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
 
-//   List<Project> findByTitle(String title);
+   List<String> findByTitle(String title);
 
     List<Project> findByProjectNameContaining(String query);
+
+
 }
