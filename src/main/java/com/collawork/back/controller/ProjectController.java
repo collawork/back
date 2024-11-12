@@ -77,29 +77,31 @@ public class ProjectController {
 
     }
 
-//    @PostMapping("/selectAll")
-//    public ResponseEntity<String> selectAllProject(@RequestParam("userId") String userId,
-//                                                   HttpServletRequest request){
-//        System.out.println("userId" + userId);
-//
-//        String token = request.getHeader("Authorization");
-//
-//        System.out.println("token : " + token);
-//
-//        if (token == null || !token.startsWith("Bearer ")) {
-//            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
-//        }
-//        token = token.replace("Bearer ", "");
-//        String email = jwtTokenProvider.getEmailFromToken(token);
-//        if (email == null) {
-//            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
-//        }
-//
-//        List<String> menuName = projectService.selectProjectName(userId);
-//
-//        if(menuName.size() == 0){
-//            return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
-//        }
-//        return ResponseEntity.ok(menuName.toString()); // 프로젝트 name 리스트
-//    }
+    @PostMapping("/selectAll")
+    public ResponseEntity<String> getProjectTitle(@RequestParam("userId") String userId,
+                                                   HttpServletRequest request){
+        System.out.println("selectAll 의 userId : " + userId);
+
+        String token = request.getHeader("Authorization");
+
+        System.out.println("token : " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        System.out.println("selectAll");
+
+        List<String> menuName = projectService.selectProjectTitleByUserId(Long.valueOf(userId));
+        System.out.println("projectController-selectAll: " + menuName);
+
+        if(menuName.isEmpty()){
+            return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
+        }
+        return ResponseEntity.ok(menuName.toString()); // 프로젝트 name 리스트
+    }
 }
