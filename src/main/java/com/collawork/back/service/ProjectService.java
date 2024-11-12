@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class ProjectService {
@@ -22,17 +23,26 @@ public class ProjectService {
         Project project = new Project();
 
         project.setProjectName(title); // 프로젝트 이름
-        project.setId(userId); // 생성자 id
+        project.setCreatedBy(userId);
         project.setProjectCode(context); // 프로젝트 설명
         LocalDate localDate = LocalDate.now();
-        project.setCreatedAt(localDate.atStartOfDay());
+        project.setCreatedAt(localDate.atStartOfDay());// 프로젝트 생성일
 
-         // 프로젝트 생성일
         if(projectRepository.save(project) != null){
             return true;
         }else{
             return false;
         }
 
+    }
+
+    public List<String> selectProjectName( String userId) {
+
+        List<String> titleList = projectRepository.findByTitle(userId);
+
+        if(titleList.size() > 0){
+            return titleList;
+        }
+        return null;
     }
 }

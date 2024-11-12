@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -70,9 +71,35 @@ public class ProjectController {
         if(result){
             ret = "프로젝트가 생성되었습니다.";
         }else{
-            ret="프로젝트 생성 실패";
+            return ResponseEntity.status(403).body("프로젝트 생성 실패.");
         }
         return ResponseEntity.ok(ret);
 
+    }
+
+    @PostMapping("/selectAll")
+    public ResponseEntity<String> selectAllProject(@RequestParam("userId") String userId,
+                                                   HttpServletRequest request){
+        System.out.println("userId" + userId);
+
+        String token = request.getHeader("Authorization");
+
+        System.out.println("token : " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        List<String> menuName = projectService.selectProjectName(userId);
+
+        if(menuName.size() == 0){
+            return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
+        }
+        return ResponseEntity.ok(menuName.toString()); // 프로젝트 name 리스트
     }
 }
