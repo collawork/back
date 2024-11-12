@@ -78,7 +78,7 @@ public class ProjectController {
     }
 
     @PostMapping("/selectAll")
-    public ResponseEntity<String> getProjectTitle(@RequestParam("userId") String userId,
+    public ResponseEntity<Object> getProjectTitle(@RequestParam("userId") String userId,
                                                    HttpServletRequest request){
         System.out.println("selectAll 의 userId : " + userId);
 
@@ -102,6 +102,9 @@ public class ProjectController {
         if(menuName.isEmpty()){
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
-        return ResponseEntity.ok(menuName.toString()); // 프로젝트 name 리스트
+        return ResponseEntity.ok(menuName); // 프로젝트 name 리스트
     }
+
+//    @PostMapping("/projecthome")
+//    public ResponseEntity<String> getProjectHome(@)
 }
