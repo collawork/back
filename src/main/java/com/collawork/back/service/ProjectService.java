@@ -1,15 +1,14 @@
 package com.collawork.back.service;
 
-import com.collawork.back.dto.MessageDTO;
-import com.collawork.back.dto.ProjectDTO;
 import com.collawork.back.model.Project;
-import com.collawork.back.model.User;
 import com.collawork.back.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class ProjectService {
@@ -38,13 +37,17 @@ public class ProjectService {
 
     }
 
-//    public List<String> selectProjectName( String userId) {
-//
-//        List<String> titleList = projectRepository.findByTitle(userId);
-//
-//        if(titleList.size() > 0){
-//            return titleList;
-//        }
-//        return null;
-//    }
+    public List<String> selectProjectTitleByUserId(Long userId) {
+
+        List<Project> titleList = projectRepository.findByCreatedBy(userId);
+        System.out.println("ProjectService 의 titleList : " +titleList);
+        List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
+        System.out.println("ProjectService 의 listTitle" + listTitle);
+        if(titleList .isEmpty()){
+            return null;
+        }else{
+            return listTitle;
+        }
+
+    }
 }
