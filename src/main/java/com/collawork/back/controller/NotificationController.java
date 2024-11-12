@@ -22,24 +22,21 @@ public class NotificationController {
     private UserRepository userRepository;
 
     @GetMapping("/unread")
-    public ResponseEntity<List<Notification>> getUnreadNotifications(
-            @RequestParam(value = "userId", required = false) Long userId) {
-        System.out.println("알림에서 받은 아이디 : " + userId);
-
-        if (userId == null) {
-            System.out.println("사용자 아이디로 사용자 못참음 : " + userId);
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam("userId") Long userId) {
+        System.out.println("알림 조회 요청 userId: " + userId);
 
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
+            System.out.println("사용자를 찾을 수 없습니다: " + userId);
             return ResponseEntity.notFound().build();
         }
 
         List<Notification> notifications = notificationRepository.findByUserAndIsReadFalse(user);
-        System.out.println("Notifications.size : " + notifications.size());
+        System.out.println("가져온 미확인 알림 수: " + notifications.size());
+
         return ResponseEntity.ok(notifications);
     }
+
 
 
     @PostMapping("/markAsRead/{id}")
