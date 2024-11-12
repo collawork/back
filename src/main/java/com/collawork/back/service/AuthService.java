@@ -82,14 +82,17 @@ public class AuthService {
             }
 
             String originalFilename = profileImage.getOriginalFilename();
-            String filePath = UPLOAD_DIR.resolve(System.currentTimeMillis() + "_" + originalFilename).toString();
-            profileImage.transferTo(new File(filePath));
+            String uniqueFilename = System.currentTimeMillis() + "_" + originalFilename;
+            Path filePath = UPLOAD_DIR.resolve(uniqueFilename);
 
-            return filePath;
+            profileImage.transferTo(filePath.toFile());
+
+            return uniqueFilename;
         } catch (IOException e) {
             throw new RuntimeException("프로필 이미지 저장 중 오류가 발생했습니다.", e);
         }
     }
+
 
     public Map<String, String> verifyAndProcessToken(String provider, String authorizationHeader) {
         String token = authorizationHeader.replace("Bearer ", "");
