@@ -1,7 +1,9 @@
 package com.collawork.back.service;
 
 import com.collawork.back.model.Project;
+import com.collawork.back.model.User;
 import com.collawork.back.repository.ProjectRepository;
+import com.collawork.back.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,10 @@ public class ProjectService {
     @Autowired
     private ProjectRepository projectRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    // 프로젝트 추가
     public Boolean insertProject(String title, String context, Long userId) {
 
 
@@ -37,6 +43,7 @@ public class ProjectService {
 
     }
 
+    // id 로 프로젝트 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
 
         List<Project> titleList = projectRepository.findByCreatedBy(userId);
@@ -50,4 +57,23 @@ public class ProjectService {
         }
 
     }
+
+//    // 프로젝트 정보 조회
+//    public List<String> selectProjectByUserId(Long userId) {
+//
+//        List<Project> projectList = projectRepository.findByCreatedBy(userId);
+//        System.out.println("ProjectService 의 projectList : " + projectList);
+//
+//        return projectList
+//
+//    }
+
+    // id 로 userName,
+//    public List<User> selectUserNameByUserId(Long id) {
+//
+//        List<User> userList = userRepository.findByCreatedBy(id);
+//        System.out.println(userList);
+//        return userList;
+//
+//    }
 }
