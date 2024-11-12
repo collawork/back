@@ -18,7 +18,7 @@ public class Project {
     private Long createdBy; // 생성자 아이디
 
 
-    @Column(name = "project_code", unique = true)
+    @Column(name = "project_code")
     private String projectCode; // 프로젝트 설명
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP")
