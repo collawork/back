@@ -44,9 +44,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/", "/static/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/auth/check-duplicates").permitAll()
                         .requestMatchers("/api/auth/social/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/user/info").permitAll()
@@ -66,8 +68,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/notifications/unread").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/notifications/markAsRead/**").authenticated()
                         .requestMatchers("/chattingServer/**").permitAll()
-
-
                         .anyRequest().authenticated())  // 나머지 경로는 인증 필요
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
@@ -90,4 +90,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
