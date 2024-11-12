@@ -28,7 +28,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 .setAllowedOrigins("*");
     }
 
-    @Bean(name = "chatWebSocketHandlerBean") // Bean 이름 변경
+    @Bean(name = "chatWebSocketHandlerBean")
     public WebSocketHandler chatWebSocketHandler() {
         return new ChatWebSocketHandler(chatMessageService);
     }

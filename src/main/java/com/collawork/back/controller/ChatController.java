@@ -15,16 +15,16 @@ import java.util.List;
 @RequestMapping("/api/chat")
 public class ChatController {
 
-    private final ChatMessageService chatMessageService;
-
     @Autowired
-    public ChatController(ChatMessageService chatMessageService) {
-        this.chatMessageService = chatMessageService;
-    }
+    ChatMessageService chatMessageService;
+
 
     @GetMapping("/{chatRoomId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable ("chatRoomId") Long chatRoomId) {
         List<Message> messages = chatMessageService.getMessagesByChatRoomId(chatRoomId);
+//        for (Message message : messages) {
+//            System.out.println(message);
+//        }
         return ResponseEntity.ok(messages);
     }
 }

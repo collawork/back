@@ -1,13 +1,7 @@
 package com.collawork.back.model;
 
-
 import com.collawork.back.repository.MessageType;
 import jakarta.persistence.*;
-
-import java.awt.*;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -18,7 +12,13 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "sender_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private User sender;
+
+    @Column(name = "sender_id")
     private Long senderId;
+
     private Long chatRoomId;
     private String content;
 
@@ -28,10 +28,12 @@ public class Message {
     private String fileUrl;
     private Date createdAt;
 
+    // 기본 생성자
     public Message() {
     }
 
-    public Message(Long id, Long senderId, Long chatRoomId, String content, MessageType messageType, String fileUrl, Date  createdAt) {
+    // 생성자
+    public Message(Long id, Long senderId, Long chatRoomId, String content, MessageType messageType, String fileUrl, Date createdAt) {
         this.id = id;
         this.senderId = senderId;
         this.chatRoomId = chatRoomId;
@@ -47,6 +49,14 @@ public class Message {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
     }
 
     public Long getSenderId() {
@@ -89,11 +99,11 @@ public class Message {
         this.fileUrl = fileUrl;
     }
 
-    public Date  getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date  createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -101,7 +111,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "id=" + id +
-                ", senderId=" + senderId +
+                ", sender=" + sender +
                 ", chatRoomId=" + chatRoomId +
                 ", content='" + content + '\'' +
                 ", messageType=" + messageType +

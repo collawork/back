@@ -24,15 +24,15 @@ public class ChatMessageService {
 
         if (messageDTO.getTime() == null) {
             System.err.println("메시지 시간 값이 null입니다.");
-            return;  // null인 경우 메시지를 저장하지 않음
+            return;
         }
-
-        System.out.println(messageDTO.getMessage());
-        System.out.println(messageDTO.getSenderId());
-        System.out.println(messageDTO.getChatRoomId());
-        System.out.println(messageDTO.getType());
-        System.out.println(messageDTO.getTime());  //오후 5:02:25
-        System.out.println(messageDTO.getFileUrl());
+//
+//        System.out.println(messageDTO.getMessage());
+//        System.out.println(messageDTO.getSenderId());
+//        System.out.println(messageDTO.getChatRoomId());
+//        System.out.println(messageDTO.getType());
+//        System.out.println(messageDTO.getTime());  //오후 5:02:25
+//        System.out.println(messageDTO.getFileUrl());
         String sdate = messageDTO.getTime();
 
        SimpleDateFormat sdf = new SimpleDateFormat("a hh:mm:ss");
@@ -53,7 +53,7 @@ public class ChatMessageService {
     }
 
     public List<Message> getMessagesByChatRoomId(Long chatRoomId) {
-        return messageRepository.findByChatRoomId(chatRoomId);
+        return messageRepository.findMessagesWithUsernameByChatRoomId(chatRoomId);
     }
 
 }
