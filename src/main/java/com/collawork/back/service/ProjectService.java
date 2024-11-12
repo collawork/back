@@ -24,7 +24,9 @@ public class ProjectService {
 
         project.setProjectName(title); // 프로젝트 이름
         project.setCreatedBy(userId);
+        System.out.println(userId);
         project.setProjectCode(context); // 프로젝트 설명
+        System.out.println("ProjectService: " +context);
         LocalDate localDate = LocalDate.now();
         project.setCreatedAt(localDate.atStartOfDay());// 프로젝트 생성일
 
@@ -36,13 +38,13 @@ public class ProjectService {
 
     }
 
-    public List<String> selectProjectName( String userId) {
-
-        List<String> titleList = projectRepository.findByTitle(userId);
-
-        if(titleList.size() > 0){
-            return titleList;
-        }
-        return null;
-    }
+//    public List<String> selectProjectName( String userId) {
+//
+//        List<String> titleList = projectRepository.findByTitle(userId);
+//
+//        if(titleList.size() > 0){
+//            return titleList;
+//        }
+//        return null;
+//    }
 }
