@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/user/projects")
@@ -46,7 +46,7 @@ public class ProjectController {
             @RequestParam("title") String title,
             @RequestParam("context") String context,
             @RequestParam("userId") Long userId,
-            HttpServletRequest request){
+            HttpServletRequest request) {
 
         System.out.println("request : " + request);
         System.out.println("params : " + title);
@@ -66,11 +66,11 @@ public class ProjectController {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-        boolean result = projectService.insertProject(title,context, userId);
+        boolean result = projectService.insertProject(title, context, userId);
         String ret = null;
-        if(result){
+        if (result) {
             ret = "프로젝트가 생성되었습니다.";
-        }else{
+        } else {
             return ResponseEntity.status(403).body("프로젝트 생성 실패.");
         }
         return ResponseEntity.ok(ret);
@@ -79,7 +79,7 @@ public class ProjectController {
 
     @PostMapping("/selectAll")
     public ResponseEntity<Object> getProjectTitle(@RequestParam("userId") String userId,
-                                                   HttpServletRequest request){
+                                                  HttpServletRequest request) {
         System.out.println("selectAll 의 userId : " + userId);
 
         String token = request.getHeader("Authorization");
@@ -99,12 +99,45 @@ public class ProjectController {
         List<String> menuName = projectService.selectProjectTitleByUserId(Long.valueOf(userId));
         System.out.println("projectController-selectAll: " + menuName);
 
-        if(menuName.isEmpty()){
+        if (menuName.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
         return ResponseEntity.ok(menuName); // 프로젝트 name 리스트
     }
 
-//    @PostMapping("/projecthome")
-//    public ResponseEntity<String> getProjectHome(@)
+//    @PostMapping("/projecthomeusers") // 유저 정보 조회
+//    public ResponseEntity<Object> getProjectHome(@RequestParam("userId") String userId, HttpServletRequest request) {
+//
+//        System.out.println("projectHome 의 userId : " + userId);
+//
+//        String token = request.getHeader("Authorization");
+//
+//        System.out.println("token : " + token);
+//
+//        if (token == null || !token.startsWith("Bearer ")) {
+//            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+//        }
+//        token = token.replace("Bearer ", "");
+//        String email = jwtTokenProvider.getEmailFromToken(token);
+//        if (email == null) {
+//            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+//        }
+//        System.out.println("selectAll");
+//
+//        // 프로젝트 생성자의 이름,회사,직급 조회
+////        List<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
+//
+////        // 프로젝트 정보
+////        List<String> ProjectList = projectService.selectProjectByUserId(Long.valueOf(userId));
+////        System.out.println("projectController-selectAll: " + ProjectList);
+//
+////        if(users.isEmpty()){
+////            return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
+////        }
+////        return ResponseEntity.ok(users); // 프로젝트 정보 리스트.
+//        // }
+//
+//    }
 }
+
+
