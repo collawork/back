@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,11 +32,23 @@ public class AuthController {
     private UserRepository userRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest loginRequest) {
+        // 로그인 요청 처리 후 JWT 토큰 생성
         String jwtToken = authService.login(loginRequest);
         String refreshToken = jwtTokenProvider.generateRefreshToken(loginRequest.getEmail());
-        return ResponseEntity.ok(Map.of("token", jwtToken, "refreshToken", refreshToken));
+
+        // 사용자 ID 조회
+        Long userId = userRepository.findByEmail(loginRequest.getEmail()).getId();
+
+        // 응답에 token, refreshToken, userId를 포함하여 반환
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", jwtToken);
+        response.put("refreshToken", refreshToken);
+        response.put("userId", userId);
+
+        return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/check-duplicates")
     public ResponseEntity<Map<String, Boolean>> checkDuplicates(@RequestBody Map<String, String> request) {
