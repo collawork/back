@@ -34,21 +34,25 @@ public class ChatMessageService {
 //        System.out.println(messageDTO.getTime());  //오후 5:02:25
 //        System.out.println(messageDTO.getFileUrl());
         String sdate = messageDTO.getTime();
-
        SimpleDateFormat sdf = new SimpleDateFormat("a hh:mm:ss");
       Date date = sdf.parse(sdate);
       Timestamp timestamp = new Timestamp(date.getTime());
-       System.out.println(timestamp);
+        Message message = new Message();
+        message.setSenderId(Long.parseLong(messageDTO.getSenderId()));
+        message.setChatRoomId(Long.parseLong(messageDTO.getChatRoomId()));
+        message.setContent(messageDTO.getMessage());
 
-            Message message = new Message();
-            message.setSenderId(Long.parseLong(messageDTO.getSenderId()));
-            message.setChatRoomId(Long.parseLong(messageDTO.getChatRoomId()));
-            message.setContent(messageDTO.getMessage());
-            message.setMessageType(MessageType.valueOf(messageDTO.getType().toUpperCase()));
-            message.setFileUrl(messageDTO.getFileUrl());
-            message.setCreatedAt(timestamp);
-            System.out.println(messageDTO.getMessage());
-            messageRepository.save(message);
+        try {
+            message.setMessageType(MessageType.valueOf(messageDTO.getMessageType().toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            System.err.println("유효하지 않은 메시지 유형: " + messageDTO.getMessageType());
+            message.setMessageType(MessageType.TEXT);
+        }
+
+        message.setFileUrl(messageDTO.getFileUrl());
+        message.setCreatedAt(timestamp);
+        System.out.println("Message: " + messageDTO.getMessage());
+        messageRepository.save(message);
 
     }
 

@@ -31,7 +31,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String chatRoomId = getChatRoomId(session);
         chatRoomSessions.putIfAbsent(chatRoomId, ConcurrentHashMap.newKeySet());
         chatRoomSessions.get(chatRoomId).add(session);
-        System.out.println("웹소켓 연결 : " + session.getId() + " 채팅방 : " + chatRoomId);
+
     }
 
     @Override
@@ -41,15 +41,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
 
         chatMessageService.saveMessage(msg);
-        System.out.println("여기오나");
 
-        Map<String, String> response = new HashMap<>();
-        response.put("senderId", msg.getSenderId());
-        response.put("message", msg.getMessage());
-        response.put("type", msg.getType());
 
-        // 클라이언트에게 JSON 형식으로 전송
-        String responseJson = objectMapper.writeValueAsString(response);
+//        Map<String, String> response = new HashMap<>();
+//        response.put("senderId", msg.getSenderId());
+//        response.put("message", msg.getMessage());
+//        response.put("type", msg.getMessageType());
+//
+//        // 클라이언트에게 JSON 형식으로 전송
+//        String responseJson = objectMapper.writeValueAsString(response);
 
 //        synchronized (chatRoomSessions) {
 //            for (WebSocketSession client : chatRoomSessions.get(chatRoomId)) {

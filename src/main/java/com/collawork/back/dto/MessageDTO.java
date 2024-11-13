@@ -9,22 +9,21 @@ import java.util.Date;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageDTO {
 
-    private String senderId;           // 보낸 사용자 ID
-    private String chatRoomId;         // 채팅방 ID
-    private String message;          // 메시지 내용
-    private String type;    // 메시지 유형 ('text', 'image', 'file')
-    private String fileUrl;          // 파일 URL
+    private String senderId; // 보낸 사용자 ID
+    private String chatRoomId; // 채팅방 ID
+    private String message; // 메시지 내용
+    private String messageType; // 메시지 유형 ('text', 'image', 'file')
+    private String fileUrl; // 파일 URL
     private String time; // 메시지 보낸 시간
-
 
     public MessageDTO() {
     }
 
-    public MessageDTO(String senderId, String chatRoomId, String message, String type, String fileUrl, String time) {
+    public MessageDTO(String senderId, String chatRoomId, String message, String messageType, String fileUrl, String time) {
         this.senderId = senderId;
         this.chatRoomId = chatRoomId;
         this.message = message;
-        this.type = type;
+        this.messageType = messageType;
         this.fileUrl = fileUrl;
         this.time = time;
     }
@@ -53,12 +52,12 @@ public class MessageDTO {
         this.message = message;
     }
 
-    public String getType() {
-        return type;
+    public String getMessageType() {
+        return messageType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 
     public String getFileUrl() {
@@ -83,9 +82,9 @@ public class MessageDTO {
                 "senderId='" + senderId + '\'' +
                 ", chatRoomId='" + chatRoomId + '\'' +
                 ", message='" + message + '\'' +
-                ", type='" + type + '\'' +
+                ", messageType='" + messageType + '\'' +
                 ", fileUrl='" + fileUrl + '\'' +
-                ", time=" + time +
+                ", time='" + time + '\'' +
                 '}';
     }
 }

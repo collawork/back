@@ -28,11 +28,11 @@ public class Message {
     private String fileUrl;
     private Date createdAt;
 
-    // 기본 생성자
+
     public Message() {
     }
 
-    // 생성자
+
     public Message(Long id, Long senderId, Long chatRoomId, String content, MessageType messageType, String fileUrl, Date createdAt) {
         this.id = id;
         this.senderId = senderId;
