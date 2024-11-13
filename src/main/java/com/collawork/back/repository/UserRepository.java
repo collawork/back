@@ -4,6 +4,7 @@ import com.collawork.back.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByEmail(String email);
@@ -12,7 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
     User findByPhone(String phone);
 
-//    List<User> findByCreateBy(Long userId);
-    // public List<User> findByCreatedBy(Long id);
+    Optional<User> findById(Long id);
 
 }
