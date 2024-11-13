@@ -36,6 +36,7 @@ public class AuthController {
         // 로그인 요청 처리 후 JWT 토큰 생성
         String jwtToken = authService.login(loginRequest);
         String refreshToken = jwtTokenProvider.generateRefreshToken(loginRequest.getEmail());
+        System.out.println("jwtToken : " + jwtToken);
 
         // 사용자 ID 조회
         Long userId = userRepository.findByEmail(loginRequest.getEmail()).getId();
