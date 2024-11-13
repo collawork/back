@@ -3,9 +3,6 @@ package com.collawork.back.config;
 import com.collawork.back.security.JwtAuthenticationFilter;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.UserDetailsServiceImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,20 +17,19 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsServiceImpl userDetailsService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, UserDetailsServiceImpl userDetailsService) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -44,9 +40,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 활성화
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                .authorizeRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/", "/static/**", "/favicon.ico").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/auth/check-duplicates").permitAll()
@@ -55,24 +51,17 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/newproject").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/friends/request").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/friends/status").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/friends/accept").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/friends/reject").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/friends/remove").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/friends/list").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/user/chatrooms").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/user/projects").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/notifications/**").permitAll()
+                        .requestMatchers("/api/friends/**").permitAll()
+                        .requestMatchers("/api/user/chatrooms").permitAll()
+                        .requestMatchers("/api/user/projects/**").permitAll()
+                        .requestMatchers("/api/notifications/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/notifications/unread").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/notifications/markAsRead/**").authenticated()
                         .requestMatchers("/chattingServer/**").permitAll()
-                        .anyRequest().authenticated())  // 나머지 경로는 인증 필요
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                        .anyRequest().authenticated()
+                );
 
-        // JwtAuthenticationFilter 추가
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
+                UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -82,9 +71,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

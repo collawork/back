@@ -1,20 +1,10 @@
 package com.collawork.back.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.List;
-
-/*
- * 작성자 : 김동규 / 2024-10-29 최초 작성
- * 설명 : CORS 전역 설정 추가
- */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -30,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:C:/back/uploads/")
-                .setCachePeriod(3600);
+                .addResourceLocations("file:C:/back/uploads/")  // 업로드 파일 위치
+                .setCachePeriod(3600);  // 캐시 시간 설정 (초)
     }
 }
