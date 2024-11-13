@@ -167,6 +167,7 @@ public class FriendController {
 
     @GetMapping("/list")
     public List<Friend> getFriends(@RequestParam Long userId) {
+        System.out.println("친구 목록 요청 userId: " + userId);
         return friendRepository.findFriendsByUserIdAndStatus(userId, Friend.Status.ACCEPTED);
     }
 
