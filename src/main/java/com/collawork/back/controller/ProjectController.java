@@ -96,48 +96,77 @@ public class ProjectController {
         }
         System.out.println("selectAll");
 
-        List<String> menuName = projectService.selectProjectTitleByUserId(Long.valueOf(userId));
-        System.out.println("projectController-selectAll: " + menuName);
+        List<String> projectList = projectService.selectProjectTitleByUserId(Long.valueOf(userId));
+        System.out.println("projectController-selectAll: " + projectList);
 
-        if (menuName.isEmpty()) {
+        if (projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
-        return ResponseEntity.ok(menuName); // 프로젝트 name 리스트
+        return ResponseEntity.ok(projectList); // 프로젝트 이름 리스트
     }
 
-//    @PostMapping("/projecthomeusers") // 유저 정보 조회
-//    public ResponseEntity<Object> getProjectHome(@RequestParam("userId") String userId, HttpServletRequest request) {
-//
-//        System.out.println("projectHome 의 userId : " + userId);
-//
-//        String token = request.getHeader("Authorization");
-//
-//        System.out.println("token : " + token);
-//
-//        if (token == null || !token.startsWith("Bearer ")) {
-//            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
-//        }
-//        token = token.replace("Bearer ", "");
-//        String email = jwtTokenProvider.getEmailFromToken(token);
-//        if (email == null) {
-//            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
-//        }
-//        System.out.println("selectAll");
-//
-//        // 프로젝트 생성자의 이름,회사,직급 조회
-////        List<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
-//
-////        // 프로젝트 정보
-////        List<String> ProjectList = projectService.selectProjectByUserId(Long.valueOf(userId));
-////        System.out.println("projectController-selectAll: " + ProjectList);
-//
-////        if(users.isEmpty()){
-////            return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
-////        }
-////        return ResponseEntity.ok(users); // 프로젝트 정보 리스트.
-//        // }
-//
-//    }
+    @PostMapping("/projecthomeusers") // 유저 정보 조회
+    public ResponseEntity<Object> getProjectHome(@RequestParam("userId") String userId, HttpServletRequest request) {
+
+        System.out.println("projectHome 의 userId : " + userId);
+
+        String token = request.getHeader("Authorization");
+
+        System.out.println("token : " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        System.out.println("selectAll");
+
+        // 프로젝트 생성자의 이름,회사,직급 조회
+        Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
+
+        // 프로젝트 정보
+//        List<String> ProjectList = projectService.selectProjectByUserId(Long.valueOf(userId));
+//        System.out.println("projectController-selectAll: " + ProjectList);
+
+        if (users.isEmpty()) {
+            return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
+        }
+        return ResponseEntity.ok(users); // 프로젝트 정보 리스트.
+    }
+
+    @PostMapping("projectselect")
+    public ResponseEntity<Object> getProjectSelect(@RequestParam("projectName") String projectName,
+                                                   HttpServletRequest request) {
+
+        System.out.println("projectInformation 의 projectName : " + projectName);
+
+        String token = request.getHeader("Authorization");
+
+        System.out.println("token : " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        System.out.println("selectAll");
+
+        // projectName 으로 project 엔티티 조회 후 가져옴
+        List<Project> projectList = projectService.selectByProjectName(projectName);
+        System.out.println("projectController 의 프로젝트 정보 조회 ::: " + projectList);
+        if (projectList.isEmpty()) {
+            return ResponseEntity.status(403).body("조회된 정보가 없습니다.");
+        }
+        return ResponseEntity.ok(projectList);
+    }
+
+
 }
 
 

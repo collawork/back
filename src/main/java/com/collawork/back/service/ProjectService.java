@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -65,15 +66,24 @@ public class ProjectService {
 //        System.out.println("ProjectService 의 projectList : " + projectList);
 //
 //        return projectList
-//
-//    }
 
-    // id 로 userName,
-//    public List<User> selectUserNameByUserId(Long id) {
-//
-//        List<User> userList = userRepository.findByCreatedBy(id);
-//        System.out.println(userList);
-//        return userList;
-//
-//    }
+
+
+    // id 로 유저 정보 조회(관리자)
+    public Optional<User> selectUserNameByUserId(Long id) {
+
+        Optional<User> userList = userRepository.findById(id);
+        System.out.println("ProjectService 의 유저 정보 조회 : " + userList);
+        return userList;
+
+}
+
+    // ProjectName 으로 프로젝트 정보 조회
+    public List<Project> selectByProjectName(String projectName) {
+
+        List<Project> titleList = projectRepository.findByProjectName(projectName);
+        System.out.println("ProjectService 의 selectByProjectName : " +titleList);
+        return titleList;
+
+    }
 }

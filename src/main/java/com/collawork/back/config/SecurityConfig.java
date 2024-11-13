@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/user/info").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/newproject").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/selectAll").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/projecthomeusers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/friends/request").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/friends/status").permitAll()
