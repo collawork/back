@@ -1,6 +1,6 @@
-package com.collawork.back.repository;
+package com.collawork.back.repository.friends;
 
-import com.collawork.back.model.Friend;
+import com.collawork.back.model.friends.Friend;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

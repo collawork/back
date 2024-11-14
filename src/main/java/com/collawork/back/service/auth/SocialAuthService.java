@@ -1,8 +1,8 @@
-package com.collawork.back.service;
+package com.collawork.back.service.auth;
 
-import com.collawork.back.dto.LoginRequest;
-import com.collawork.back.model.User;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.dto.auth.LoginRequest;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

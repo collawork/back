@@ -1,6 +1,6 @@
 package com.collawork.back.utils;
 
-import com.collawork.back.model.Friend;
+import com.collawork.back.model.friends.Friend;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

@@ -1,24 +1,36 @@
-package com.collawork.back.dto;
+package com.collawork.back.dto.auth;
 
-import org.springframework.web.multipart.MultipartFile;
+import com.collawork.back.model.auth.User;
 
-public class SignupRequest {
+public class UserDTO {
+    private Long id;
     private String username;
-    private String nickname;
     private String email;
-    private String password;
     private String company;
     private String position;
     private String phone;
     private String fax;
-    private MultipartFile profileImage;
+    private String profileImageUrl;
 
-    public MultipartFile getProfileImage() {
-        return profileImage;
+    public UserDTO(User user, String baseUrl) {
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.company = user.getCompany();
+        this.position = user.getPosition();
+        this.phone = user.getPhone();
+        this.fax = user.getFax();
+        this.profileImageUrl = user.getProfileImage() != null
+                ? baseUrl + "/uploads/" + user.getProfileImage()
+                : baseUrl + "/default-profile.png";
     }
 
-    public void setProfileImage(MultipartFile profileImage) {
-        this.profileImage = profileImage;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getUsername() {
@@ -29,28 +41,12 @@ public class SignupRequest {
         this.username = username;
     }
 
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getCompany() {
@@ -83,5 +79,13 @@ public class SignupRequest {
 
     public void setFax(String fax) {
         this.fax = fax;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

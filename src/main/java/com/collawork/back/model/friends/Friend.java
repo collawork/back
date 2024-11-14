@@ -1,5 +1,6 @@
-package com.collawork.back.model;
+package com.collawork.back.model.friends;
 
+import com.collawork.back.model.auth.User;
 import com.collawork.back.utils.StatusConverter;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

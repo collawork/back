@@ -2,7 +2,7 @@ package com.collawork.back.config;
 
 import com.collawork.back.security.JwtAuthenticationFilter;
 import com.collawork.back.security.JwtTokenProvider;
-import com.collawork.back.service.UserDetailsServiceImpl;
+import com.collawork.back.service.auth.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

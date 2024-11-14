@@ -1,5 +1,6 @@
 package com.collawork.back.model;
 
+import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.MessageType;
 import jakarta.persistence.*;
 import java.util.Date;
