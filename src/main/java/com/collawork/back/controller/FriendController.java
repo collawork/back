@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 작성자: 김동규 / 작성일: 2024-11-14
+ * 설명: 친구관련 컨트롤러
+ * */
 @RestController
 @RequestMapping("/api/friends")
 @CrossOrigin(origins = "http://localhost:3000")
@@ -32,14 +36,28 @@ public class FriendController {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * 친구 관계 상태 확인 메소드
+     * */
     @GetMapping("/status")
     public Map<String, Object> getFriendshipStatus(@RequestParam Long userId, @RequestParam Long selectedUserId) {
         Optional<Friend> friendship = friendRepository.findFriendshipBetweenUsers(userId, selectedUserId);
         Map<String, Object> response = new HashMap<>();
 
+
+
+
         if (friendship.isPresent()) {
-            response.put("status", friendship.get().getStatus().name());
-            response.put("isRequester", friendship.get().getRequester().getId().equals(userId));
+            Friend friend = friendship.get();
+            response.put("status", friend.getStatus().name());
+            response.put("isRequester", friend.getRequester().getId().equals(userId));
+            response.put("requesterId", friend.getRequester().getId());
+            response.put("id", friendship.get().getId());
+
+            System.out.println("friendship : " + friendship.get().getId());
+            System.out.println("requesterId : " + friend.getRequester().getId());
+            System.out.println("isRequester : " + friend.getRequester().getId().equals(userId));
+
         } else {
             response.put("status", "NONE");
             response.put("isRequester", false);
@@ -48,7 +66,9 @@ public class FriendController {
         return response;
     }
 
-
+    /**
+     * 친구 요청 메소드
+     * */
     @PostMapping("/request")
     public Map<String, Object> sendFriendRequest(@RequestBody FriendRequestDTO friendRequestDTO) {
         Map<String, Object> response = new HashMap<>();
@@ -94,32 +114,44 @@ public class FriendController {
         }
     }
 
-
-
-
+    /**
+     * 친구 승인 메소드
+     * */
     @PostMapping("/accept")
-    public String acceptFriendRequest(@RequestParam Long requestId) {
+    public ResponseEntity<String> acceptFriendRequest(
+            @RequestParam Long requestId,
+            @RequestParam Long responderId) {
+
         Optional<Friend> friendship = friendRepository.findById(requestId);
 
         if (friendship.isPresent()) {
             Friend friend = friendship.get();
+
+            if (!friend.getResponder().getId().equals(responderId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("권한이 없습니다.");
+            }
+
             friend.setStatus(Friend.Status.ACCEPTED);
             friendRepository.save(friend);
 
-            // 친구 요청 수락 알림을 생성
             Notification notification = new Notification();
             notification.setUser(friend.getRequester());
             notification.setType(Notification.Type.FRIEND_REQUEST);
             notification.setMessage(friend.getResponder().getUsername() + "님이 친구 요청을 수락했습니다.");
             notification.setRequestId(requestId);
+            notification.setResponderId(responderId);
             notificationRepository.save(notification);
 
-            return "친구 요청 승인";
+            return ResponseEntity.ok("친구 요청 승인");
         }
-        return "친구 요청을 찾을 수 없습니다.";
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("친구 요청을 찾을 수 없습니다.");
     }
 
 
+    /**
+     * 친구 요청 거절 메소드
+     * */
     @PostMapping("/reject")
     public String rejectFriendRequest(@RequestParam Long requesterId, @RequestParam Long responderId) {
         System.out.println("수신된 requesterId: " + requesterId + ", responderId: " + responderId);
@@ -151,11 +183,9 @@ public class FriendController {
         }
     }
 
-
-
-
-
-
+    /**
+     * 친구 삭제하는 메소드
+     * */
     @DeleteMapping("/remove")
     public String removeFriend(@RequestParam Long requestId) {
         friendRepository.deleteById(requestId);
@@ -165,13 +195,18 @@ public class FriendController {
         return "친구 삭제가 성공적으로 완료되었습니다.";
     }
 
+    /**
+     * 친구 목록 보는 메소드
+     * */
     @GetMapping("/list")
     public List<Friend> getFriends(@RequestParam Long userId) {
         System.out.println("친구 목록 요청 userId: " + userId);
         return friendRepository.findFriendsByUserIdAndStatus(userId, Friend.Status.ACCEPTED);
     }
 
-    // 요청 목록을 보기 위한 메소드
+    /**
+     * 요청 목록을 보기 위한 메소드
+     * */
     @GetMapping("/request")
     public ResponseEntity<Map<String, Object>> getFriendRequest(@RequestParam Long requestId) {
         Optional<Friend> friendship = friendRepository.findById(requestId);
