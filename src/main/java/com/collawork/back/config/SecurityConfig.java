@@ -58,12 +58,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/projects/**").permitAll()
                         .requestMatchers("/api/notifications/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
-                        .requestMatchers("/chattingServer/**").permitAll()
+                        .requestMatchers("/chattingServer/**","/ws/**").permitAll()
+                        .requestMatchers("/files/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
                         UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 

@@ -1,9 +1,8 @@
 package com.collawork.back.model;
 
-
+import com.collawork.back.repository.MessageType;
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name = "messages")
@@ -13,39 +12,37 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String chatRoomId;
-    private String senderId;
+    @ManyToOne
+    @JoinColumn(name = "sender_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private User sender;
+
+    @Column(name = "sender_id")
+    private Long senderId;
+
+    private Long chatRoomId;
     private String content;
-    private String messageType; // "text" 또는 "file"
-    private String fileUrl; // 파일 URL 추가
 
-    @Column(updatable = false, nullable = false)
-    private LocalDateTime createdAt;
+    @Enumerated(EnumType.STRING)
+    private MessageType messageType;
 
-    public Message(Long id, String chatRoomId, String senderId, String content, String messageType, String fileUrl, LocalDateTime createdAt) {
+    private String fileUrl;
+    private Date createdAt;
+
+
+    public Message() {
+    }
+
+
+    public Message(Long id, Long senderId, Long chatRoomId, String content, MessageType messageType, String fileUrl, Date createdAt) {
         this.id = id;
-        this.chatRoomId = chatRoomId;
         this.senderId = senderId;
+        this.chatRoomId = chatRoomId;
         this.content = content;
         this.messageType = messageType;
         this.fileUrl = fileUrl;
         this.createdAt = createdAt;
     }
 
-    public Message() {
-        // 기본 생성자
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now(); // 엔티티가 저장되기 전에 현재 시간 설정
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -54,20 +51,28 @@ public class Message {
         this.id = id;
     }
 
-    public String getChatRoomId() {
-        return chatRoomId;
+    public User getSender() {
+        return sender;
     }
 
-    public void setChatRoomId(String chatRoomId) {
-        this.chatRoomId = chatRoomId;
+    public void setSender(User sender) {
+        this.sender = sender;
     }
 
-    public String getSenderId() {
+    public Long getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(String senderId) {
+    public void setSenderId(Long senderId) {
         this.senderId = senderId;
+    }
+
+    public Long getChatRoomId() {
+        return chatRoomId;
+    }
+
+    public void setChatRoomId(Long chatRoomId) {
+        this.chatRoomId = chatRoomId;
     }
 
     public String getContent() {
@@ -78,11 +83,11 @@ public class Message {
         this.content = content;
     }
 
-    public String getMessageType() {
+    public MessageType getMessageType() {
         return messageType;
     }
 
-    public void setMessageType(String messageType) {
+    public void setMessageType(MessageType messageType) {
         this.messageType = messageType;
     }
 
@@ -94,19 +99,22 @@ public class Message {
         this.fileUrl = fileUrl;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    // toString() 메서드
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
     @Override
     public String toString() {
         return "Message{" +
                 "id=" + id +
-                ", chatRoomId='" + chatRoomId + '\'' +
-                ", senderId='" + senderId + '\'' +
+                ", sender=" + sender +
+                ", chatRoomId=" + chatRoomId +
                 ", content='" + content + '\'' +
-                ", messageType='" + messageType + '\'' +
+                ", messageType=" + messageType +
                 ", fileUrl='" + fileUrl + '\'' +
                 ", createdAt=" + createdAt +
                 '}';

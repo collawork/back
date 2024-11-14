@@ -1,11 +1,13 @@
 package com.collawork.back.model;
 
+
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "chat_rooms")
-public class ChatRoom {
+public class ChatRooms {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,16 +16,17 @@ public class ChatRoom {
     @Column(name = "room_name")
     private String roomName;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    @ManyToOne
+    @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_chat_rooms_created_by"))
+    private User createdBy;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public ChatRoom() {
+    public ChatRooms() {
     }
 
-    public ChatRoom(Long id, String roomName, Long createdBy, LocalDateTime createdAt) {
+    public ChatRooms(Long id, String roomName, User createdBy, LocalDateTime createdAt) {
         this.id = id;
         this.roomName = roomName;
         this.createdBy = createdBy;
@@ -46,11 +49,11 @@ public class ChatRoom {
         this.roomName = roomName;
     }
 
-    public Long getCreatedBy() {
+    public User getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Long createdBy) {
+    public void setCreatedBy(User createdBy) {
         this.createdBy = createdBy;
     }
 
@@ -64,7 +67,7 @@ public class ChatRoom {
 
     @Override
     public String toString() {
-        return "ChatRoom{" +
+        return "chatRooms{" +
                 "id=" + id +
                 ", roomName='" + roomName + '\'' +
                 ", createdBy=" + createdBy +
