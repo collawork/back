@@ -1,9 +1,9 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.notification;
 
-import com.collawork.back.model.Notification;
-import com.collawork.back.model.User;
-import com.collawork.back.repository.NotificationRepository;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.model.notification.Notification;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.notification.NotificationRepository;
+import com.collawork.back.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

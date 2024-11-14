@@ -1,7 +1,7 @@
-package com.collawork.back.repository;
+package com.collawork.back.repository.notification;
 
-import com.collawork.back.model.Notification;
-import com.collawork.back.model.User;
+import com.collawork.back.model.notification.Notification;
+import com.collawork.back.model.auth.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

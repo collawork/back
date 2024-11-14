@@ -1,4 +1,4 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.auth;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;

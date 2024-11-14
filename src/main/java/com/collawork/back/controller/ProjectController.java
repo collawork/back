@@ -1,7 +1,7 @@
 package com.collawork.back.controller;
 
 import com.collawork.back.model.Project;
-import com.collawork.back.model.User;
+import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectService;
@@ -113,6 +113,7 @@ public class ProjectController {
         String token = request.getHeader("Authorization");
 
         System.out.println("token : " + token);
+        System.out.println("플젝의 userId : " + userId);
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");

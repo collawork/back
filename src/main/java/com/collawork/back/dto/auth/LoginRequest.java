@@ -1,4 +1,4 @@
-package com.collawork.back.dto;
+package com.collawork.back.dto.auth;
 
 public class LoginRequest {
     private String email;

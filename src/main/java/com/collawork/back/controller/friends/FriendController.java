@@ -1,12 +1,12 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.friends;
 
-import com.collawork.back.dto.FriendRequestDTO;
-import com.collawork.back.model.Friend;
-import com.collawork.back.model.Notification;
-import com.collawork.back.model.User;
-import com.collawork.back.repository.FriendRepository;
-import com.collawork.back.repository.NotificationRepository;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.dto.friends.FriendRequestDTO;
+import com.collawork.back.model.friends.Friend;
+import com.collawork.back.model.notification.Notification;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.friends.FriendRepository;
+import com.collawork.back.repository.notification.NotificationRepository;
+import com.collawork.back.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

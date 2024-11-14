@@ -1,7 +1,7 @@
-package com.collawork.back.service;
+package com.collawork.back.service.auth;
 
-import com.collawork.back.model.User;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

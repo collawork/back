@@ -1,20 +1,17 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.auth;
 
-import com.collawork.back.dto.UserDTO;
-import com.collawork.back.model.User;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.dto.auth.UserDTO;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/api")
@@ -44,6 +41,33 @@ public class MainController {
         UserDTO userDTO = new UserDTO(user, baseUrl);
 
         return ResponseEntity.ok(userDTO);
+    }
+
+    // 사용자 정보 업데이트
+    @PutMapping("/user/update")
+    public ResponseEntity<String> updateUserProfile(@RequestBody User updatedUser, HttpServletRequest request) {
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            user.setUsername(updatedUser.getUsername());
+            user.setCompany(updatedUser.getCompany());
+            user.setPosition(updatedUser.getPosition());
+            user.setFax(updatedUser.getFax());
+
+            if (updatedUser.getProfileImage() != null) {
+                user.setProfileImage(updatedUser.getProfileImage());
+            }
+
+            userRepository.save(user);
+            return ResponseEntity.ok("프로필이 성공적으로 업데이트되었습니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+        }
     }
 
     @GetMapping("/user/detail")
