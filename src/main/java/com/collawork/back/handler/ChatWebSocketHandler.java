@@ -43,31 +43,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         chatMessageService.saveMessage(msg);
 
 
-//        Map<String, String> response = new HashMap<>();
-//        response.put("senderId", msg.getSenderId());
-//        response.put("message", msg.getMessage());
-//        response.put("type", msg.getMessageType());
-//
-//        // 클라이언트에게 JSON 형식으로 전송
-//        String responseJson = objectMapper.writeValueAsString(response);
 
-//        synchronized (chatRoomSessions) {
-//            for (WebSocketSession client : chatRoomSessions.get(chatRoomId)) {
-//                if (!client.equals(session)) {
-//                    if ("join".equals(msg.getType())) {
-//                        Map<String, String> joinResponse = new HashMap<>();
-//                   //     joinResponse.put("message", msg.getSenderId() + "님이 입장하셨습니다.");
-//                        client.sendMessage(new TextMessage(objectMapper.writeValueAsString(joinResponse)));
-//                    } else if ("leave".equals(msg.getType())) {
-//                        Map<String, String> leaveResponse = new HashMap<>();
-//                     //   leaveResponse.put("message", msg.getSenderId() + "님이 퇴장하셨습니다.");
-//                        client.sendMessage(new TextMessage(objectMapper.writeValueAsString(leaveResponse)));
-//                    } else if ("message".equals(msg.getType())) {
-//                        client.sendMessage(new TextMessage(responseJson)); // 일반 메시지
-//                    }
-//                }
-//            }
-//        }
     }
 
     @Override

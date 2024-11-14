@@ -45,14 +45,23 @@ public class ChatController {
     }
 
 
-
+    //해당 채팅방의 모든 메세지 반환하는 메서드
     @GetMapping("/{chatRoomId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable ("chatRoomId") Long chatRoomId) {
         List<Message> messages = chatMessageService.getMessagesByChatRoomId(chatRoomId);
+
         return ResponseEntity.ok(messages);
     }
 
+    //채팅방 이름 가져오는 메서드
+    @GetMapping("/roomName/{chatRoomId}")
+    public ResponseEntity<String> getRoomName(@PathVariable("chatRoomId") Long chatRoomId) {
+        String roomName = chatMessageService.getChatRoomName(chatRoomId);
 
+        return ResponseEntity.ok(roomName);
+    }
+
+    //파일업로드 메서드
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile file,
@@ -79,7 +88,7 @@ public class ChatController {
             Message message = new Message();
             message.setSenderId(senderId);
             message.setChatRoomId(chatRoomId);
-            message.setMessageType(MessageType.FILE);
+            message.setMessageType(MessageType.file);
             message.setFileUrl(fileUrl);
             message.setCreatedAt(timestamp);
 

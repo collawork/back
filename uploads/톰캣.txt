@@ -1,0 +1,8 @@
+톰캣 https://tomcat.apache.org/whichversion.html 
+download tomcat 10=> core zip파일 다운
+
+
+intelleg new file=>jakarta EE
+template => web application Application server : Tomcat 10
+java, gradle  
+tomcat위쪽에 addit ->deployment아래 /남ㅁ기고 삭제
