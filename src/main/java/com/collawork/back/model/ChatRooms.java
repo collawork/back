@@ -14,14 +14,14 @@ public class ChatRooms {
     private Long id;
 
     @Column(name = "room_name")
-    private String roomName;
+    private String roomName; // 채팅방 이름
 
     @ManyToOne
     @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_chat_rooms_created_by"))
-    private User createdBy;
+    private User createdBy; // 만든 사람
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 생성 시간
 
     public ChatRooms() {
     }
