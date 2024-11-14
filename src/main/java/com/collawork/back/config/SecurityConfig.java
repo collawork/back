@@ -3,9 +3,6 @@ package com.collawork.back.config;
 import com.collawork.back.security.JwtAuthenticationFilter;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.UserDetailsServiceImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,20 +17,19 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsServiceImpl userDetailsService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider, UserDetailsServiceImpl userDetailsService) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,36 +38,44 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
+        http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/", "/static/**", "/favicon.ico").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/auth/check-duplicates").permitAll()
                         .requestMatchers("/api/auth/social/**").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/user/info").permitAll()
                         .requestMatchers("/login/oauth2/code/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/newproject").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/selectAll").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/projecthomeusers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
+                        .requestMatchers("/api/friends/**").permitAll()
+                        .requestMatchers("/api/user/chatrooms").permitAll()
+                        .requestMatchers("/api/user/projects/**").permitAll()
+                        .requestMatchers("/api/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers("/chattingServer/**","/ws/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
-
-                        .anyRequest().authenticated())  // 나머지 경로는 인증 필요
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
-
-        // JwtAuthenticationFilter 추가
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService), UsernamePasswordAuthenticationFilter.class);
-
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.addAllowedOrigin("http://localhost:3000");
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.addAllowedOriginPattern("http://localhost:3000");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

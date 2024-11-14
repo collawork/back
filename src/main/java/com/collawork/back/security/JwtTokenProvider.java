@@ -18,6 +18,9 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    @Value("${jwt.refreshExpiration}")         // .yml 파일에서 설정한 값 가져오는 방법 중 한가지 위에랑 다름
+    private long refreshExpiration;
+
     private Key key;
 
     @PostConstruct
@@ -30,7 +33,16 @@ public class JwtTokenProvider {
                 .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(key)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -38,10 +50,20 @@ public class JwtTokenProvider {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+        } catch (ExpiredJwtException e) {
+            System.out.println("토큰 만료됨: " + e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            System.out.println("지원되지 않는 토큰 형식: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            System.out.println("손상된 토큰: " + e.getMessage());
+        } catch (SignatureException e) {
+            System.out.println("잘못된 서명: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("빈 또는 잘못된 토큰: " + e.getMessage());
         }
+        return false;
     }
+
 
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()

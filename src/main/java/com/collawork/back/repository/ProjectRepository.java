@@ -8,5 +8,16 @@ import java.util.List;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-    List<Project> findByProjectNameContaining(String projectName);
+
+
+//   List<String> findById(Long Id);
+
+    List<Project> findByCreatedBy(Long userId);
+
+
+//    List<String> findByUserId(Long userId);
+
+     List<Project> findByProjectNameContaining(String query);
+
+    List<Project> findByProjectName(String projectName);
 }

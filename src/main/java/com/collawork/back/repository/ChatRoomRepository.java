@@ -9,4 +9,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRooms,Long> {
 
     @Query("SELECT c.roomName FROM ChatRooms c WHERE c.id = :id")
     String findChatRoomNameById(@Param("id") Long id);
+
 }

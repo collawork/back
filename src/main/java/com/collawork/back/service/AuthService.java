@@ -25,6 +25,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 작성자: 김동규 / 작성일: 2024.11.14
+ * 설명: 사용자 인증 관련 service
+ * */
 @Service
 public class AuthService {
 
@@ -59,7 +63,8 @@ public class AuthService {
 
     public void register(SignupRequest signupRequest, MultipartFile profileImage) {
         User user = new User();
-        user.setUsername(generateUniqueUsername(signupRequest.getUsername()));
+//        user.setUsername(generateUniqueUsername(signupRequest.getUsername()));   사용자 이름 중복검사 제거
+        user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setCompany(signupRequest.getCompany());
@@ -82,14 +87,17 @@ public class AuthService {
             }
 
             String originalFilename = profileImage.getOriginalFilename();
-            String filePath = UPLOAD_DIR.resolve(System.currentTimeMillis() + "_" + originalFilename).toString();
-            profileImage.transferTo(new File(filePath));
+            String uniqueFilename = System.currentTimeMillis() + "_" + originalFilename;
+            Path filePath = UPLOAD_DIR.resolve(uniqueFilename);
 
-            return filePath;
+            profileImage.transferTo(filePath.toFile());
+
+            return uniqueFilename;
         } catch (IOException e) {
             throw new RuntimeException("프로필 이미지 저장 중 오류가 발생했습니다.", e);
         }
     }
+
 
     public Map<String, String> verifyAndProcessToken(String provider, String authorizationHeader) {
         String token = authorizationHeader.replace("Bearer ", "");
