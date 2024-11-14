@@ -106,7 +106,7 @@ public class ProjectController {
     }
 
     @PostMapping("/projecthomeusers") // 유저 정보 조회
-    public ResponseEntity<Object> getProjectHome(@RequestParam("userId") String userId, HttpServletRequest request) {
+    public ResponseEntity<Object> getProjectHome(@RequestParam("id") Long userId, HttpServletRequest request) {
 
         System.out.println("projectHome 의 userId : " + userId);
 
@@ -124,12 +124,8 @@ public class ProjectController {
         }
         System.out.println("selectAll");
 
-        // 프로젝트 생성자의 이름,회사,직급 조회
-        Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
-
-        // 프로젝트 정보
-//        List<String> ProjectList = projectService.selectProjectByUserId(Long.valueOf(userId));
-//        System.out.println("projectController-selectAll: " + ProjectList);
+        // 프로젝트 생성자의 정보 조회
+    Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
 
         if (users.isEmpty()) {
             return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
