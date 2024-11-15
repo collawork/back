@@ -1,7 +1,8 @@
 package com.collawork.back.service;
 
-import com.collawork.back.model.Project;
+import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.model.project.Voting;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,4 +87,22 @@ public class ProjectService {
         return titleList;
 
     }
+
+    public boolean votingInsert(String votingName, String projectId, String createdUser) {
+
+        Voting voting = new Voting();
+        voting.setVotingName(votingName);
+        voting.setProjectId(Long.valueOf(projectId));
+        voting.setCreatedUser(createdUser);
+        LocalDate localDate = LocalDate.now();
+        voting.setCreatedAt(localDate.atStartOfDay());
+
+//        if(projectRepository.save(voting) != null){
+//            return true;
+//        }else{
+//            return false;
+//        }
+        return false;
+
+     }
 }

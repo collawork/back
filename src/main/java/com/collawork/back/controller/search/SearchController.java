@@ -1,7 +1,7 @@
 package com.collawork.back.controller.search;
 
 import com.collawork.back.model.auth.User;
-import com.collawork.back.model.Project;
+import com.collawork.back.model.project.Project;
 import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.ProjectRepository;

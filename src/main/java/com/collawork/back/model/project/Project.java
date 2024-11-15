@@ -1,4 +1,4 @@
-package com.collawork.back.model;
+package com.collawork.back.model.project;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
