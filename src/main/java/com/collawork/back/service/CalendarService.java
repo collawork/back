@@ -6,6 +6,8 @@ import com.collawork.back.model.Calendar;
 import com.collawork.back.repository.CalendarRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 @Service
@@ -18,12 +20,14 @@ public class CalendarService {
 
         Calendar calendar = new Calendar();
 
-        calendar.setProjectId(scheduleInfo.getProjectId()); // 있으면 받고
         calendar.setTitle(scheduleInfo.getTitle());
-        calendar.setDescription(scheduleInfo.getDescription()); // 있으면 받고
+        calendar.setDescription(scheduleInfo.getDescription());
         calendar.setStartTime(scheduleInfo.getStart());
-        calendar.setEndTime(scheduleInfo.getEnd()); // 있으면 받고
-        calendar.setCreateBy(scheduleInfo.getCreateBy());
+        calendar.setEndTime(scheduleInfo.getEnd());
+        calendar.setCreatedAt(scheduleInfo.getCreatedAt());
+        calendar.setCreatedBy(scheduleInfo.getCreatedBy());
+        calendar.setAllDay(scheduleInfo.isAllDay());
+        calendar.setProjectId(scheduleInfo.getProjectId());
 
         if(calendarRepository.save(calendar) != null){
             return Optional.of(calendar);

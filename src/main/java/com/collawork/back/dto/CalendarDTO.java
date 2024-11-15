@@ -2,37 +2,50 @@ package com.collawork.back.dto;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class CalendarDTO {
 
     // private BigInteger id; // 스케쥴의 고유 아이디는 DB에서 부여한다. 그러니 사용자로부터 값을 받을 필요가 없다.
     // private Timestamp createAt; // 스케쥴 생성일을 DB에서 부여한다. 그러니 사용자로부터 값을 받을 필요가 없다.
 
+    private BigInteger id;
     private String title;
-    private LocalDateTime start;
-    private LocalDateTime end;
-
-    private BigInteger projectId; //
-    private String description; //
-    private BigInteger createBy; //
-
-    // private Map<String, String> extendedProps = {projectId, description, createBy};
-
+    private String description;
+    private ZonedDateTime start;
+    private ZonedDateTime end;
+    private ZonedDateTime createdAt;
+    private BigInteger createdBy; //
+    private boolean allDay;
+    private BigInteger projectId;
 
     public CalendarDTO() {
     }
 
-    public CalendarDTO(String title, LocalDateTime start, LocalDateTime end, BigInteger projectId, String description, BigInteger createBy) {
+    public CalendarDTO(BigInteger id, String title, String description, ZonedDateTime start, ZonedDateTime end, ZonedDateTime createdAt, BigInteger createdBy, boolean allDay, BigInteger projectId) {
+        this.id = id;
         this.title = title;
+        this.description = description;
         this.start = start;
         this.end = end;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.allDay = allDay;
         this.projectId = projectId;
-        this.description = description;
-        this.createBy = createBy;
+    }
+
+    public BigInteger getId() {
+        return id;
+    }
+
+    public void setId(BigInteger id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -43,20 +56,52 @@ public class CalendarDTO {
         this.title = title;
     }
 
-    public LocalDateTime getStart() {
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public ZonedDateTime getStart() {
         return start;
     }
 
-    public void setStart(LocalDateTime start) {
+    public void setStart(ZonedDateTime start) {
         this.start = start;
     }
 
-    public LocalDateTime getEnd() {
+    public ZonedDateTime getEnd() {
         return end;
     }
 
-    public void setEnd(LocalDateTime end) {
+    public void setEnd(ZonedDateTime end) {
         this.end = end;
+    }
+
+    public ZonedDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(ZonedDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public BigInteger getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(BigInteger createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public boolean isAllDay() {
+        return allDay;
+    }
+
+    public void setAllDay(boolean allDay) {
+        this.allDay = allDay;
     }
 
     public BigInteger getProjectId() {
@@ -67,31 +112,18 @@ public class CalendarDTO {
         this.projectId = projectId;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public BigInteger getCreateBy() {
-        return createBy;
-    }
-
-    public void setCreateBy(BigInteger createBy) {
-        this.createBy = createBy;
-    }
-
     @Override
     public String toString() {
         return "CalendarDTO{" +
-                "title='" + title + '\'' +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
                 ", start=" + start +
                 ", end=" + end +
+                ", createdAt=" + createdAt +
+                ", createdBy=" + createdBy +
+                ", allDay=" + allDay +
                 ", projectId=" + projectId +
-                ", description='" + description + '\'' +
-                ", createBy=" + createBy +
                 '}';
     }
 }

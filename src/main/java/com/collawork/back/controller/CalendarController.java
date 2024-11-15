@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,19 +35,32 @@ public class CalendarController {
         System.out.println("test::::::::::::::::: "+data);
 
         CalendarDTO scheduleInfo = new CalendarDTO();
+
         scheduleInfo.setTitle(data.get("title").toString());
         scheduleInfo.setDescription(data.get("description").toString());
-        
-        scheduleInfo.setCreateBy(new BigInteger((String) data.get("createBy")));
-//        // data에서 createBy 값을 가져옴
-//        String createByString = (String) data.get("createBy");
-//        // String을 BigInteger로 변환
-//        BigInteger createBy = new BigInteger(createByString);
-//        // scheduleInfo에 createBy 설정
-//        scheduleInfo.setCreateBy(createBy);
-        scheduleInfo.setProjectId(new BigInteger((String) data.get("projectId")));
-        scheduleInfo.setStart(LocalDateTime.parse(data.get("start").toString()));
-        scheduleInfo.setEnd(LocalDateTime.parse(data.get("end").toString()));
+        System.out.println("0");
+        scheduleInfo.setStart(ZonedDateTime.parse(data.get("start").toString()));
+        if(data.get("end").toString() == null || data.get("end").toString().isEmpty()){
+            scheduleInfo.setEnd(ZonedDateTime.parse(data.get("start").toString()));
+        }else {
+            scheduleInfo.setEnd(ZonedDateTime.parse(data.get("end").toString()));
+        }
+        System.out.println("1");
+        scheduleInfo.setCreatedAt(ZonedDateTime.now());
+        System.out.println("2");
+        scheduleInfo.setCreatedBy(new BigInteger(Integer.toString((Integer)data.get("createdBy"))));
+        System.out.println("3");
+        scheduleInfo.setAllDay(data.get("allDay").toString().equals("true"));
+        System.out.println("4");
+        if(data.get("projectId") == null || data.get("projectId").toString().isEmpty()){
+            scheduleInfo.setProjectId(null);
+        }else {
+            scheduleInfo.setProjectId(new BigInteger(Integer.toString((Integer)data.get("projectId"))));
+        }
+        System.out.println("scheduleInfo.getProjectId() = " + scheduleInfo.getProjectId());
+
+        System.out.println("scheduleInfo.isAllDay() = " + scheduleInfo.isAllDay());
+
 
 
 
