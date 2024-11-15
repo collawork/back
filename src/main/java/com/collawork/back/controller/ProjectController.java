@@ -1,7 +1,8 @@
 package com.collawork.back.controller;
 
-import com.collawork.back.model.Project;
+import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.model.project.Voting;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectService;
@@ -26,6 +27,7 @@ public class ProjectController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
 
     @GetMapping("/{projectId}")
     public ResponseEntity<Project> getProjectInfo(@PathVariable Long projectId, HttpServletRequest request) {
@@ -134,6 +136,7 @@ public class ProjectController {
         return ResponseEntity.ok(users); // 프로젝트 정보 리스트.
     }
 
+    // 프로젝트 전체 조회 메소드
     @PostMapping("projectselect")
     public ResponseEntity<Object> getProjectSelect(@RequestParam("projectName") String projectName,
                                                    HttpServletRequest request) {
@@ -161,6 +164,42 @@ public class ProjectController {
             return ResponseEntity.status(403).body("조회된 정보가 없습니다.");
         }
         return ResponseEntity.ok(projectList);
+    }
+
+    // 투표 생성 메소드
+    @PostMapping("newvoting")
+    public ResponseEntity<Object> votingInsert(
+            @RequestParam("votingName") String votingName,
+            @RequestParam("projectId") String projectId,
+            @RequestParam("created_user") String createdUser,
+            HttpServletRequest request){
+
+        System.out.println("projectInformation 의 projectName : " + votingName);
+        System.out.println("projectInformation 의 projectId : " + projectId);
+        System.out.println("projectInformation 의 createdUser : " + createdUser);
+
+        String token = request.getHeader("Authorization");
+
+        System.out.println("token : " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        boolean result = projectService.votingInsert(votingName,projectId,createdUser);
+        if (result) {
+              return ResponseEntity.ok("투표가 생성되었습니다 !");
+        }else{
+            return ResponseEntity.status(405).body("투표 생성에 실패하였습니다 !");
+        }
+
+
+
     }
 
 

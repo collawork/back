@@ -1,6 +1,6 @@
 package com.collawork.back.repository;
 
-import com.collawork.back.model.Project;
+import com.collawork.back.model.project.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
