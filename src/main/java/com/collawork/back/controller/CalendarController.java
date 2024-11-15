@@ -36,6 +36,7 @@ public class CalendarController {
         CalendarDTO scheduleInfo = new CalendarDTO();
         scheduleInfo.setTitle(data.get("title").toString());
         scheduleInfo.setDescription(data.get("description").toString());
+        
         scheduleInfo.setCreateBy(new BigInteger((String) data.get("createBy")));
 //        // data에서 createBy 값을 가져옴
 //        String createByString = (String) data.get("createBy");

@@ -1,4 +1,4 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.search;
 
 import com.collawork.back.model.User;
 import com.collawork.back.model.Project;
