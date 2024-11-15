@@ -1,11 +1,10 @@
 package com.collawork.back.controller.search;
 
-import com.collawork.back.model.User;
+import com.collawork.back.model.auth.User;
 import com.collawork.back.model.Project;
-import com.collawork.back.model.ChatRoom;
-import com.collawork.back.repository.UserRepository;
-import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.repository.ChatRoomRepository;
+import com.collawork.back.repository.auth.UserRepository;
+import com.collawork.back.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -35,21 +34,23 @@ public class SearchController {
         List<Project> projects = projectRepository.findByProjectNameContaining(query);
 
         // 채팅방 검색
-        List<ChatRoom> chatRooms = chatRoomRepository.findByRoomNameContaining(query);
+//        List<ChatRoom> chatRooms = chatRoomRepository.findByRoomNameContaining(query);
 
-        SearchResult result = new SearchResult(users, projects, chatRooms);
+        // chatRooms
+        SearchResult result = new SearchResult(users, projects);
         return ResponseEntity.ok(result);
     }
 
     static class SearchResult {
         private List<User> users;
         private List<Project> projects;
-        private List<ChatRoom> chatRooms;
+//        private List<ChatRoom> chatRooms;
 
-        public SearchResult(List<User> users, List<Project> projects, List<ChatRoom> chatRooms) {
+//        List<ChatRoom> chatRooms
+        public SearchResult(List<User> users, List<Project> projects) {
             this.users = users;
             this.projects = projects;
-            this.chatRooms = chatRooms;
+//            this.chatRooms = chatRooms;
         }
 
         public List<User> getUsers() {
@@ -60,8 +61,8 @@ public class SearchController {
             return projects;
         }
 
-        public List<ChatRoom> getChatRooms() {
-            return chatRooms;
-        }
+//        public List<ChatRoom> getChatRooms() {
+//            return chatRooms;
+//        }
     }
 }

@@ -1,13 +1,13 @@
 package com.collawork.back.repository;
 
-import com.collawork.back.model.ChatRoom;
+import com.collawork.back.model.ChatRooms;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+public interface ChatRoomRepository extends JpaRepository<ChatRooms,Long> {
 
-@Repository
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-    List<ChatRoom> findByRoomNameContaining(String roomName);
-    List<ChatRoom> findByCreatedBy(Long createdBy);
+    @Query("SELECT c.roomName FROM ChatRooms c WHERE c.id = :id")
+    String findChatRoomNameById(@Param("id") Long id);
+
 }

@@ -9,20 +9,20 @@ public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // 프로젝트 고유 아이디
 
     @Column(name = "project_name", nullable = false)
-    private String projectName;
+    private String projectName; // 프로젝트 이름
 
     @Column(name = "created_by")
-    private Long createdBy;
+    private Long createdBy; // 생성자 아이디
 
-    // 프로젝트 설명
-    @Column(name = "project_code", unique = true)
-    private String projectCode;
+
+    @Column(name = "project_code")
+    private String projectCode; // 프로젝트 설명
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 생성일
 
 
     public Project() {
