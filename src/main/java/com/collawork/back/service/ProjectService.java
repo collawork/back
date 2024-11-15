@@ -1,9 +1,9 @@
 package com.collawork.back.service;
 
 import com.collawork.back.model.Project;
-import com.collawork.back.model.User;
+import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.ProjectRepository;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.repository.auth.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

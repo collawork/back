@@ -1,7 +1,7 @@
 package com.collawork.back.controller;
 
 import com.collawork.back.model.ChatRooms;
-import com.collawork.back.model.User;
+import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;

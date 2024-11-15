@@ -1,6 +1,7 @@
 package com.collawork.back.model;
 
 
+import com.collawork.back.model.auth.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

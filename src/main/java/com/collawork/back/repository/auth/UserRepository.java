@@ -1,6 +1,6 @@
-package com.collawork.back.repository;
+package com.collawork.back.repository.auth;
 
-import com.collawork.back.model.User;
+import com.collawork.back.model.auth.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

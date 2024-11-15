@@ -1,14 +1,12 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.auth;
 
-import com.collawork.back.dto.LoginRequest;
-import com.collawork.back.dto.SignupRequest;
-import com.collawork.back.model.User;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.dto.auth.LoginRequest;
+import com.collawork.back.dto.auth.SignupRequest;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
-import com.collawork.back.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.collawork.back.service.auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +18,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:3000")
-public class AuthController {
+public class UserController {
 
     @Autowired
     private AuthService authService;

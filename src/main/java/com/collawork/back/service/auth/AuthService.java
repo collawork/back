@@ -1,9 +1,9 @@
-package com.collawork.back.service;
+package com.collawork.back.service.auth;
 
-import com.collawork.back.dto.LoginRequest;
-import com.collawork.back.dto.SignupRequest;
-import com.collawork.back.model.User;
-import com.collawork.back.repository.UserRepository;
+import com.collawork.back.dto.auth.LoginRequest;
+import com.collawork.back.dto.auth.SignupRequest;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -16,7 +16,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

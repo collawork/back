@@ -1,6 +1,5 @@
-package com.collawork.back.model;
+package com.collawork.back.model.auth;
 
-import com.nimbusds.oauth2.sdk.TokenIntrospectionSuccessResponse;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

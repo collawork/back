@@ -1,4 +1,4 @@
-package com.collawork.back.dto;
+package com.collawork.back.dto.friends;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
