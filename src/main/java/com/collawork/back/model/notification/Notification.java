@@ -41,10 +41,10 @@ public class Notification {
     public enum Type {
         FRIEND_REQUEST,
         MESSAGE,
-        ALERT
+        ALERT,
+        PROJECT_INVITATION
     }
 
-    // Getter와 Setter 추가
     public Long getId() {
         return id;
     }
@@ -77,11 +77,11 @@ public class Notification {
         this.message = message;
     }
 
-    public boolean isRead() {
+    public boolean getIsRead() {
         return isRead;
     }
 
-    public void setRead(boolean isRead) {
+    public void setIsRead(boolean isRead) {
         this.isRead = isRead;
     }
 
@@ -109,11 +109,11 @@ public class Notification {
         this.responderId = responderId;
     }
 
-    public boolean isActionCompleted() {
+    public boolean getIsActionCompleted() {
         return isActionCompleted;
     }
 
-    public void setActionCompleted(boolean actionCompleted) {
+    public void setIsActionCompleted(boolean actionCompleted) {
         isActionCompleted = actionCompleted;
     }
 }

@@ -6,6 +6,8 @@ import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.auth.AuthService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -80,7 +82,6 @@ public class UserController {
             return ResponseEntity.status(403).body("유효하지 않은 리프레시 토큰입니다.");
         }
     }
-
 
 
 }
