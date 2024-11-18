@@ -21,6 +21,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final ChatMessageService chatMessageService;
 
+
     @Autowired
     public ChatWebSocketHandler(ChatMessageService chatMessageService) {
         this.chatMessageService = chatMessageService;
