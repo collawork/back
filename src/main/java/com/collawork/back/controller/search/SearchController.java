@@ -4,7 +4,7 @@ import com.collawork.back.model.auth.User;
 import com.collawork.back.model.project.Project;
 import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.repository.auth.UserRepository;
-import com.collawork.back.repository.ProjectRepository;
+import com.collawork.back.repository.project.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;

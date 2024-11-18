@@ -1,4 +1,4 @@
-package com.collawork.back.repository;
+package com.collawork.back.repository.project;
 
 import com.collawork.back.model.project.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
