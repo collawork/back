@@ -2,13 +2,18 @@ package com.collawork.back.service;
 
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.model.project.ProjectParticipant;
 import com.collawork.back.model.project.Voting;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.repository.auth.UserRepository;
+import com.collawork.back.repository.project.ProjectParticipantRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,44 +26,51 @@ public class ProjectService {
     private ProjectRepository projectRepository;
 
     @Autowired
+    private ProjectParticipantRepository projectParticipantRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
-    // 프로젝트 추가
-    public Boolean insertProject(String title, String context, Long userId) {
-
-
+    @Transactional
+    public Long insertProject(String title, String context, Long userId) {
         Project project = new Project();
-
-        project.setProjectName(title); // 프로젝트 이름
+        project.setProjectName(title);
         project.setCreatedBy(userId);
-        System.out.println(userId);
-        project.setProjectCode(context); // 프로젝트 설명
-        System.out.println("ProjectService: " +context);
-        LocalDate localDate = LocalDate.now();
-        project.setCreatedAt(localDate.atStartOfDay());// 프로젝트 생성일
+        project.setProjectCode(context);
+        project.setCreatedAt(LocalDateTime.now());
 
-        if(projectRepository.save(project) != null){
-            return true;
-        }else{
-            return false;
-        }
+        Project savedProject = projectRepository.save(project);
 
+        // 프로젝트 생성자를 ADMIN 역할로 project_participants에 추가
+        ProjectParticipant creator = new ProjectParticipant();
+        creator.setProject(savedProject);
+        creator.setUser(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
+        creator.setRole(ProjectParticipant.Role.ADMIN);
+        projectParticipantRepository.save(creator);
+
+        return savedProject.getId();
     }
+
 
     // id 로 프로젝트 이름 조회
+//    public List<String> selectProjectTitleByUserId(Long userId) {
+//
+//        List<Project> titleList = projectRepository.findByCreatedBy(userId);
+//        System.out.println("ProjectService 의 titleList : " +titleList);
+//        List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
+//        System.out.println("ProjectService 의 listTitle" + listTitle);
+//        if(titleList .isEmpty()){
+//            return Collections.emptyList(); // 빈 리스트 반환
+//        }else{
+//            return listTitle;
+//        }
+//
+//    }
+
     public List<String> selectProjectTitleByUserId(Long userId) {
-
-        List<Project> titleList = projectRepository.findByCreatedBy(userId);
-        System.out.println("ProjectService 의 titleList : " +titleList);
-        List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
-        System.out.println("ProjectService 의 listTitle" + listTitle);
-        if(titleList .isEmpty()){
-            return null;
-        }else{
-            return listTitle;
-        }
-
+        return projectRepository.findProjectTitlesByUserId(userId);
     }
+
 
 //    // 프로젝트 정보 조회
 //    public List<String> selectProjectByUserId(Long userId) {
