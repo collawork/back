@@ -3,21 +3,21 @@ package com.collawork.back.service;
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.model.project.ProjectParticipant;
+import com.collawork.back.model.project.ProjectParticipantId;
 import com.collawork.back.model.project.Voting;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
+import com.collawork.back.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static java.util.stream.Collectors.toList;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class ProjectService {
@@ -31,25 +31,75 @@ public class ProjectService {
     @Autowired
     private UserRepository userRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
-    public Long insertProject(String title, String context, Long userId) {
+    public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {
         Project project = new Project();
         project.setProjectName(title);
         project.setCreatedBy(userId);
         project.setProjectCode(context);
         project.setCreatedAt(LocalDateTime.now());
 
+        // 명시적으로 영속성 컨텍스트에 추가
+        entityManager.persist(project);
+
+        // 프로젝트 저장
         Project savedProject = projectRepository.save(project);
 
-        // 프로젝트 생성자를 ADMIN 역할로 project_participants에 추가
+        // 사용자 조회
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 명시적으로 영속성 컨텍스트에 추가
+        entityManager.persist(user);
+
+        // ID를 명시적으로 설정
+        ProjectParticipantId participantId = new ProjectParticipantId(savedProject.getId(), user.getId());
         ProjectParticipant creator = new ProjectParticipant();
+        creator.setId(participantId);
         creator.setProject(savedProject);
-        creator.setUser(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
+        creator.setUser(user);
         creator.setRole(ProjectParticipant.Role.ADMIN);
+
+        // 프로젝트 생성자를 저장
         projectParticipantRepository.save(creator);
+
+        // 초대된 사용자들에게 알림 생성
+        if (participantIds != null) {
+            for (Long participantIdValue : participantIds) {
+                // 생성자는 초대 목록에서 제외
+                if (participantIdValue.equals(userId)) {
+                    continue;
+                }
+
+                User participant = userRepository.findById(participantIdValue)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+
+                // participant 객체 유효성 검증
+                if (participant == null || participant.getId() == null) {
+                    throw new IllegalArgumentException("유효하지 않은 사용자입니다.");
+                }
+
+                // 알림 메시지 생성
+                String message = "프로젝트 '" + title + "'에 초대되었습니다.";
+                notificationService.createNotification(
+                        participant.getId(),        // 사용자 ID
+                        "PROJECT_INVITATION",       // 알림 타입
+                        message,                    // 알림 메시지
+                        null        // projectId 전달
+                );
+            }
+        }
 
         return savedProject.getId();
     }
+
+
+
 
 
     // id 로 프로젝트 이름 조회

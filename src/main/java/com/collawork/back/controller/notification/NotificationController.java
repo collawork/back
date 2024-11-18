@@ -29,6 +29,9 @@ public class NotificationController {
     @Autowired
     private ProjectParticipantRepository projectParticipantRepository;
 
+    @Autowired
+    private ProjectRepository projectRepository;
+
     @GetMapping("/unread")
     public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam("userId") Long userId) {
         System.out.println("알림 조회 요청 userId: " + userId);
@@ -66,15 +69,37 @@ public class NotificationController {
             @PathVariable Long id,
             @RequestParam("action") String action) {
 
+        // id 값이 null인 경우 예외 처리
+        if (id == null) {
+            return ResponseEntity.badRequest().body("알림 ID가 누락되었습니다.");
+        }
+
+        System.out.println("id : " + id);
+
         // 알림 조회
         Notification notification = notificationRepository.findById(id).orElse(null);
         if (notification == null) {
             return ResponseEntity.badRequest().body("유효하지 않은 알림입니다.");
         }
 
+        System.out.println("notification found: " + notification);
+        System.out.println("Request ID in Notification: " + notification.getRequestId());
+
+        // requestId가 null인 경우 처리
+        if (notification.getRequestId() == null) {
+            return ResponseEntity.badRequest().body("프로젝트 초대에 대한 유효한 요청 ID가 없습니다.");
+        }
+
         // 알림이 프로젝트 초대인지 확인
         if (!"PROJECT_INVITATION".equals(notification.getType().name())) {
             return ResponseEntity.badRequest().body("유효하지 않은 초대 알림입니다.");
+        }
+
+        // 프로젝트 조회
+        Project project = projectRepository.findById(notification.getRequestId())
+                .orElse(null);
+        if (project == null) {
+            return ResponseEntity.badRequest().body("유효하지 않은 프로젝트입니다.");
         }
 
         if ("accept".equalsIgnoreCase(action)) {
@@ -83,12 +108,12 @@ public class NotificationController {
 
             // 복합 키 설정
             ProjectParticipantId participantId = new ProjectParticipantId(
-                    notification.getRequestId(), // projectId
+                    project.getId(), // projectId
                     notification.getUser().getId() // userId
             );
             participant.setId(participantId);
 
-            participant.setProject(new Project(notification.getRequestId())); // 프로젝트 객체 설정
+            participant.setProject(project); // 영속화된 프로젝트 객체 설정
             participant.setUser(notification.getUser()); // 사용자 설정
             participant.setRole(ProjectParticipant.Role.MEMBER); // 역할 설정 (기본값: MEMBER)
             projectParticipantRepository.save(participant);
@@ -107,9 +132,10 @@ public class NotificationController {
 
             return ResponseEntity.ok("프로젝트 초대가 거절되었습니다.");
         } else {
-            return ResponseEntity.badRequest().body("유효하지 않은 행동입니다. 'accept' 또는 'decline'을 사용하십시오.");
+            return ResponseEntity.badRequest().body("유효하지 않은 행동입니다. '승인' 또는 '거절'을 사용하십시오.");
         }
     }
+
 
 
     /**
