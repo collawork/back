@@ -287,16 +287,9 @@ public class ProjectController {
     // 투표 생성 메소드
     @PostMapping("newvoting")
     public  ResponseEntity<Object> votingInsert(
-            // @RequestBody Map<String, String> map,
-//            @RequestParam("votingName") String votingName,
-//            @RequestParam("projectId") String projectId,
-//            @RequestParam("createdUser") String createdUser,
-//            @RequestParam("contents") List<String> contents,
             @RequestBody Map<String, Object> payload,
             HttpServletRequest request){
 
-
-       // System.out.println("projectInformation 의 projectName : " + map);
         String votingName = (String) payload.get("votingName");
         String projectId = String.valueOf(payload.get("projectId"));
         String createdUser = String.valueOf(payload.get("createdUser"));
@@ -341,34 +334,65 @@ public class ProjectController {
 
     }
 
-//    @PostMapping("votecontents") // 항목 내용 저장
-//    public ResponseEntity<Object> voteContentsSave(@RequestParam("contents") List<String> contents,
-//                                                   @RequestParam("id") Long id,
-//                                                   HttpServletRequest request){
-//
-//        System.out.println("votecontents 의 contents 값 :: " + contents);
-//        System.out.println("votecontents 의 투표 고유 id 값 :: " + id);
-//
-//        String token = request.getHeader("Authorization");
-//
-//        System.out.println("token : " + token);
-//
-//        if (token == null || !token.startsWith("Bearer ")) {
-//            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
-//        }
-//        token = token.replace("Bearer ", "");
-//        String email = jwtTokenProvider.getEmailFromToken(token);
-//        if (email == null) {
-//            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
-//        }
-//
-//        boolean result = projectService.insertVoteContents(contents, id);
-//        if(result){
-//            return ResponseEntity.ok("항목 저장에 성공.");
-//        }else{
-//           return ResponseEntity.status(403).body("투표 항목 저장중에 실패 ");
-//        }
-//    }
+    @PostMapping("findVoting") // 투표 기본 정보 불러오기
+    public ResponseEntity<Object> findVoting(
+            @RequestParam("projectId") Long projectId,
+            HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        System.out.println("findVoting 의 받아온 projectId :: " + projectId);
+        List<Voting> vote =  projectService.findByVoting(projectId);
+        System.out.println("vote :: " + vote);
+        if(vote.isEmpty()){
+            return ResponseEntity.status(404).body(vote);
+        }else{
+
+            return ResponseEntity.ok(vote);
+        }
+
+    }
+
+    @PostMapping("findContents") // 투표 contents 불러오기
+    public ResponseEntity<Object> findContents(
+            @RequestParam("votingId") Long votingId,
+            HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        System.out.println("받아오는 vote 고유 id : :" + votingId);
+
+        List<VotingContents> contents = projectService.findByVotingId(votingId);
+        System.out.println("contents :: " + contents);
+        if(contents.isEmpty()){
+            return ResponseEntity.status(404).body(contents);
+        }else{
+            return ResponseEntity.ok(contents);
+        }
+    }
+
+
 
 
 }
