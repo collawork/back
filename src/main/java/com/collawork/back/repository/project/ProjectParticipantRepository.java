@@ -51,5 +51,12 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             "WHERE pp.user.id = :userId AND pp.status = 'ACCEPTED'")
     List<String> findAcceptedProjectsByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT u.username, u.email " +
+            "FROM ProjectParticipant pp " +
+            "JOIN pp.user u " +
+            "WHERE pp.project.id = :projectId AND pp.status = 'PENDING'")
+    List<Object[]> findPendingParticipantsByProjectId(@Param("projectId") Long projectId);
+
+
 }
 

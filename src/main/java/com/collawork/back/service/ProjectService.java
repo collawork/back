@@ -62,8 +62,6 @@ public class ProjectService {
 
         // 프로젝트 저장
         Project savedProject = projectRepository.save(project);
-        entityManager.flush();
-        entityManager.clear();
 
         // 프로젝트 생성자(ADMIN)의 참가 정보 추가
         User creator = userRepository.findById(userId)
@@ -77,11 +75,11 @@ public class ProjectService {
         creatorParticipant.setRole(ProjectParticipant.Role.ADMIN); // ADMIN 역할 부여
         creatorParticipant.setStatus(ProjectParticipant.Status.ACCEPTED); // 상태를 ACCEPTED로 설정
 
+        // 디버깅 로그 추가
         System.out.println("플젝 생성한사람 상태 : " + creatorParticipant.getStatus());
 
-
         // 생성자 정보 저장
-        projectParticipantRepository.save(creatorParticipant);
+        projectParticipantRepository.saveAndFlush(creatorParticipant);
 
         System.out.println("저장된 Creator Participant: " + creatorParticipant);
         System.out.println("Creator participant status: " + creatorParticipant.getStatus());
@@ -97,14 +95,13 @@ public class ProjectService {
 
                 String message = "프로젝트 '" + title + "'에 초대되었습니다.";
                 notificationService.createNotification(
-                        participant.getId(),        // 사용자 ID
-                        "PROJECT_INVITATION",       // 알림 타입
-                        message,                    // 알림 메시지
-                        null,        // projectId 전달
-                        savedProject.getId()       // projectId 전달
+                        participant.getId(),
+                        "PROJECT_INVITATION",
+                        message,
+                        null,
+                        savedProject.getId()
                 );
 
-                // 참가 정보 추가 (PENDING 상태)
                 ProjectParticipant participantEntity = new ProjectParticipant();
                 ProjectParticipantId participantEntityId = new ProjectParticipantId(savedProject.getId(), participant.getId());
                 participantEntity.setId(participantEntityId);
@@ -113,13 +110,13 @@ public class ProjectService {
                 participantEntity.setRole(ProjectParticipant.Role.MEMBER); // 기본 역할은 MEMBER
                 participantEntity.setStatus(ProjectParticipant.Status.PENDING); // 초대 상태는 PENDING
 
-                projectParticipantRepository.save(participantEntity);
+                System.out.println("참가자 상태 저장 전: " + participantEntity.getStatus());
+                projectParticipantRepository.saveAndFlush(participantEntity);
             }
         }
 
         return savedProject.getId();
     }
-
 
     // 프로젝트 참여자 기반으로 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
@@ -219,6 +216,29 @@ public class ProjectService {
         return projectParticipantRepository.findAcceptedProjectsByUserId(userId);
     }
 
+    public List<Map<String, Object>> selectAcceptedProjectsByUserId(Long userId) {
+        return projectRepository.findAcceptedProjectsByUserId(userId).stream()
+                .map(project -> {
+                    Map<String, Object> projectMap = new HashMap<>();
+                    projectMap.put("id", project.getId());
+                    projectMap.put("name", project.getProjectName());
+                    return projectMap;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Map<String, Object>> getPendingParticipants(Long projectId) {
+        List<Object[]> participants = projectParticipantRepository.findPendingParticipantsByProjectId(projectId);
+
+        return participants.stream()
+                .map(row -> {
+                    Map<String, Object> participant = new HashMap<>();
+                    participant.put("username", row[0]); // 사용자 이름
+                    participant.put("email", row[1]);   // 사용자 이메일
+                    return participant;
+                })
+                .collect(Collectors.toList());
+    }
 
     /**
      * id 로 유저 정보 조회(관리자)

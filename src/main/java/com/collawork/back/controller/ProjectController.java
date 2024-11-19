@@ -104,9 +104,6 @@ public class ProjectController {
         }
     }
 
-
-
-
     @PostMapping("/selectAll")
     public ResponseEntity<Object> getProjectTitle(@RequestBody Map<String, Object> requestBody,
                                                   HttpServletRequest request) {
@@ -132,15 +129,18 @@ public class ProjectController {
             return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
         }
 
-        // `status='ACCEPTED'` 프로젝트만 조회
-        List<String> projectList = projectService.selectAcceptedProjectTitlesByUserId(userId);
+        // 프로젝트 ID와 이름을 모두 조회
+        List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
+
         System.out.println("조회된 프로젝트 목록: " + projectList);
+
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
 
         return ResponseEntity.ok(projectList);
     }
+
 
 
 
@@ -288,6 +288,35 @@ public class ProjectController {
 
         return ResponseEntity.ok(formattedParticipants);
     }
+
+    /**
+     * 프로젝트에 초대된 사용자 조회(승인, 거절 전)
+     * */
+    @GetMapping("/{projectId}/participants/pending")
+    public ResponseEntity<List<Map<String, Object>>> getPendingParticipants(
+            @PathVariable Long projectId,
+            HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body(Collections.emptyList());
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body(Collections.emptyList());
+        }
+
+        // PENDING 상태인 사람만 조회
+        List<Map<String, Object>> pendingParticipants = projectService.getPendingParticipants(projectId);
+
+        if (pendingParticipants.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        return ResponseEntity.ok(pendingParticipants);
+    }
+
 
 
     // 투표 생성 메소드
