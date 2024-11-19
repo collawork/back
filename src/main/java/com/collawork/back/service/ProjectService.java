@@ -113,19 +113,35 @@ public class ProjectService {
 
 
     // id 로 프로젝트 이름 조회
-    public List<String> selectProjectTitleByUserId(Long userId) {
+//    public List<String> selectProjectTitleByUserId(Long userId) {
+//
+//        List<Project> titleList = projectRepository.findByCreatedBy(userId);
+//        System.out.println("ProjectService 의 titleList : " +titleList);
+//        List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
+//        System.out.println("ProjectService 의 listTitle" + listTitle);
+//        if(titleList .isEmpty()){
+//            return null;
+//        }else{
+//            return listTitle;
+//        }
+//
+//    }
 
-        List<Project> titleList = projectRepository.findByCreatedBy(userId);
-        System.out.println("ProjectService 의 titleList : " + titleList);
-        List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
-        System.out.println("ProjectService 의 listTitle" + listTitle);
-        if (titleList.isEmpty()) {
-            return null;
-        } else {
-            return listTitle;
+    // 프로젝트 참여자 기반으로 이름 조회
+    public List<String> selectProjectTitleByUserId(Long userId) {
+      
+        // Repository를 통해 프로젝트 목록 가져d옴
+        List<String> listTitle = projectParticipantRepository.findProjectTitlesByUserId(userId);
+      
+        System.out.println("ProjectService 의 listTitle: " + listTitle);
+
+        if (listTitle == null || listTitle.isEmpty()) {
+            return null; // 데이터 없으면 null
         }
 
+        return listTitle;
     }
+
 
 
     // id 로 유저 정보 조회(관리자)

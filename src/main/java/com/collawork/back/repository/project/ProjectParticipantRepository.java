@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ProjectParticipantRepository extends JpaRepository<ProjectParticipant, ProjectParticipantId> {
 
@@ -16,6 +18,13 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
     @Transactional
     @Query(value = "INSERT INTO project_participants (project_id, user_id, role) VALUES (:projectId, :userId, :role)", nativeQuery = true)
     void addParticipant(@Param("projectId") Long projectId, @Param("userId") Long userId, @Param("role") String role);
+
+    @Query("SELECT p.projectName " +
+            "FROM ProjectParticipant pp " +
+            "JOIN pp.project p " +
+            "WHERE pp.user.id = :userId")
+    List<String> findProjectTitlesByUserId(@Param("userId") Long userId);
+
 
 }
 
