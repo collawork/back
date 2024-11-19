@@ -1,19 +1,12 @@
 package com.collawork.back.service;
 
-import com.collawork.back.model.project.Project;
+import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
-import com.collawork.back.model.project.ProjectParticipant;
-import com.collawork.back.model.project.ProjectParticipantId;
-import com.collawork.back.model.project.Voting;
-import com.collawork.back.model.project.VotingContents;
-import com.collawork.back.repository.project.ProjectRepository;
+import com.collawork.back.repository.project.*;
 import com.collawork.back.repository.auth.UserRepository;
-import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.service.auth.SocialAuthService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
-import com.collawork.back.repository.project.VotingContentsRepository;
-import com.collawork.back.repository.project.VotingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -40,6 +33,9 @@ public class ProjectService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VotingRecordRepository votingRecordRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -94,6 +90,7 @@ public class ProjectService {
 
                 User participant = userRepository.findById(participantId)
                         .orElseThrow(() -> new RuntimeException("User not found"));
+                String message = "프로젝트 '" + title + "'에 초대되었습니다.";
 
                 notificationService.createNotification(
                         participant.getId(),        // 사용자 ID
@@ -120,25 +117,10 @@ public class ProjectService {
     }
 
 
-    // id 로 프로젝트 이름 조회
-//    public List<String> selectProjectTitleByUserId(Long userId) {
-//
-//        List<Project> titleList = projectRepository.findByCreatedBy(userId);
-//        System.out.println("ProjectService 의 titleList : " +titleList);
-//        List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
-//        System.out.println("ProjectService 의 listTitle" + listTitle);
-//        if(titleList .isEmpty()){
-//            return null;
-//        }else{
-//            return listTitle;
-//        }
-//
-//    }
-
     // 프로젝트 참여자 기반으로 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
       
-        // Repository를 통해 프로젝트 목록 가져d옴
+        // Repository를 통해 프로젝트 목록 가져옴
         List<String> listTitle = projectParticipantRepository.findProjectTitlesByUserId(userId);
       
         System.out.println("ProjectService 의 listTitle: " + listTitle);
@@ -234,9 +216,9 @@ public class ProjectService {
     }
 
 
-
-
-    // id 로 유저 정보 조회(관리자)
+    /**
+     * id 로 유저 정보 조회(관리자)
+     **/
     public Optional<User> selectUserNameByUserId(Long id) {
 
         Optional<User> userList = userRepository.findById(id);
@@ -303,5 +285,20 @@ public class ProjectService {
         List<VotingContents> contents = votingContentsRepository.findByVotingId(votingId);
         System.out.println("항목 검색 후 결과 :: " + contents);
         return contents;
+    }
+
+    public Boolean insertUserVote(Long votingId, Long contentsId, Long userId) {
+
+        VotingRecord userVote = new VotingRecord();
+        userVote.setVotingId(votingId);
+        userVote.setUserId(userId);
+        userVote.setContentsId(contentsId);
+
+        List<VotingRecord> useVote = Collections.singletonList(votingRecordRepository.save(userVote));
+
+        if(!useVote.isEmpty()){
+            return true;
+        }
+        return false;
     }
 }

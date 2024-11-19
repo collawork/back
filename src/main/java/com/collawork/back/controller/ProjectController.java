@@ -1,10 +1,7 @@
 package com.collawork.back.controller;
 
-import com.collawork.back.model.project.Project;
+import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
-import com.collawork.back.model.project.ProjectParticipant;
-import com.collawork.back.model.project.Voting;
-import com.collawork.back.model.project.VotingContents;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
@@ -389,6 +386,37 @@ public class ProjectController {
             return ResponseEntity.status(404).body(contents);
         }else{
             return ResponseEntity.ok(contents);
+        }
+    }
+
+
+    @PostMapping("uservoteinsert") // 투표 contents 불러오기
+    public ResponseEntity<Object> userVoteInsert(
+            @RequestParam("votingId") Long votingId, // 투표 고유 id
+            @RequestParam("contentsId") Long contentsId, // 투표 한 항목 id
+            @RequestParam("userId") Long userId, // user 고유 id
+            HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        System.out.println("유저 투표 받아오는 정보 ::: "+votingId+contentsId+userId);
+
+        Boolean userVote = projectService.insertUserVote(votingId,contentsId,userId);
+        if(userVote){
+            return ResponseEntity.ok("유저 투표 정보 등록 성공.");
+        }else{
+            return ResponseEntity.status(404).body("유저 투표 정보 등록 실패.");
+
         }
     }
 
