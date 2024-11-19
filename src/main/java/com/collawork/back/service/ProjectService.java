@@ -9,18 +9,21 @@ import com.collawork.back.model.project.VotingContents;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
+import com.collawork.back.service.auth.SocialAuthService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
 import com.collawork.back.repository.project.VotingContentsRepository;
 import com.collawork.back.repository.project.VotingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -49,55 +52,49 @@ public class ProjectService {
     @Autowired
     private NotificationService notificationService;
 
+    private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
+
     @Transactional
     public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {
+        // 프로젝트 엔터티 생성
         Project project = new Project();
         project.setProjectName(title);
         project.setCreatedBy(userId);
         project.setProjectCode(context);
         project.setCreatedAt(LocalDateTime.now());
 
-        // 명시적으로 영속성 컨텍스트에 추가
-        entityManager.persist(project);
-
         // 프로젝트 저장
         Project savedProject = projectRepository.save(project);
+        entityManager.flush();
+        entityManager.clear();
 
-        // 사용자 조회
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        // 프로젝트 생성자(ADMIN)의 참가 정보 추가
+        User creator = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
 
-        // 명시적으로 영속성 컨텍스트에 추가
-        entityManager.persist(user);
+        ProjectParticipant creatorParticipant = new ProjectParticipant();
+        ProjectParticipantId creatorId = new ProjectParticipantId(savedProject.getId(), creator.getId());
+        creatorParticipant.setId(creatorId);
+        creatorParticipant.setProject(savedProject);
+        creatorParticipant.setUser(creator);
+        creatorParticipant.setRole(ProjectParticipant.Role.ADMIN); // ADMIN 역할 부여
+        creatorParticipant.setStatus(ProjectParticipant.Status.ACCEPTED); // 상태를 ACCEPTED로 설정
 
-        // ID를 명시적으로 설정
-        ProjectParticipantId participantId = new ProjectParticipantId(savedProject.getId(), user.getId());
-        ProjectParticipant creator = new ProjectParticipant();
-        creator.setId(participantId);
-        creator.setProject(savedProject);
-        creator.setUser(user);
-        creator.setRole(ProjectParticipant.Role.ADMIN);
+        // 생성자 정보 저장
+        projectParticipantRepository.save(creatorParticipant);
 
-        // 프로젝트 생성자를 저장
-        projectParticipantRepository.save(creator);
+        System.out.println("저장된 Creator Participant: " + creatorParticipant);
 
-        // 초대된 사용자들에게 알림 생성
+
+        // 초대된 사용자들에게 알림 및 참가 정보 추가
         if (participantIds != null) {
-            for (Long participantIdValue : participantIds) {
-                // 생성자는 초대 목록에서 제외
-                if (participantIdValue.equals(userId)) {
-                    continue;
-                }
+            for (Long participantId : participantIds) {
+                // 생성자는 초대 대상에서 제외
+                if (participantId.equals(userId)) continue;
 
-                User participant = userRepository.findById(participantIdValue)
+                User participant = userRepository.findById(participantId)
                         .orElseThrow(() -> new RuntimeException("User not found"));
 
-                // participant 객체 유효성 검증
-                if (participant == null || participant.getId() == null) {
-                    throw new IllegalArgumentException("유효하지 않은 사용자입니다.");
-                }
-
-                // 알림 메시지 생성
-                String message = "프로젝트 '" + title + "'에 초대되었습니다.";
                 notificationService.createNotification(
                         participant.getId(),        // 사용자 ID
                         "PROJECT_INVITATION",       // 알림 타입
@@ -105,6 +102,17 @@ public class ProjectService {
                         null,        // projectId 전달
                         savedProject.getId()       // projectId 전달
                 );
+
+                // 참가 정보 추가 (PENDING 상태)
+                ProjectParticipant participantEntity = new ProjectParticipant();
+                ProjectParticipantId participantEntityId = new ProjectParticipantId(savedProject.getId(), participant.getId());
+                participantEntity.setId(participantEntityId);
+                participantEntity.setProject(savedProject);
+                participantEntity.setUser(participant);
+                participantEntity.setRole(ProjectParticipant.Role.MEMBER); // 기본 역할은 MEMBER
+                participantEntity.setStatus(ProjectParticipant.Status.PENDING); // 초대 상태는 PENDING
+
+                projectParticipantRepository.save(participantEntity);
             }
         }
 
@@ -141,6 +149,90 @@ public class ProjectService {
 
         return listTitle;
     }
+
+    /**
+     * 프로젝트 참여자 목록 반환
+     * */
+    public List<Map<String, Object>> getParticipantsByUserId(Long userId) {
+        List<Object[]> participantList = projectParticipantRepository.findParticipantsByUserId(userId);
+
+        return participantList.stream()
+                .map(row -> {
+                    Map<String, Object> participant = new HashMap<>();
+                    participant.put("name", row[0]);
+                    participant.put("email", row[1]);
+                    return participant;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 프로젝트 초대 로직
+     * */
+    public void inviteParticipant(Long projectId, Long userId, ProjectParticipant.Role role) {
+        ProjectParticipantId participantId = new ProjectParticipantId(projectId, userId);
+
+        ProjectParticipant participant = new ProjectParticipant();
+        participant.setId(participantId);
+        participant.setRole(role);
+        participant.setStatus(ProjectParticipant.Status.PENDING);
+
+        projectParticipantRepository.save(participant);
+    }
+
+
+    /**
+     * 프로젝트 초대 승인 로직
+     * */
+    @Transactional
+    public void acceptInvitation(Long projectId, Long userId) {
+        ProjectParticipant participant = getParticipant(projectId, userId);
+        log.debug("참가자 상태 변경 전: {}", participant.getStatus());
+        if (!participant.getStatus().equals(ProjectParticipant.Status.PENDING)) {
+            throw new IllegalStateException("이미 처리된 초대입니다.");
+        }
+        participant.setStatus(ProjectParticipant.Status.ACCEPTED);
+        projectParticipantRepository.save(participant);
+        log.debug("참가자 상태 변경 후: {}", participant.getStatus());
+    }
+
+
+    private ProjectParticipant getParticipant(Long projectId, Long userId) {
+        ProjectParticipantId participantId = new ProjectParticipantId(projectId, userId);
+        ProjectParticipant participant = projectParticipantRepository.findById(participantId)
+                .orElseThrow(() -> new IllegalArgumentException("참가자 정보를 찾을 수 없습니다."));
+        log.debug("참가자 정보: {}", participant);
+        return participant;
+    }
+
+    /**
+     * 프로젝트 초대 거절 로직
+     * */
+    public void rejectInvitation(Long projectId, Long userId) {
+        ProjectParticipant participant = getParticipant(projectId, userId);
+        participant.setStatus(ProjectParticipant.Status.REJECTED);
+        projectParticipantRepository.save(participant);
+    }
+
+    /**
+     * 프로젝트에 초대된 모든 사용자 조회
+     * */
+    public List<ProjectParticipant> getAllParticipants(Long projectId) {
+        return projectParticipantRepository.getAllParticipants(projectId);
+    }
+
+    /**
+     * 프로젝트 초대에 승인한 사용자만 조회
+     * */
+    public List<ProjectParticipant> getAcceptedParticipants(Long projectId) {
+        return projectParticipantRepository.getAcceptedParticipants(projectId);
+    }
+
+    public List<String> selectAcceptedProjectTitlesByUserId(Long userId) {
+        // status='ACCEPTED' 조건으로 프로젝트 제목 조회
+        return projectParticipantRepository.findAcceptedProjectsByUserId(userId);
+    }
+
 
 
 

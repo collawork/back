@@ -22,11 +22,29 @@ public class ProjectParticipant {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private Role role = Role.MEMBER; // 기본값 MEMBER
+    private Role role = Role.MEMBER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status = Status.PENDING;
 
     public enum Role {
         MEMBER,
         ADMIN
+    }
+
+    public enum Status {
+        PENDING,
+        ACCEPTED,
+        REJECTED
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     public ProjectParticipant() {}

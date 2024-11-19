@@ -25,6 +25,31 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             "WHERE pp.user.id = :userId")
     List<String> findProjectTitlesByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT u.username, u.email FROM ProjectParticipant pp " +
+            "JOIN pp.user u " +
+            "WHERE pp.project.id IN (" +
+            "    SELECT p.project.id FROM ProjectParticipant p WHERE p.user.id = :userId" +
+            ")")
+    List<Object[]> findParticipantsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId AND pp.status = 'ACCEPTED'")
+    List<ProjectParticipant> findAcceptedParticipantsByProjectId(@Param("projectId") Long projectId);
+
+    @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId")
+    List<ProjectParticipant> findAllParticipantsByProjectId(@Param("projectId") Long projectId);
+
+    // 모든 참가자 조회
+    @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId")
+    List<ProjectParticipant> getAllParticipants(@Param("projectId") Long projectId);
+
+    // 승인된 참가자만 조회
+    @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId AND pp.status = 'ACCEPTED'")
+    List<ProjectParticipant> getAcceptedParticipants(@Param("projectId") Long projectId);
+
+    @Query("SELECT p.projectName FROM ProjectParticipant pp " +
+            "JOIN pp.project p " +
+            "WHERE pp.user.id = :userId AND pp.status = 'ACCEPTED'")
+    List<String> findAcceptedProjectsByUserId(@Param("userId") Long userId);
 
 }
 
