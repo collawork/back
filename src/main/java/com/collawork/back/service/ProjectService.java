@@ -102,7 +102,8 @@ public class ProjectService {
                         participant.getId(),        // 사용자 ID
                         "PROJECT_INVITATION",       // 알림 타입
                         message,                    // 알림 메시지
-                        null        // projectId 전달
+                        null,        // projectId 전달
+                        savedProject.getId()       // projectId 전달
                 );
             }
         }
@@ -111,19 +112,16 @@ public class ProjectService {
     }
 
 
-
-
-
     // id 로 프로젝트 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
 
         List<Project> titleList = projectRepository.findByCreatedBy(userId);
-        System.out.println("ProjectService 의 titleList : " +titleList);
+        System.out.println("ProjectService 의 titleList : " + titleList);
         List<String> listTitle = titleList.stream().map(Project::getProjectName).collect(toList());
         System.out.println("ProjectService 의 listTitle" + listTitle);
-        if(titleList .isEmpty()){
+        if (titleList.isEmpty()) {
             return null;
-        }else{
+        } else {
             return listTitle;
         }
 
@@ -137,13 +135,13 @@ public class ProjectService {
         System.out.println("ProjectService 의 유저 정보 조회 : " + userList);
         return userList;
 
-}
+    }
 
     // ProjectName 으로 프로젝트 정보 조회
     public List<Project> selectByProjectName(String projectName) {
 
         List<Project> titleList = projectRepository.findByProjectName(projectName);
-        System.out.println("ProjectService 의 selectByProjectName : " +titleList);
+        System.out.println("ProjectService 의 selectByProjectName : " + titleList);
         return titleList;
 
     }
@@ -165,18 +163,19 @@ public class ProjectService {
         return result;
 
 
-     }
+    }
 
     public boolean insertVoteContents(List<String> contents, Long id) {
 
-        for(String con : contents){
-            System.out.println("service 의 contents :: " + con);
-        }
-
-        VotingContents votingContents = new VotingContents();
-        votingContents.setVotingId(id);
         for (String content : contents) {
+            System.out.println("Service 의 contents :: " + content);
+
+            // 매번 새로운 객체를 생성
+            VotingContents votingContents = new VotingContents();
+            votingContents.setVotingId(id);
             votingContents.setVotingContents(content);
+
+            // 새로운 엔티티를 저장
             votingContentsRepository.save(votingContents);
         }
         return true;
