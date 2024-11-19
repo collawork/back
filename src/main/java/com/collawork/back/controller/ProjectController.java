@@ -107,9 +107,6 @@ public class ProjectController {
         }
     }
 
-
-
-
     @PostMapping("/selectAll")
     public ResponseEntity<Object> getProjectTitle(@RequestBody Map<String, Object> requestBody,
                                                   HttpServletRequest request) {
@@ -135,15 +132,18 @@ public class ProjectController {
             return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
         }
 
-        // `status='ACCEPTED'` 프로젝트만 조회
-        List<String> projectList = projectService.selectAcceptedProjectTitlesByUserId(userId);
+        // 프로젝트 ID와 이름을 모두 조회
+        List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
+
         System.out.println("조회된 프로젝트 목록: " + projectList);
+
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
 
         return ResponseEntity.ok(projectList);
     }
+
 
 
 
