@@ -208,27 +208,33 @@ public class ProjectController {
     // 투표 생성 메소드
     @PostMapping("newvoting")
     public  ResponseEntity<Object> votingInsert(
-            @RequestParam("votingName") String votingName,
-            @RequestParam("projectId") String projectId,
-            @RequestParam("createdUser") String createdUser,
-            @RequestParam("contents") List<String> contents,
+            // @RequestBody Map<String, String> map,
+//            @RequestParam("votingName") String votingName,
+//            @RequestParam("projectId") String projectId,
+//            @RequestParam("createdUser") String createdUser,
+//            @RequestParam("contents") List<String> contents,
+            @RequestBody Map<String, Object> payload,
             HttpServletRequest request){
 
 
-        System.out.println("projectInformation 의 projectName : " + votingName);
-        System.out.println("projectInformation 의 projectId : " + projectId);
-        System.out.println("projectInformation 의 createdUser : " + createdUser);
-        for(String content : contents){
-            System.out.println("~!~!" + content);
-        }
-        System.out.println("~!~!" + contents);
-        String token = request.getHeader("Authorization");
+       // System.out.println("projectInformation 의 projectName : " + map);
+        String votingName = (String) payload.get("votingName");
+        String projectId = String.valueOf(payload.get("projectId"));
+        String createdUser = String.valueOf(payload.get("createdUser"));
+        List<String> contents = (List<String>) payload.get("contents");
 
-        System.out.println("token : " + token);
+        System.out.println("Voting Name: " + votingName);
+        System.out.println("Project ID: " + projectId);
+        System.out.println("Created User: " + createdUser);
+        contents.forEach(content -> System.out.println("Content: " + content));
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
         }
+
         token = token.replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
         if (email == null) {
@@ -236,16 +242,15 @@ public class ProjectController {
         }
 
         List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser);
-        System.out.println("projectInformation 결과 ::: " + result);
 
         if(result.size()>0) {
             System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
             System.out.println("votecontents 의 contents 값 :: " + contents);
             String listId = result.stream().map(Voting::getId).collect(Collectors.toSet()).toString();
             listId = listId.replaceAll("[\\[\\]]", "");
-            // boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
+            boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
             System.out.println("listId :: " + listId);
-              // System.out.println("result2 ::: " + result2);
+              System.out.println("result2 ::: " + result2);
             if(true){
                 return ResponseEntity.ok("항목 저장에 성공.");
             }else{
