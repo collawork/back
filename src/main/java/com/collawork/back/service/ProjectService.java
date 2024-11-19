@@ -80,11 +80,14 @@ public class ProjectService {
         creatorParticipant.setRole(ProjectParticipant.Role.ADMIN); // ADMIN 역할 부여
         creatorParticipant.setStatus(ProjectParticipant.Status.ACCEPTED); // 상태를 ACCEPTED로 설정
 
+        System.out.println("플젝 생성한사람 상태 : " + creatorParticipant.getStatus());
+
+
         // 생성자 정보 저장
         projectParticipantRepository.save(creatorParticipant);
 
         System.out.println("저장된 Creator Participant: " + creatorParticipant);
-
+        System.out.println("Creator participant status: " + creatorParticipant.getStatus());
 
         // 초대된 사용자들에게 알림 및 참가 정보 추가
         if (participantIds != null) {
@@ -95,6 +98,7 @@ public class ProjectService {
                 User participant = userRepository.findById(participantId)
                         .orElseThrow(() -> new RuntimeException("User not found"));
 
+                String message = "프로젝트 '" + title + "'에 초대되었습니다.";
                 notificationService.createNotification(
                         participant.getId(),        // 사용자 ID
                         "PROJECT_INVITATION",       // 알림 타입

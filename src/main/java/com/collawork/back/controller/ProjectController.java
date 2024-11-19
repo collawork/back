@@ -12,15 +12,14 @@ import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 @RestController
@@ -274,14 +273,24 @@ public class ProjectController {
      * 프로젝트 승인된 참가자만 조회(userId 안받고)
      */
     @GetMapping("/{projectId}/participants/accepted")
-    public ResponseEntity<List<ProjectParticipant>> getAcceptedParticipants(@PathVariable Long projectId) {
+    public ResponseEntity<List<Map<String, Object>>> getAcceptedParticipants(@PathVariable Long projectId) {
         List<ProjectParticipant> participants = projectService.getAcceptedParticipants(projectId);
-        return ResponseEntity.ok(participants);
+
+        System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
+
+        // 사용자 정보 포함 여부 확인
+        List<Map<String, Object>> formattedParticipants = participants.stream()
+                .map(participant -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("userId", participant.getUser().getId());
+                    map.put("username", participant.getUser().getUsername());
+                    map.put("email", participant.getUser().getEmail());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(formattedParticipants);
     }
-
-
-
-
 
 
     // 투표 생성 메소드
