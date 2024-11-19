@@ -8,10 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -28,6 +25,36 @@ public class CalendarController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @GetMapping("/events")
+    public ResponseEntity<Object> EventsByProjectId(@RequestParam("selectedProjectId") Object data, HttpServletRequest request) {
+        System.out.println("1111");
+        System.out.println("data~~~~~~~~~~~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! = " + data);
+
+//        CalendarDTO calendarDTO = new CalendarDTO();
+//        calendarDTO.setCreatedAt(ZonedDateTime.now());
+//        if(data.get("projectId") == null || data.get("selectedProjectId").toString().isEmpty()){
+//            calendarDTO.setProjectId(null);
+//        }else {
+//            calendarDTO.setProjectId(new BigInteger(Integer.toString((Integer)data.get("selectedProjectId"))));
+//        }
+        Optional<Calendar> result = calendarService.eventsByProjectId(data);
+
+        // 토큰..
+        String token = request.getHeader("Authorization");
+        System.out.println("token : " + token);
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        return ResponseEntity.ok("test");
+
+
+    }
 
     @PostMapping("/insert")
     public ResponseEntity<Object> insert(@RequestBody Map<String,Object> data, HttpServletRequest request) {

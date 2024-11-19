@@ -7,6 +7,7 @@ import com.collawork.back.repository.CalendarRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -29,6 +30,17 @@ public class CalendarService {
         calendar.setAllDay(scheduleInfo.isAllDay());
         calendar.setProjectId(scheduleInfo.getProjectId());
 
+        if(calendarRepository.save(calendar) != null){
+            return Optional.of(calendar);
+        }
+        return Optional.empty();
+    }
+
+
+    public Optional<Calendar> eventsByProjectId(Object data) {
+        Calendar calendar = new Calendar();
+        if (data == "null") calendar.setProjectId(null);
+        else calendar.setProjectId((BigInteger) data);
         if(calendarRepository.save(calendar) != null){
             return Optional.of(calendar);
         }
