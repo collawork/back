@@ -196,4 +196,20 @@ public class ProjectService {
         }
         return true;
     }
+
+    // 프로젝트 id 에 해당되는 투표 정보 조회
+    public List<Voting> findByVoting(Long projectId) {
+
+        List<Voting> vote = votingRepository.findByProjectId(projectId);
+        System.out.println("검색 후 받는 투표 정보들  :::  " + vote);
+        return vote;
+
+    }
+
+    public List<VotingContents> findByVotingId(Long votingId) {
+
+        List<VotingContents> contents = votingContentsRepository.findByVotingId(votingId);
+        System.out.println("항목 검색 후 결과 :: " + contents);
+        return contents;
+    }
 }
