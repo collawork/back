@@ -54,7 +54,6 @@ public class ProjectService {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
 
-
     @Transactional
     public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {
         // 프로젝트 엔터티 생성
@@ -97,11 +96,11 @@ public class ProjectService {
                         .orElseThrow(() -> new RuntimeException("User not found"));
 
                 notificationService.createNotification(
-                        participant.getId(),
-                        "PROJECT_INVITATION",
-                        "프로젝트 '" + title + "'에 초대되었습니다.",
-                        null, // friendRequestId는 null
-                        savedProject.getId() // projectId 전달
+                        participant.getId(),        // 사용자 ID
+                        "PROJECT_INVITATION",       // 알림 타입
+                        message,                    // 알림 메시지
+                        null,        // projectId 전달
+                        savedProject.getId()       // projectId 전달
                 );
 
                 // 참가 정보 추가 (PENDING 상태)
@@ -121,7 +120,6 @@ public class ProjectService {
     }
 
 
-
     // id 로 프로젝트 이름 조회
 //    public List<String> selectProjectTitleByUserId(Long userId) {
 //
@@ -139,14 +137,14 @@ public class ProjectService {
 
     // 프로젝트 참여자 기반으로 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
-        // Repository를 통해 프로젝트 목록 가져오기
+      
+        // Repository를 통해 프로젝트 목록 가져d옴
         List<String> listTitle = projectParticipantRepository.findProjectTitlesByUserId(userId);
-
-        // 로그 출력
+      
         System.out.println("ProjectService 의 listTitle: " + listTitle);
 
         if (listTitle == null || listTitle.isEmpty()) {
-            return null; // 데이터가 없으면 null 반환
+            return null; // 데이터 없으면 null
         }
 
         return listTitle;
@@ -245,13 +243,13 @@ public class ProjectService {
         System.out.println("ProjectService 의 유저 정보 조회 : " + userList);
         return userList;
 
-}
+    }
 
     // ProjectName 으로 프로젝트 정보 조회
     public List<Project> selectByProjectName(String projectName) {
 
         List<Project> titleList = projectRepository.findByProjectName(projectName);
-        System.out.println("ProjectService 의 selectByProjectName : " +titleList);
+        System.out.println("ProjectService 의 selectByProjectName : " + titleList);
         return titleList;
 
     }
@@ -273,18 +271,19 @@ public class ProjectService {
         return result;
 
 
-     }
+    }
 
     public boolean insertVoteContents(List<String> contents, Long id) {
 
-        for(String con : contents){
-            System.out.println("service 의 contents :: " + con);
-        }
-
-        VotingContents votingContents = new VotingContents();
-        votingContents.setVotingId(id);
         for (String content : contents) {
+            System.out.println("Service 의 contents :: " + content);
+
+            // 매번 새로운 객체를 생성
+            VotingContents votingContents = new VotingContents();
+            votingContents.setVotingId(id);
             votingContents.setVotingContents(content);
+
+            // 새로운 엔티티를 저장
             votingContentsRepository.save(votingContents);
         }
         return true;
