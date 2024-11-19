@@ -237,6 +237,19 @@ public class ProjectService {
         return projectParticipantRepository.findAcceptedProjectsByUserId(userId);
     }
 
+    public List<Map<String, Object>> selectAcceptedProjectsByUserId(Long userId) {
+        return projectRepository.findAcceptedProjectsByUserId(userId).stream()
+                .map(project -> {
+                    Map<String, Object> projectMap = new HashMap<>();
+                    projectMap.put("id", project.getId());
+                    projectMap.put("name", project.getProjectName());
+                    return projectMap;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+
 
 
 
