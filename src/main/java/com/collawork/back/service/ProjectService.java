@@ -24,6 +24,8 @@ import java.util.Optional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class ProjectService {
 
@@ -46,9 +48,6 @@ public class ProjectService {
 
     @Autowired
     private NotificationService notificationService;
-
-    // 프로젝트 추가
-    public Boolean insertProject(String title, String context, Long userId) {
 
     @Transactional
     public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {

@@ -203,52 +203,53 @@ public class ProjectController {
     // 투표 생성 메소드
     @PostMapping("newvoting")
     public  ResponseEntity<Object> votingInsert(
-            @RequestParam("votingName") String votingName,
-            @RequestParam("projectId") String projectId,
-            @RequestParam("createdUser") String createdUser,
-            @RequestParam("contents") List<String> contents,
+            @RequestBody Map<String, String> map,
+//            @RequestParam("votingName") String votingName,
+//            @RequestParam("projectId") String projectId,
+//            @RequestParam("createdUser") String createdUser,
+//            @RequestParam("contents") List<String> contents,
             HttpServletRequest request){
 
 
-        System.out.println("projectInformation 의 projectName : " + votingName);
-        System.out.println("projectInformation 의 projectId : " + projectId);
-        System.out.println("projectInformation 의 createdUser : " + createdUser);
-        for(String content : contents){
-            System.out.println("~!~!" + content);
-        }
-        System.out.println("~!~!" + contents);
-        String token = request.getHeader("Authorization");
-
-        System.out.println("token : " + token);
-
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
-        }
-        token = token.replace("Bearer ", "");
-        String email = jwtTokenProvider.getEmailFromToken(token);
-        if (email == null) {
-            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
-        }
-
-        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser);
-        System.out.println("projectInformation 결과 ::: " + result);
-
-        if(result.size()>0) {
-            System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
-            System.out.println("votecontents 의 contents 값 :: " + contents);
-            String listId = result.stream().map(Voting::getId).collect(Collectors.toSet()).toString();
-            listId = listId.replaceAll("[\\[\\]]", "");
-            // boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
-            System.out.println("listId :: " + listId);
-              // System.out.println("result2 ::: " + result2);
+        System.out.println("projectInformation 의 projectName : " + map);
+//        System.out.println("projectInformation 의 projectId : " + projectId);
+//        System.out.println("projectInformation 의 createdUser : " + createdUser);
+//        for(String content : contents){
+//            System.out.println("~!~!" + content);
+//        }
+//        System.out.println("~!~!" + contents);
+//        String token = request.getHeader("Authorization");
+//
+//        System.out.println("token : " + token);
+//
+//        if (token == null || !token.startsWith("Bearer ")) {
+//            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+//        }
+//        token = token.replace("Bearer ", "");
+//        String email = jwtTokenProvider.getEmailFromToken(token);
+//        if (email == null) {
+//            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+//        }
+//
+//        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser);
+//        System.out.println("projectInformation 결과 ::: " + result);
+//
+//        if(result.size()>0) {
+//            System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
+//            System.out.println("votecontents 의 contents 값 :: " + contents);
+//            String listId = result.stream().map(Voting::getId).collect(Collectors.toSet()).toString();
+//            listId = listId.replaceAll("[\\[\\]]", "");
+//            // boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
+//            System.out.println("listId :: " + listId);
+//              // System.out.println("result2 ::: " + result2);
             if(true){
                 return ResponseEntity.ok("항목 저장에 성공.");
             }else{
                 return ResponseEntity.status(403).body("투표 항목 저장중에 실패 ");
             }
-        }else{
-            return ResponseEntity.status(403).body("투표 생성 중 오류가 발생했습니다.");
-        }
+//        }else{
+//            return ResponseEntity.status(403).body("투표 생성 중 오류가 발생했습니다.");
+//        }
 
     }
 
