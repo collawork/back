@@ -27,5 +27,4 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<String> findProjectTitlesByUserId(@Param("userId") Long userId);
 
 
-
 }

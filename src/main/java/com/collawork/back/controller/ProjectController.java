@@ -11,6 +11,8 @@ import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Collections;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,8 +136,8 @@ public class ProjectController {
             return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
         }
 
-        // 프로젝트 목록 조회
-        List<String> projectList = projectService.selectProjectTitleByUserId(userId);
+        // `status='ACCEPTED'` 프로젝트만 조회
+        List<String> projectList = projectService.selectAcceptedProjectTitlesByUserId(userId);
         System.out.println("조회된 프로젝트 목록: " + projectList);
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
@@ -143,6 +145,7 @@ public class ProjectController {
 
         return ResponseEntity.ok(projectList);
     }
+
 
 
 
@@ -204,6 +207,82 @@ public class ProjectController {
         }
         return ResponseEntity.ok(projectList);
     }
+
+    /**
+     * 프로젝트 참여자 조회 메소드
+     * parmas - userId
+     * */
+    @PostMapping("/participants")
+    public ResponseEntity<List<Map<String, Object>>> getProjectParticipants(@RequestBody Map<String, Object> requestBody,
+                                                                            HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body(Collections.emptyList());
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body(Collections.emptyList());
+        }
+
+        Long userId = Long.valueOf(requestBody.get("userId").toString());
+
+        // 참여자 목록 조회
+        List<Map<String, Object>> participants = projectService.getParticipantsByUserId(userId);
+
+        return ResponseEntity.ok(participants);
+    }
+
+    @PostMapping("/{projectId}/accept")
+    public ResponseEntity<String> acceptInvitation(
+            @PathVariable Long projectId,
+            @RequestParam Long userId) {
+        projectService.acceptInvitation(projectId, userId);
+        return ResponseEntity.ok("프로젝트 초대 승인");
+    }
+
+    @PostMapping("/{projectId}/reject")
+    public ResponseEntity<String> rejectInvitation(
+            @PathVariable Long projectId,
+            @RequestParam Long userId) {
+        projectService.rejectInvitation(projectId, userId);
+        return ResponseEntity.ok("프로젝트 초대 거절");
+    }
+
+    /**
+     * 프로젝트 모든 참가자 조회
+     * */
+    @GetMapping("/{projectId}/participants")
+    public ResponseEntity<List<ProjectParticipant>> getAllParticipants(@PathVariable Long projectId) {
+        return ResponseEntity.ok(projectService.getAllParticipants(projectId));
+    }
+
+    /**
+     * 프로젝트 승인한 참가자만 조회
+     * */
+    @PostMapping("/{projectId}/participants/{userId}/accept")
+    public ResponseEntity<String> acceptParticipant(
+            @PathVariable Long projectId,
+            @PathVariable Long userId) {
+        log.debug("초대 승인 요청: projectId={}, userId={}", projectId, userId);
+        projectService.acceptInvitation(projectId, userId);
+        return ResponseEntity.ok("참가 요청이 승인되었습니다.");
+    }
+
+    /**
+     * 프로젝트 승인된 참가자만 조회(userId 안받고)
+     */
+    @GetMapping("/{projectId}/participants/accepted")
+    public ResponseEntity<List<ProjectParticipant>> getAcceptedParticipants(@PathVariable Long projectId) {
+        List<ProjectParticipant> participants = projectService.getAcceptedParticipants(projectId);
+        return ResponseEntity.ok(participants);
+    }
+
+
+
+
+
 
     // 투표 생성 메소드
     @PostMapping("newvoting")

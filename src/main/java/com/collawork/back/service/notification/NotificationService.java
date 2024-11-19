@@ -17,8 +17,16 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * 알림 생성 메서드
+     * @param userId 알림을 받을 사용자 ID
+     * @param type 알림 유형 (FRIEND_REQUEST, PROJECT_INVITATION 등)
+     * @param message 알림 메시지
+     * @param requestId 요청 ID (친구 요청 ID 또는 프로젝트 ID)
+     * @param projectId 프로젝트 ID (프로젝트 초대 알림일 경우)
+     */
     @Transactional
-    public void createNotification(Long userId, String type, String message, Long requestId, Long projectId) {
+    public void createNotification(Long userId, String type, String message, Long friendRequestId, Long projectId) {
         System.out.println("알림 생성 요청 - 사용자 ID: " + userId + ", 유형: " + type);
 
         User user = userRepository.findById(userId)
@@ -31,25 +39,29 @@ public class NotificationService {
         notification.setIsRead(false);
         notification.setIsActionCompleted(false);
 
-        // 요청 ID 설정 (친구 요청 알림)
-        if ("FRIEND_REQUEST".equals(type) && requestId != null) {
-            notification.setRequestId(requestId);
+        // FRIEND_REQUEST 알림
+        if ("FRIEND_REQUEST".equals(type)) {
+            if (friendRequestId != null) {
+                notification.setRequestId(friendRequestId);
+            } else {
+                throw new IllegalArgumentException("친구 요청 알림에는 friendRequestId가 필요합니다.");
+            }
         }
 
-        // 프로젝트 ID 설정 (프로젝트 초대 알림)
-        if ("PROJECT_INVITATION".equals(type) && projectId != null) {
-            notification.setRequestId(projectId);
-        } else if ("PROJECT_INVITATION".equals(type)) {
-            throw new IllegalArgumentException("프로젝트 초대에는 프로젝트 ID가 필요합니다.");
+        // PROJECT_INVITATION 알림
+        if ("PROJECT_INVITATION".equals(type)) {
+            if (projectId != null) {
+                notification.setProjectId(projectId);
+            } else {
+                throw new IllegalArgumentException("프로젝트 초대 알림에는 projectId가 필요합니다.");
+            }
         }
 
-        // 알림 저장
         notificationRepository.save(notification);
-
         System.out.println("알림 저장 완료: " + notification.getId());
     }
 
 
-
 }
+
 
