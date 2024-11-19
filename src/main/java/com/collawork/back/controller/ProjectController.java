@@ -9,15 +9,14 @@ import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 @RestController
@@ -271,14 +270,24 @@ public class ProjectController {
      * 프로젝트 승인된 참가자만 조회(userId 안받고)
      */
     @GetMapping("/{projectId}/participants/accepted")
-    public ResponseEntity<List<ProjectParticipant>> getAcceptedParticipants(@PathVariable Long projectId) {
+    public ResponseEntity<List<Map<String, Object>>> getAcceptedParticipants(@PathVariable Long projectId) {
         List<ProjectParticipant> participants = projectService.getAcceptedParticipants(projectId);
-        return ResponseEntity.ok(participants);
+
+        System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
+
+        // 사용자 정보 포함 여부 확인
+        List<Map<String, Object>> formattedParticipants = participants.stream()
+                .map(participant -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("userId", participant.getUser().getId());
+                    map.put("username", participant.getUser().getUsername());
+                    map.put("email", participant.getUser().getEmail());
+                    return map;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(formattedParticipants);
     }
-
-
-
-
 
 
     // 투표 생성 메소드
@@ -290,6 +299,7 @@ public class ProjectController {
         String votingName = (String) payload.get("votingName");
         String projectId = String.valueOf(payload.get("projectId"));
         String createdUser = String.valueOf(payload.get("createdUser"));
+        String detail = (String) payload.get("detail");
         List<String> contents = (List<String>) payload.get("contents");
 
         System.out.println("Voting Name: " + votingName);
@@ -310,7 +320,7 @@ public class ProjectController {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser);
+        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser,detail);
 
         if(result.size()>0) {
             System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
@@ -390,8 +400,9 @@ public class ProjectController {
     }
 
 
-    @PostMapping("uservoteinsert") // 투표 contents 불러오기
-    public ResponseEntity<Object> userVoteInsert(
+    // 투표 contents 불러오기
+    @PostMapping("uservoteinsert")
+    public ResponseEntity<Object> findUserVoting(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("contentsId") Long contentsId, // 투표 한 항목 id
             @RequestParam("userId") Long userId, // user 고유 id
@@ -419,10 +430,47 @@ public class ProjectController {
 
         }
     }
+    @PostMapping("findUserVoting") // 투표 별 유저가 투표한 항목 불러오기
+    public ResponseEntity<Object> userVoteInsert(
+            @RequestParam("votingId") Long votingId, // 투표 고유 id
+            @RequestParam("userId") Long userId, // 투표 한 항목 id
+            HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        List<VotingRecord> uservoting = projectService.findByVotingIdRecord(votingId);
+        System.out.println(uservoting);
+
+        if(uservoting.isEmpty()){
+            return ResponseEntity.status(404).body(uservoting);
+        }else{
+            System.out.println(uservoting);
+
+            // 이제 가지고 해당 userId 가 있는지 확인한다.
+            uservoting.getClass();
+            uservoting.toString();
+            System.out.println(uservoting.toString());
+            // boolean result = uservoting.toString().contains(userId);
+            if(true){
+                return ResponseEntity.ok(uservoting);
+            }else{
+                return ResponseEntity.status(404).body(uservoting);
+            }
 
 
-
-
+        }
+    }
 }
 
 
