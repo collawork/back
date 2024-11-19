@@ -1,10 +1,7 @@
 package com.collawork.back.controller;
 
-import com.collawork.back.model.project.Project;
+import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
-import com.collawork.back.model.project.ProjectParticipant;
-import com.collawork.back.model.project.Voting;
-import com.collawork.back.model.project.VotingContents;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
@@ -331,6 +328,7 @@ public class ProjectController {
         String votingName = (String) payload.get("votingName");
         String projectId = String.valueOf(payload.get("projectId"));
         String createdUser = String.valueOf(payload.get("createdUser"));
+        String detail = (String) payload.get("detail");
         List<String> contents = (List<String>) payload.get("contents");
 
         System.out.println("Voting Name: " + votingName);
@@ -351,7 +349,7 @@ public class ProjectController {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser);
+        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser,detail);
 
         if(result.size()>0) {
             System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
@@ -431,8 +429,77 @@ public class ProjectController {
     }
 
 
+    // 투표 contents 불러오기
+    @PostMapping("uservoteinsert")
+    public ResponseEntity<Object> findUserVoting(
+            @RequestParam("votingId") Long votingId, // 투표 고유 id
+            @RequestParam("contentsId") Long contentsId, // 투표 한 항목 id
+            @RequestParam("userId") Long userId, // user 고유 id
+            HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+        System.out.println("유저 투표 받아오는 정보 ::: "+votingId+contentsId+userId);
+
+        Boolean userVote = projectService.insertUserVote(votingId,contentsId,userId);
+        if(userVote){
+            return ResponseEntity.ok("유저 투표 정보 등록 성공.");
+        }else{
+            return ResponseEntity.status(404).body("유저 투표 정보 등록 실패.");
+
+        }
+    }
+    @PostMapping("findUserVoting") // 투표 별 유저가 투표한 항목 불러오기
+    public ResponseEntity<Object> userVoteInsert(
+            @RequestParam("votingId") Long votingId, // 투표 고유 id
+            @RequestParam("userId") Long userId, // 투표 한 항목 id
+            HttpServletRequest request){
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        List<VotingRecord> uservoting = projectService.findByVotingIdRecord(votingId);
+        System.out.println(uservoting);
+
+        if(uservoting.isEmpty()){
+            return ResponseEntity.status(404).body(uservoting);
+        }else{
+            System.out.println(uservoting);
+
+            // 이제 가지고 해당 userId 가 있는지 확인한다.
+            uservoting.getClass();
+            uservoting.toString();
+            System.out.println(uservoting.toString());
+            // boolean result = uservoting.toString().contains(userId);
+            if(true){
+                return ResponseEntity.ok(uservoting);
+            }else{
+                return ResponseEntity.status(404).body(uservoting);
+            }
 
 
+        }
+    }
 }
 
 
