@@ -3,23 +3,23 @@ package com.collawork.back.controller;
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.model.project.ProjectParticipant;
-import com.collawork.back.repository.ProjectRepository;
+import com.collawork.back.model.project.Voting;
+import com.collawork.back.model.project.VotingContents;
+import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/user/projects")
@@ -202,16 +202,21 @@ public class ProjectController {
 
     // 투표 생성 메소드
     @PostMapping("newvoting")
-    public ResponseEntity<Object> votingInsert(
+    public  ResponseEntity<Object> votingInsert(
             @RequestParam("votingName") String votingName,
             @RequestParam("projectId") String projectId,
-            @RequestParam("created_user") String createdUser,
+            @RequestParam("createdUser") String createdUser,
+            @RequestParam("contents") List<String> contents,
             HttpServletRequest request){
+
 
         System.out.println("projectInformation 의 projectName : " + votingName);
         System.out.println("projectInformation 의 projectId : " + projectId);
         System.out.println("projectInformation 의 createdUser : " + createdUser);
-
+        for(String content : contents){
+            System.out.println("~!~!" + content);
+        }
+        System.out.println("~!~!" + contents);
         String token = request.getHeader("Authorization");
 
         System.out.println("token : " + token);
@@ -225,16 +230,56 @@ public class ProjectController {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-        boolean result = projectService.votingInsert(votingName,projectId,createdUser);
-        if (result) {
-              return ResponseEntity.ok("투표가 생성되었습니다 !");
+        List<Voting> result = projectService.votingInsert(votingName,projectId,createdUser);
+        System.out.println("projectInformation 결과 ::: " + result);
+
+        if(result.size()>0) {
+            System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
+            System.out.println("votecontents 의 contents 값 :: " + contents);
+            String listId = result.stream().map(Voting::getId).collect(Collectors.toSet()).toString();
+            listId = listId.replaceAll("[\\[\\]]", "");
+            // boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
+            System.out.println("listId :: " + listId);
+              // System.out.println("result2 ::: " + result2);
+            if(true){
+                return ResponseEntity.ok("항목 저장에 성공.");
+            }else{
+                return ResponseEntity.status(403).body("투표 항목 저장중에 실패 ");
+            }
         }else{
-            return ResponseEntity.status(405).body("투표 생성에 실패하였습니다 !");
+            return ResponseEntity.status(403).body("투표 생성 중 오류가 발생했습니다.");
         }
 
-
-
     }
+
+//    @PostMapping("votecontents") // 항목 내용 저장
+//    public ResponseEntity<Object> voteContentsSave(@RequestParam("contents") List<String> contents,
+//                                                   @RequestParam("id") Long id,
+//                                                   HttpServletRequest request){
+//
+//        System.out.println("votecontents 의 contents 값 :: " + contents);
+//        System.out.println("votecontents 의 투표 고유 id 값 :: " + id);
+//
+//        String token = request.getHeader("Authorization");
+//
+//        System.out.println("token : " + token);
+//
+//        if (token == null || !token.startsWith("Bearer ")) {
+//            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+//        }
+//        token = token.replace("Bearer ", "");
+//        String email = jwtTokenProvider.getEmailFromToken(token);
+//        if (email == null) {
+//            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+//        }
+//
+//        boolean result = projectService.insertVoteContents(contents, id);
+//        if(result){
+//            return ResponseEntity.ok("항목 저장에 성공.");
+//        }else{
+//           return ResponseEntity.status(403).body("투표 항목 저장중에 실패 ");
+//        }
+//    }
 
 
 }

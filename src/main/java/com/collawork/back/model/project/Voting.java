@@ -10,11 +10,10 @@ import java.util.Date;
 public class Voting {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "voting_name")
+    @Column(name = "voting_name",nullable = false)
     private String votingName;
 
     @Column(name = "project_id")
@@ -26,7 +25,7 @@ public class Voting {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "is_vote")
+    @Column(name = "is_vote", columnDefinition = "TIMESTAMP")
     private Boolean isVote;
 
     public Voting() {
