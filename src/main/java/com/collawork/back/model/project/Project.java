@@ -35,7 +35,7 @@ public class Project {
     }
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProjectParticipant> participants = new ArrayList<>();
+    private List<ProjectParticipant> projectParticipants = new ArrayList<>();
 
 
     public Project(Long id, String projectName, Long createdBy, String projectCode, LocalDateTime createdAt) {

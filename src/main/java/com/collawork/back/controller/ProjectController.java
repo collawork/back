@@ -1,19 +1,21 @@
 package com.collawork.back.controller;
 
-import com.collawork.back.dto.project.ProjectRequestDTO;
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.model.project.ProjectParticipant;
-import com.collawork.back.model.project.Voting;
 import com.collawork.back.repository.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,8 @@ public class ProjectController {
     @Autowired
     private ProjectParticipantsService projectParticipantsService;
 
+    private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
+
 
     @GetMapping("/{projectId}")
     public ResponseEntity<Project> getProjectInfo(@PathVariable Long projectId, HttpServletRequest request) {
@@ -56,8 +60,10 @@ public class ProjectController {
 
     @PostMapping("/newproject")
     public ResponseEntity<String> newProject(
-            @RequestBody ProjectRequestDTO requestData,
+            @RequestBody Map<String, Object> requestData,
             HttpServletRequest request) {
+
+        log.debug("Received request data: {}", requestData);
 
         String token = request.getHeader("Authorization");
 
@@ -72,29 +78,30 @@ public class ProjectController {
         }
 
         try {
-            String title = requestData.getTitle();
-            String context = requestData.getContext();
-            Long userId = requestData.getUserId();
-            List<Long> participants = requestData.getParticipants();
+            // 요청 데이터 파싱
+            String title = (String) requestData.get("title");
+            String context = (String) requestData.get("context");
+            Long userId = Long.valueOf(requestData.get("userId").toString());
+            List<Long> participants = ((List<?>) requestData.get("participants")).stream()
+                    .map(participant -> Long.valueOf(participant.toString()))
+                    .toList();
 
-            // 1. 프로젝트 생성
-            Long projectId = projectService.insertProject(title, context, userId);
-            if (projectId == null) {
-                return ResponseEntity.status(403).body("프로젝트 생성 실패.");
-            }
+            log.debug("Project ID created: {}", userId);
 
-            // 2. 생성자를 ADMIN으로 project_participants에 추가
-            projectParticipantsService.addParticipant(
-                    projectId, userId, ProjectParticipant.Role.ADMIN);
+            // 프로젝트 생성
+            Long projectId = projectService.insertProject(title, context, userId, participants);
 
-            // 3. 초대받은 사용자들을 MEMBER로 추가
+            // ADMIN 역할로 생성자 추가
+            projectParticipantsService.addParticipant(projectId, userId, ProjectParticipant.Role.ADMIN);
+
+            // MEMBER 역할로 참가자 추가
             for (Long participantId : participants) {
-                projectParticipantsService.addParticipant(
-                        projectId, participantId, ProjectParticipant.Role.MEMBER);
+                projectParticipantsService.addParticipant(projectId, participantId, ProjectParticipant.Role.MEMBER);
             }
 
             return ResponseEntity.ok("프로젝트가 생성되었습니다.");
         } catch (Exception e) {
+            log.error("Error creating project: {}", e.getMessage(), e);
             return ResponseEntity.status(400).body("요청 데이터 처리 중 오류 발생: " + e.getMessage());
         }
     }
