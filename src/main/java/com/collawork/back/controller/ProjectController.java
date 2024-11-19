@@ -112,6 +112,8 @@ public class ProjectController {
     @PostMapping("/selectAll")
     public ResponseEntity<Object> getProjectTitle(@RequestBody Map<String, Object> requestBody,
                                                   HttpServletRequest request) {
+        System.out.println("요청 바디: " + requestBody);
+
         String token = request.getHeader("Authorization");
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -119,6 +121,7 @@ public class ProjectController {
 
         token = token.replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
+        System.out.println("추출한 이메일: " + email);
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
@@ -126,12 +129,14 @@ public class ProjectController {
         Long userId;
         try {
             userId = Long.valueOf(requestBody.get("userId").toString());
+            System.out.println("추출한 userId: " + userId);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
         }
 
         // 프로젝트 목록 조회
         List<String> projectList = projectService.selectProjectTitleByUserId(userId);
+        System.out.println("조회된 프로젝트 목록: " + projectList);
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
