@@ -2,17 +2,21 @@ package com.collawork.back.controller;
 
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.model.project.ProjectParticipant;
 import com.collawork.back.model.project.Voting;
 import com.collawork.back.model.project.VotingContents;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
+import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
+import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.hibernate.mapping.Map;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +35,14 @@ public class ProjectController {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private ProjectParticipantsService projectParticipantsService;
+
+    private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
+
 
     @GetMapping("/{projectId}")
     public ResponseEntity<Project> getProjectInfo(@PathVariable Long projectId, HttpServletRequest request) {
@@ -48,67 +60,86 @@ public class ProjectController {
 
     @PostMapping("/newproject")
     public ResponseEntity<String> newProject(
-            @RequestParam("title") String title,
-            @RequestParam("context") String context,
-            @RequestParam("userId") Long userId,
+            @RequestBody Map<String, Object> requestData,
             HttpServletRequest request) {
 
-        System.out.println("request : " + request);
-        System.out.println("params : " + title);
-        System.out.println("context : " + context);
-        System.out.println("userId : " + userId);
+        log.debug("Received request data: {}", requestData);
 
         String token = request.getHeader("Authorization");
-
-        System.out.println("token : " + token);
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
         }
+
         token = token.replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-        boolean result = projectService.insertProject(title, context, userId);
-        String ret = null;
-        if (result) {
-            ret = "프로젝트가 생성되었습니다.";
-        } else {
-            return ResponseEntity.status(403).body("프로젝트 생성 실패.");
-        }
-        return ResponseEntity.ok(ret);
+        try {
+            // 요청 데이터 파싱
+            String title = (String) requestData.get("title");
+            String context = (String) requestData.get("context");
+            Long userId = Long.valueOf(requestData.get("userId").toString());
+            List<Long> participants = ((List<?>) requestData.get("participants")).stream()
+                    .map(participant -> Long.valueOf(participant.toString()))
+                    .toList();
 
+            log.debug("Project ID created: {}", userId);
+
+            // 프로젝트 생성
+            Long projectId = projectService.insertProject(title, context, userId, participants);
+
+            // ADMIN 역할로 생성자 추가
+            projectParticipantsService.addParticipant(projectId, userId, ProjectParticipant.Role.ADMIN);
+
+            // MEMBER 역할로 참가자 추가
+            for (Long participantId : participants) {
+                projectParticipantsService.addParticipant(projectId, participantId, ProjectParticipant.Role.MEMBER);
+            }
+
+            return ResponseEntity.ok("프로젝트가 생성되었습니다.");
+        } catch (Exception e) {
+            log.error("Error creating project: {}", e.getMessage(), e);
+            return ResponseEntity.status(400).body("요청 데이터 처리 중 오류 발생: " + e.getMessage());
+        }
     }
+
+
+
 
     @PostMapping("/selectAll")
-    public ResponseEntity<Object> getProjectTitle(@RequestParam("userId") String userId,
+    public ResponseEntity<Object> getProjectTitle(@RequestBody Map<String, Object> requestBody,
                                                   HttpServletRequest request) {
-        System.out.println("selectAll 의 userId : " + userId);
-
         String token = request.getHeader("Authorization");
-
-        System.out.println("token : " + token);
-
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
         }
+
         token = token.replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
-        System.out.println("selectAll");
 
-        List<String> projectList = projectService.selectProjectTitleByUserId(Long.valueOf(userId));
-        System.out.println("projectController-selectAll: " + projectList);
+        Long userId;
+        try {
+            userId = Long.valueOf(requestBody.get("userId").toString());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
+        }
 
-        if (projectList.isEmpty()) {
+        // 프로젝트 목록 조회
+        List<String> projectList = projectService.selectProjectTitleByUserId(userId);
+        if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
         }
-        return ResponseEntity.ok(projectList); // 프로젝트 이름 리스트
+
+        return ResponseEntity.ok(projectList);
     }
+
+
 
     @PostMapping("/projecthomeusers") // 유저 정보 조회
     public ResponseEntity<Object> getProjectHome(@RequestParam("id") Long userId, HttpServletRequest request) {

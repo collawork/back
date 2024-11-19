@@ -2,6 +2,8 @@ package com.collawork.back.model.project;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "projects")
@@ -27,6 +29,14 @@ public class Project {
 
     public Project() {
     }
+
+    public Project(Long id) {
+        this.id = id;
+    }
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectParticipant> projectParticipants = new ArrayList<>();
+
 
     public Project(Long id, String projectName, Long createdBy, String projectCode, LocalDateTime createdAt) {
         this.id = id;
