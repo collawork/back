@@ -24,6 +24,8 @@ import java.util.Optional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class ProjectService {
 
@@ -47,8 +49,6 @@ public class ProjectService {
     @Autowired
     private NotificationService notificationService;
 
-    // 프로젝트 추가
-    public Boolean insertProject(String title, String context, Long userId) {
 
     @Transactional
     public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {
@@ -101,9 +101,10 @@ public class ProjectService {
                 String message = "프로젝트 '" + title + "'에 초대되었습니다.";
                 notificationService.createNotification(
                         participant.getId(),        // 사용자 ID
-                        "PROJECT_INVITATION",       // 알림 타입
-                        message,                    // 알림 메시지
-                        null        // projectId 전달
+                        "PROJECT_INVITATION",      // 알림 타입
+                        message,                   // 알림 메시지
+                        null,                      // requestId는 null
+                        savedProject.getId()       // projectId 전달
                 );
             }
         }
