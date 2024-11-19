@@ -292,6 +292,35 @@ public class ProjectController {
         return ResponseEntity.ok(formattedParticipants);
     }
 
+    /**
+     * 프로젝트에 초대된 사용자 조회(승인, 거절 전)
+     * */
+    @GetMapping("/{projectId}/participants/pending")
+    public ResponseEntity<List<Map<String, Object>>> getPendingParticipants(
+            @PathVariable Long projectId,
+            HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body(Collections.emptyList());
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body(Collections.emptyList());
+        }
+
+        // PENDING 상태인 사람만 조회
+        List<Map<String, Object>> pendingParticipants = projectService.getPendingParticipants(projectId);
+
+        if (pendingParticipants.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        return ResponseEntity.ok(pendingParticipants);
+    }
+
+
 
     // 투표 생성 메소드
     @PostMapping("newvoting")

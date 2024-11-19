@@ -30,8 +30,6 @@ public class ProjectParticipantsService {
 
     @Transactional
     public void addParticipant(Long projectId, Long userId, ProjectParticipant.Role role) {
-        // 프로젝트 및 사용자 엔티티 조회
-        log.debug("Creating ProjectParticipant: projectId={}, userId={}, role={}", projectId, userId, role);
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found with ID: " + projectId));
@@ -48,9 +46,19 @@ public class ProjectParticipantsService {
         participant.setUser(user);
         participant.setRole(role);
 
+        // Role에 따른 Status 설정
+        if (role == ProjectParticipant.Role.ADMIN) {
+            participant.setStatus(ProjectParticipant.Status.ACCEPTED); // 관리자 역할은 ACCEPTED
+        } else {
+            participant.setStatus(ProjectParticipant.Status.PENDING); // 일반 멤버는 PENDING
+        }
+
+        log.debug("Saving participant: {}", participant);
+
         // 저장
         projectParticipantsRepository.save(participant);
     }
+
 }
 
 
