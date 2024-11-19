@@ -18,7 +18,7 @@ public class NotificationService {
     private UserRepository userRepository;
 
     @Transactional
-    public void createNotification(Long userId, String type, String message, Long requestId) {
+    public void createNotification(Long userId, String type, String message, Long requestId, Long projectId) {
         System.out.println("알림 생성 요청 - 사용자 ID: " + userId + ", 유형: " + type);
 
         User user = userRepository.findById(userId)
@@ -31,12 +31,16 @@ public class NotificationService {
         notification.setIsRead(false);
         notification.setIsActionCompleted(false);
 
-        // PROJECT_INVITATION 유형일 경우 requestId가 필수로 설정해야됨(근데 아니어도 되는거 생각 해봐야됨)
-        if ("PROJECT_INVITATION".equals(type)) {
-            if (requestId == null) {
-                throw new IllegalArgumentException("프로젝트 초대에는 요청 ID가 필요합니다.");
-            }
-            notification.setRequestId(requestId);  // 프로젝트 초대 알림에만 requestId 설정
+        // 요청 ID 설정 (친구 요청 알림)
+        if ("FRIEND_REQUEST".equals(type) && requestId != null) {
+            notification.setRequestId(requestId);
+        }
+
+        // 프로젝트 ID 설정 (프로젝트 초대 알림)
+        if ("PROJECT_INVITATION".equals(type) && projectId != null) {
+            notification.setRequestId(projectId);
+        } else if ("PROJECT_INVITATION".equals(type)) {
+            throw new IllegalArgumentException("프로젝트 초대에는 프로젝트 ID가 필요합니다.");
         }
 
         // 알림 저장
@@ -44,6 +48,7 @@ public class NotificationService {
 
         System.out.println("알림 저장 완료: " + notification.getId());
     }
+
 
 
 }

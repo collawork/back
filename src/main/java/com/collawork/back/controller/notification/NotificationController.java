@@ -5,7 +5,7 @@ import com.collawork.back.model.auth.User;
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.project.ProjectParticipant;
 import com.collawork.back.model.project.ProjectParticipantId;
-import com.collawork.back.repository.ProjectRepository;
+import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.notification.NotificationRepository;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
