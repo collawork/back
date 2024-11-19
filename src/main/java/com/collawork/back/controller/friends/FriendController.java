@@ -173,7 +173,7 @@ public class FriendController {
             notification.setMessage(friend.getResponder().getUsername() + "님이 친구 요청을 거절했습니다.");
             notification.setRequestId(friend.getId());
             notification.setResponderId(responderId);
-            notification.setActionCompleted(true);
+            notification.setIsActionCompleted(true);
             notificationRepository.save(notification);
 
             return "친구 요청이 거절되었습니다.";

@@ -41,6 +41,9 @@ public class User {
         this.createdAt = createdAt;
     }
 
+    public User(Long userId) {
+    }
+
     public Long getId() {
         return id;
     }
