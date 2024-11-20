@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProjectParticipantRepository extends JpaRepository<ProjectParticipant, ProjectParticipantId> {
@@ -56,6 +57,8 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             "JOIN pp.user u " +
             "WHERE pp.project.id = :projectId AND pp.status = 'PENDING'")
     List<Object[]> findPendingParticipantsByProjectId(@Param("projectId") Long projectId);
+
+    Optional<ProjectParticipant> findByProjectIdAndUserId(Long projectId, Long userId);
 
 
 }
