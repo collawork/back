@@ -1,19 +1,24 @@
 package com.collawork.back.service;
 
+import com.collawork.back.controller.ProjectController;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.model.project.Project;
 import com.collawork.back.model.project.ProjectParticipant;
 import com.collawork.back.model.project.ProjectParticipantId;
-import com.collawork.back.repository.ProjectRepository;
+import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.auth.UserRepository;
-import com.collawork.back.repository.project.ProjectParticipantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.collawork.back.repository.project.ProjectParticipantRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProjectParticipantsService {
+
     @Autowired
-    private ProjectParticipantRepository projectParticipantRepository;
+    private ProjectParticipantRepository projectParticipantsRepository;
 
     @Autowired
     private ProjectRepository projectRepository;
@@ -21,22 +26,41 @@ public class ProjectParticipantsService {
     @Autowired
     private UserRepository userRepository;
 
-    public void addParticipant(Long projectId, Long userId, ProjectParticipant.Role role) {
-        // ProjectParticipantId 객체 명시적 생성
-        ProjectParticipantId id = new ProjectParticipantId(projectId, userId);
+    private static final Logger log = LoggerFactory.getLogger(ProjectParticipantsService.class);
 
-        // ProjectParticipant 엔티티 생성 및 매핑
+    @Transactional
+    public void addParticipant(Long projectId, Long userId, ProjectParticipant.Role role) {
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with ID: " + projectId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        // 복합 키 생성
+        ProjectParticipantId participantId = new ProjectParticipantId(projectId, userId);
+
+        // Participant 엔티티 생성
         ProjectParticipant participant = new ProjectParticipant();
-        participant.setId(id);
+        participant.setId(participantId);
+        participant.setProject(project);
+        participant.setUser(user);
         participant.setRole(role);
 
-        // Lazy Entity 매핑 (옵션: 필요에 따라 Entity 직접 초기화)
-        participant.setProject(new Project(projectId));
-        participant.setUser(new User(userId));
+        // Role에 따른 Status 설정
+        if (role == ProjectParticipant.Role.ADMIN) {
+            participant.setStatus(ProjectParticipant.Status.ACCEPTED); // 관리자 역할은 ACCEPTED
+        } else {
+            participant.setStatus(ProjectParticipant.Status.PENDING); // 일반 멤버는 PENDING
+        }
 
-        // 엔티티 저장
-        projectParticipantRepository.save(participant);
+        log.debug("Saving participant: {}", participant);
+
+        // 저장
+        projectParticipantsRepository.save(participant);
     }
 
-
 }
+
+
+
+

@@ -32,6 +32,9 @@ public class Notification {
     @Column(name = "request_id")
     private Long requestId;
 
+    @Column(name = "project_id")
+    private Long projectId;
+
     @Column(name = "responder_id")  // 요청을 받은 사용자 ID
     private Long responderId;
 
@@ -43,6 +46,14 @@ public class Notification {
         MESSAGE,
         ALERT,
         PROJECT_INVITATION
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
     public Long getId() {

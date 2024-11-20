@@ -10,12 +10,14 @@ import java.util.Date;
 public class Voting {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "voting_name")
+    @Column(name = "voting_name",nullable = false)
     private String votingName;
+
+    @Column(name = "voting_detail")
+    private String votingDetail;
 
     @Column(name = "project_id")
     private Long projectId;
@@ -26,19 +28,21 @@ public class Voting {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "is_vote")
+    @Column(name = "is_vote", columnDefinition = "TIMESTAMP")
     private Boolean isVote;
 
     public Voting() {
     }
 
-    public Voting(Long id, String votingName, Long projectId, String createdUser, LocalDateTime createdAt, Boolean isVote) {
+    public Voting(Long id, String votingName, String votingDetail, Long projectId, String createdUser, LocalDateTime createdAt, Boolean isVote) {
         this.id = id;
         this.votingName = votingName;
+        this.votingDetail = votingDetail;
         this.projectId = projectId;
         this.createdUser = createdUser;
         this.createdAt = createdAt;
         this.isVote = isVote;
+
     }
 
     public Long getId() {
@@ -55,6 +59,14 @@ public class Voting {
 
     public void setVotingName(String votingName) {
         this.votingName = votingName;
+    }
+
+    public String getVotingDetail() {
+        return votingDetail;
+    }
+
+    public void setVotingDetail(String votingDetail) {
+        this.votingDetail = votingDetail;
     }
 
     public Long getProjectId() {
@@ -94,6 +106,7 @@ public class Voting {
         return "Voting{" +
                 "id=" + id +
                 ", votingName='" + votingName + '\'' +
+                ", votingDetail='" + votingDetail + '\'' +
                 ", projectId=" + projectId +
                 ", createdUser='" + createdUser + '\'' +
                 ", createdAt=" + createdAt +
