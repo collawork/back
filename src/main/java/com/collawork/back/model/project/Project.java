@@ -1,6 +1,8 @@
 package com.collawork.back.model.project;
 
 import jakarta.persistence.*;
+import net.minidev.json.annotate.JsonIgnore;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +39,9 @@ public class Project {
         this.id = id;
     }
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProjectParticipant> projectParticipants = new ArrayList<>();
+//    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JsonIgnore
+//    private List<ProjectParticipant> projectParticipants = new ArrayList<>();
 
 
     public Project(Long id, String projectName, Long createdBy, String projectCode, Long chatRoomId, LocalDateTime createdAt, List<ProjectParticipant> projectParticipants) {
@@ -48,7 +51,7 @@ public class Project {
         this.projectCode = projectCode;
         this.chatRoomId = chatRoomId;
         this.createdAt = createdAt;
-        this.projectParticipants = projectParticipants;
+//        this.projectParticipants = projectParticipants;
     }
 
     public Long getId() {
@@ -99,13 +102,13 @@ public class Project {
         this.createdAt = createdAt;
     }
 
-    public List<ProjectParticipant> getProjectParticipants() {
-        return projectParticipants;
-    }
-
-    public void setProjectParticipants(List<ProjectParticipant> projectParticipants) {
-        this.projectParticipants = projectParticipants;
-    }
+//    public List<ProjectParticipant> getProjectParticipants() {
+//        return projectParticipants;
+//    }
+//
+//    public void setProjectParticipants(List<ProjectParticipant> projectParticipants) {
+//        this.projectParticipants = projectParticipants;
+//    }
 
     @Override
     public String toString() {
@@ -116,7 +119,7 @@ public class Project {
                 ", projectCode='" + projectCode + '\'' +
                 ", chatRoomId=" + chatRoomId +
                 ", createdAt=" + createdAt +
-                ", projectParticipants=" + projectParticipants +
+//                ", projectParticipants=" + projectParticipants +
                 '}';
     }
 }
