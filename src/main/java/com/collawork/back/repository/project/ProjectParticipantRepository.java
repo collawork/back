@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProjectParticipantRepository extends JpaRepository<ProjectParticipant, ProjectParticipantId> {
@@ -57,6 +59,10 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             "WHERE pp.project.id = :projectId AND pp.status = 'PENDING'")
     List<Object[]> findPendingParticipantsByProjectId(@Param("projectId") Long projectId);
 
+    Optional<ProjectParticipant> findByProjectIdAndUserId(Long projectId, Long userId);
 
+
+    @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId AND pp.id.userId IN :userIds")
+    List<ProjectParticipant> findByProjectIdAndUserIdIn(@Param("projectId") Long projectId, @Param("userIds") List<Long> userIds);
 }
 

@@ -1,14 +1,7 @@
-package com.collawork.back.dto;
+package com.collawork.back.dto.calendar;
 
 import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 public class CalendarDTO {
 
@@ -17,27 +10,24 @@ public class CalendarDTO {
 
     private BigInteger id;
     private String title;
-    private String description;
     private ZonedDateTime start;
     private ZonedDateTime end;
-    private ZonedDateTime createdAt;
-    private BigInteger createdBy; //
     private boolean allDay;
-    private BigInteger projectId;
+    private BigInteger groupId;
+
+    private ExtendedProps extendedProps;
 
     public CalendarDTO() {
     }
 
-    public CalendarDTO(BigInteger id, String title, String description, ZonedDateTime start, ZonedDateTime end, ZonedDateTime createdAt, BigInteger createdBy, boolean allDay, BigInteger projectId) {
+    public CalendarDTO(BigInteger id, String title, ZonedDateTime start, ZonedDateTime end, boolean allDay, BigInteger groupId, ExtendedProps extendedProps) {
         this.id = id;
         this.title = title;
-        this.description = description;
         this.start = start;
         this.end = end;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
         this.allDay = allDay;
-        this.projectId = projectId;
+        this.groupId = groupId;
+        this.extendedProps = extendedProps;
     }
 
     public BigInteger getId() {
@@ -56,14 +46,6 @@ public class CalendarDTO {
         this.title = title;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public ZonedDateTime getStart() {
         return start;
     }
@@ -80,22 +62,6 @@ public class CalendarDTO {
         this.end = end;
     }
 
-    public ZonedDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(ZonedDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public BigInteger getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(BigInteger createdBy) {
-        this.createdBy = createdBy;
-    }
-
     public boolean isAllDay() {
         return allDay;
     }
@@ -104,12 +70,20 @@ public class CalendarDTO {
         this.allDay = allDay;
     }
 
-    public BigInteger getProjectId() {
-        return projectId;
+    public BigInteger getGroupId() {
+        return groupId;
     }
 
-    public void setProjectId(BigInteger projectId) {
-        this.projectId = projectId;
+    public void setGroupId(BigInteger groupId) {
+        this.groupId = groupId;
+    }
+
+    public ExtendedProps getExtendedProps() {
+        return extendedProps;
+    }
+
+    public void setExtendedProps(ExtendedProps extendedProps) {
+        this.extendedProps = extendedProps;
     }
 
     @Override
@@ -117,13 +91,11 @@ public class CalendarDTO {
         return "CalendarDTO{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
                 ", start=" + start +
                 ", end=" + end +
-                ", createdAt=" + createdAt +
-                ", createdBy=" + createdBy +
                 ", allDay=" + allDay +
-                ", projectId=" + projectId +
+                ", groupId=" + groupId +
+                ", extendedProps=" + extendedProps +
                 '}';
     }
 }

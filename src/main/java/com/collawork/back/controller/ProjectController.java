@@ -4,6 +4,11 @@ import com.collawork.back.model.ChatRooms;
 import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.ChatRoomRepository;
+import com.collawork.back.dto.ParticipantInviteRequestDTO;
+import com.collawork.back.model.project.*;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
+import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
@@ -17,7 +22,10 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
@@ -44,6 +52,12 @@ public class ProjectController {
 
     @Autowired
     private ProjectParticipantsService projectParticipantsService;
+
+    @Autowired
+    private ProjectParticipantRepository projectParticipantRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -336,6 +350,93 @@ public class ProjectController {
 
         return ResponseEntity.ok(pendingParticipants);
     }
+
+    @GetMapping("/{projectId}/role")
+    public ResponseEntity<Map<String, String>> getUserRole(
+            @PathVariable Long projectId,
+            @RequestParam Long userId) {
+        ProjectParticipant participant = projectParticipantRepository
+                .findByProjectIdAndUserId(projectId, userId)
+                .orElseThrow(() -> new RuntimeException("참가자 정보를 찾을 수 없습니다."));
+
+        Map<String, String> response = new HashMap<>();
+        response.put("role", participant.getRole().toString());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 프로젝트 생성 후 참여자 초대시 처리하는 로직
+     * @param projectId
+     * 기대 결과값 : 프로젝트 고유 키
+     * */
+    @PostMapping("/{projectId}/participants/invite")
+    public ResponseEntity<?> inviteParticipants(
+            @PathVariable Long projectId,
+            @RequestBody ParticipantInviteRequestDTO inviteRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 현재 사용자 확인 (권한 체크)
+        String currentEmail = userDetails.getUsername();
+        boolean isAdmin = projectParticipantsService.isUserAdmin(projectId, currentEmail);
+
+        if (!isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("프로젝트에서 사용자 초대 권한이 없습니다.");
+        }
+
+        // 요청 데이터에서 participants 뽑아오기
+        List<Long> participantIds = inviteRequest.getParticipants();
+        if (participantIds == null || participantIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("참가자 ID가 제공되지 않았습니다.");
+        }
+
+        // Null 값 필터링
+        participantIds = participantIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (participantIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("유효한 참가자 ID가 없습니다.");
+        }
+
+        try {
+            // 이미 참여 중인 사용자 확인
+            List<Long> alreadyAccepted = projectParticipantsService.getAcceptedParticipantsIds(projectId, participantIds);
+            if (!alreadyAccepted.isEmpty()) {
+                // 사용자 정보 가져오기
+                List<String> alreadyAcceptedUserDetails = userRepository.findAllById(alreadyAccepted).stream()
+                        .map(user -> user.getUsername() + " (" + user.getEmail() + ")")
+                        .collect(Collectors.toList());
+                return ResponseEntity.badRequest().body("이미 참여 중인 사용자: " + alreadyAcceptedUserDetails);
+            }
+
+            // REJECTED 상태 사용자도 처리
+            List<Long> rejectedUsers = projectParticipantsService.updateRejectedParticipantsToPending(projectId, participantIds);
+            if (!rejectedUsers.isEmpty()) {
+                return ResponseEntity.ok("거절된 사용자의 상태를 '초대됨(PENDING)'으로 업데이트했습니다: " + rejectedUsers);
+            }
+
+            // 초대 처리
+            projectParticipantsService.inviteParticipants(projectId, participantIds);
+
+            // **알림 처리 (NotificationService 사용)**
+            String projectName = projectService.getProjectNameById(projectId); // 프로젝트 이름 가져오기
+            for (Long participantId : participantIds) {
+                String message = "프로젝트 '" + projectName + "'에 초대되었습니다.";
+                notificationService.createOrUpdateNotification(participantId, projectId, message);
+            }
+
+            return ResponseEntity.ok("프로젝트 참가자 초대 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("프로젝트 참가자 초대 중 오류 발생 : " + e.getMessage());
+        }
+    }
+
+
+
+
+
 
 
 
