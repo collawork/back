@@ -433,13 +433,6 @@ public class ProjectController {
         }
     }
 
-
-
-
-
-
-
-
     // 투표 생성 메소드
     @PostMapping("newvoting")
     public  ResponseEntity<Object> votingInsert(
@@ -640,8 +633,36 @@ public class ProjectController {
             // 해당 유저 id 가 없다면(투표한 정보) null 반환
             System.out.println("please:: " + please);
             return ResponseEntity.ok(null);
+        }
+    }
 
+    @PostMapping("VoteOptionUsers")
+    public ResponseEntity<Object> voteOptionUsers(
+            @RequestParam("votingId") Long votingId, // 투표 id
+            HttpServletRequest request) {
 
+        System.out.println("이거 왜안찍혀 :: " + votingId);
+
+        String token = request.getHeader("Authorization");
+        System.out.println("Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        }
+
+        token = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(token);
+        if (email == null) {
+            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
+        }
+
+        List<VotingRecord> uservoting = projectService.findByVotingIdRecord(votingId);
+        System.out.println(uservoting);
+
+        if (uservoting.isEmpty()) {
+            return ResponseEntity.status(404).body(uservoting);
+        } else {
+            return ResponseEntity.ok(uservoting);
         }
     }
 }

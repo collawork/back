@@ -59,6 +59,8 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             "WHERE pp.project.id = :projectId AND pp.status = 'PENDING'")
     List<Object[]> findPendingParticipantsByProjectId(@Param("projectId") Long projectId);
 
+
+
     Optional<ProjectParticipant> findByProjectIdAndUserId(Long projectId, Long userId);
 
 
