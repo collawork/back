@@ -1,7 +1,9 @@
 package com.collawork.back.controller;
 
+import com.collawork.back.model.ChatRooms;
 import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
@@ -9,6 +11,7 @@ import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -32,6 +35,9 @@ public class ProjectController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private ChatRoomRepository chatRoomRepository;
 
     @Autowired
     private NotificationService notificationService;
@@ -62,6 +68,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
         log.debug("Received request data: {}", requestData);
+        System.out.println("왜안생김? : " + requestData);
 
         String token = request.getHeader("Authorization");
 
@@ -84,10 +91,22 @@ public class ProjectController {
                     .map(participant -> Long.valueOf(participant.toString()))
                     .toList();
 
+            User user = new User();
+
             log.debug("Project ID created: {}", userId);
 
+            // 프로젝트 생생 시 프로젝트 채팅방 생성
+            ChatRooms chatRoom = new ChatRooms();
+            chatRoom.setRoomName(title); // 채팅방 이름(=프로젝트 이름)
+            chatRoom.setCreatedBy(user.setId(userId)); // 만든사람
+            chatRoom.setCreatedAt(LocalDateTime.now()); // 생성 시간
+            List<ChatRooms> chatRoomm = Collections.singletonList(chatRoomRepository.save(chatRoom));
+            System.out.println("프로젝트 생성시 생성되는 채팅방 :: " + chatRoomm);
+            Long chatRoomId = chatRoomm.get(0).getId();
+            System.out.println("채팅방 id : " + chatRoomId);
+
             // 프로젝트 생성
-            Long projectId = projectService.insertProject(title, context, userId, participants);
+            Long projectId = projectService.insertProject(title, context, userId, participants,chatRoomId);
 
             // ADMIN 역할로 생성자 추가
             projectParticipantsService.addParticipant(projectId, userId, ProjectParticipant.Role.ADMIN);
@@ -132,7 +151,7 @@ public class ProjectController {
         // 프로젝트 ID와 이름을 모두 조회
         List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
 
-        System.out.println("조회된 프로젝트 목록: " + projectList);
+        System.out.println("조회된 프로젝트 목록oo: " + projectList);
 
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
@@ -167,6 +186,7 @@ public class ProjectController {
 
         // 프로젝트 생성자의 정보 조회
     Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
+        System.out.println("users 정보 조회 결과 ::: " + users);
 
         if (users.isEmpty()) {
             return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");

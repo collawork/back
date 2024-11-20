@@ -52,13 +52,14 @@ public class ProjectService {
     private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
 
     @Transactional
-    public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {
+    public Long insertProject(String title, String context, Long userId, List<Long> participantIds, Long chatRoomId) {
         // 프로젝트 엔터티 생성
         Project project = new Project();
         project.setProjectName(title);
         project.setCreatedBy(userId);
         project.setProjectCode(context);
         project.setCreatedAt(LocalDateTime.now());
+        project.setChatRoomId(chatRoomId);
 
         // 프로젝트 저장
         Project savedProject = projectRepository.save(project);
