@@ -1,7 +1,14 @@
 package com.collawork.back.controller;
 
+import com.collawork.back.model.ChatRooms;
 import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.ChatRoomRepository;
+import com.collawork.back.dto.ParticipantInviteRequestDTO;
+import com.collawork.back.model.project.*;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
+import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
@@ -9,12 +16,16 @@ import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
@@ -34,10 +45,19 @@ public class ProjectController {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
+    private ChatRoomRepository chatRoomRepository;
+
+    @Autowired
     private NotificationService notificationService;
 
     @Autowired
     private ProjectParticipantsService projectParticipantsService;
+
+    @Autowired
+    private ProjectParticipantRepository projectParticipantRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -62,6 +82,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
         log.debug("Received request data: {}", requestData);
+        System.out.println("왜안생김? : " + requestData);
 
         String token = request.getHeader("Authorization");
 
@@ -84,10 +105,22 @@ public class ProjectController {
                     .map(participant -> Long.valueOf(participant.toString()))
                     .toList();
 
+            User user = new User();
+
             log.debug("Project ID created: {}", userId);
 
+            // 프로젝트 생생 시 프로젝트 채팅방 생성
+            ChatRooms chatRoom = new ChatRooms();
+            chatRoom.setRoomName(title); // 채팅방 이름(=프로젝트 이름)
+            chatRoom.setCreatedBy(user.setId(userId)); // 만든사람
+            chatRoom.setCreatedAt(LocalDateTime.now()); // 생성 시간
+            List<ChatRooms> chatRoomm = Collections.singletonList(chatRoomRepository.save(chatRoom));
+            System.out.println("프로젝트 생성시 생성되는 채팅방 :: " + chatRoomm);
+            Long chatRoomId = chatRoomm.get(0).getId();
+            System.out.println("채팅방 id : " + chatRoomId);
+
             // 프로젝트 생성
-            Long projectId = projectService.insertProject(title, context, userId, participants);
+            Long projectId = projectService.insertProject(title, context, userId, participants,chatRoomId);
 
             // ADMIN 역할로 생성자 추가
             projectParticipantsService.addParticipant(projectId, userId, ProjectParticipant.Role.ADMIN);
@@ -132,7 +165,7 @@ public class ProjectController {
         // 프로젝트 ID와 이름을 모두 조회
         List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
 
-        System.out.println("조회된 프로젝트 목록: " + projectList);
+        System.out.println("조회된 프로젝트 목록oo: " + projectList);
 
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
@@ -167,6 +200,7 @@ public class ProjectController {
 
         // 프로젝트 생성자의 정보 조회
     Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
+        System.out.println("users 정보 조회 결과 ::: " + users);
 
         if (users.isEmpty()) {
             return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
@@ -317,6 +351,93 @@ public class ProjectController {
         return ResponseEntity.ok(pendingParticipants);
     }
 
+    @GetMapping("/{projectId}/role")
+    public ResponseEntity<Map<String, String>> getUserRole(
+            @PathVariable Long projectId,
+            @RequestParam Long userId) {
+        ProjectParticipant participant = projectParticipantRepository
+                .findByProjectIdAndUserId(projectId, userId)
+                .orElseThrow(() -> new RuntimeException("참가자 정보를 찾을 수 없습니다."));
+
+        Map<String, String> response = new HashMap<>();
+        response.put("role", participant.getRole().toString());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 프로젝트 생성 후 참여자 초대시 처리하는 로직
+     * @param projectId
+     * 기대 결과값 : 프로젝트 고유 키
+     * */
+    @PostMapping("/{projectId}/participants/invite")
+    public ResponseEntity<?> inviteParticipants(
+            @PathVariable Long projectId,
+            @RequestBody ParticipantInviteRequestDTO inviteRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        // 현재 사용자 확인 (권한 체크)
+        String currentEmail = userDetails.getUsername();
+        boolean isAdmin = projectParticipantsService.isUserAdmin(projectId, currentEmail);
+
+        if (!isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("프로젝트에서 사용자 초대 권한이 없습니다.");
+        }
+
+        // 요청 데이터에서 participants 뽑아오기
+        List<Long> participantIds = inviteRequest.getParticipants();
+        if (participantIds == null || participantIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("참가자 ID가 제공되지 않았습니다.");
+        }
+
+        // Null 값 필터링
+        participantIds = participantIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (participantIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("유효한 참가자 ID가 없습니다.");
+        }
+
+        try {
+            // 이미 참여 중인 사용자 확인
+            List<Long> alreadyAccepted = projectParticipantsService.getAcceptedParticipantsIds(projectId, participantIds);
+            if (!alreadyAccepted.isEmpty()) {
+                // 사용자 정보 가져오기
+                List<String> alreadyAcceptedUserDetails = userRepository.findAllById(alreadyAccepted).stream()
+                        .map(user -> user.getUsername() + " (" + user.getEmail() + ")")
+                        .collect(Collectors.toList());
+                return ResponseEntity.badRequest().body("이미 참여 중인 사용자: " + alreadyAcceptedUserDetails);
+            }
+
+            // REJECTED 상태 사용자도 처리
+            List<Long> rejectedUsers = projectParticipantsService.updateRejectedParticipantsToPending(projectId, participantIds);
+            if (!rejectedUsers.isEmpty()) {
+                return ResponseEntity.ok("거절된 사용자의 상태를 '초대됨(PENDING)'으로 업데이트했습니다: " + rejectedUsers);
+            }
+
+            // 초대 처리
+            projectParticipantsService.inviteParticipants(projectId, participantIds);
+
+            // **알림 처리 (NotificationService 사용)**
+            String projectName = projectService.getProjectNameById(projectId); // 프로젝트 이름 가져오기
+            for (Long participantId : participantIds) {
+                String message = "프로젝트 '" + projectName + "'에 초대되었습니다.";
+                notificationService.createOrUpdateNotification(participantId, projectId, message);
+            }
+
+            return ResponseEntity.ok("프로젝트 참가자 초대 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("프로젝트 참가자 초대 중 오류 발생 : " + e.getMessage());
+        }
+    }
+
+
+
+
+
+
 
 
     // 투표 생성 메소드
@@ -429,13 +550,17 @@ public class ProjectController {
     }
 
 
-    // 투표 contents 불러오기
+    // 유저가 투표한 투표 항목 (voting_record 테이블) insert
     @PostMapping("uservoteinsert")
     public ResponseEntity<Object> findUserVoting(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("contentsId") Long contentsId, // 투표 한 항목 id
             @RequestParam("userId") Long userId, // user 고유 id
             HttpServletRequest request){
+
+        System.out.println("넘어온 유저 투표 정보 :: " + votingId);
+        System.out.println("넘어온 유저 투표 정보 :: " + contentsId);
+        System.out.println("넘어온 유저 투표 정보 :: " + userId);
 
         String token = request.getHeader("Authorization");
         System.out.println("Token: " + token);
@@ -459,7 +584,9 @@ public class ProjectController {
 
         }
     }
-    @PostMapping("findUserVoting") // 투표 별 유저가 투표한 항목 불러오기
+
+    // 투표 별 유저가 투표한 항목 불러오기
+    @PostMapping("findUserVoting")
     public ResponseEntity<Object> userVoteInsert(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("userId") Long userId, // 투표 한 항목 id
@@ -486,16 +613,33 @@ public class ProjectController {
         }else{
             System.out.println(uservoting);
 
+            // 투표의 고유 id 를 가지고 온다.
             // 이제 가지고 해당 userId 가 있는지 확인한다.
             uservoting.getClass();
             uservoting.toString();
-            System.out.println(uservoting.toString());
-            // boolean result = uservoting.toString().contains(userId);
-            if(true){
-                return ResponseEntity.ok(uservoting);
-            }else{
-                return ResponseEntity.status(404).body(uservoting);
+            System.out.println("확인 :: " + uservoting);
+            System.out.println("확인 :: " + uservoting.toString());
+            int please = 0;
+
+            for(VotingRecord user: uservoting) {
+                if (user.getUserId().equals(userId)) {
+                    List<Long> userVote = new ArrayList<>();
+                    userVote.add(user.getVotingId());
+                    userVote.add(user.getContentsId());
+                    please = 1;
+                    System.out.println(userVote.toString());
+                    System.out.println("please :: " + please);
+                    // 해당 유저 id 가 있으면(투표한 정보) 투표Id, 투표 항목 반환
+                    return ResponseEntity.ok(userVote.toString());
+                    // return user.getContentsId();
+                }else{
+                    System.out.println("user 정보가 없어서 여기 탐");
+                    please = 2;
+                }
             }
+            // 해당 유저 id 가 없다면(투표한 정보) null 반환
+            System.out.println("please:: " + please);
+            return ResponseEntity.ok(null);
 
 
         }

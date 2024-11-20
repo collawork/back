@@ -85,4 +85,14 @@ public class ProjectParticipant {
     public void setRole(Role role) {
         this.role = role;
     }
+
+    @Override
+    public String toString() {
+        return "ProjectParticipant{" +
+
+                ", user=" + user +
+                ", role=" + role +
+                ", status=" + status +
+                '}';
+    }
 }
