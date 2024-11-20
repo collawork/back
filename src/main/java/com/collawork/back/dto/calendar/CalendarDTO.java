@@ -14,19 +14,23 @@ public class CalendarDTO {
     private ZonedDateTime end;
     private boolean allDay;
     private BigInteger groupId;
+    private boolean editable;
+    private String color;
 
     private ExtendedProps extendedProps;
 
     public CalendarDTO() {
     }
 
-    public CalendarDTO(BigInteger id, String title, ZonedDateTime start, ZonedDateTime end, boolean allDay, BigInteger groupId, ExtendedProps extendedProps) {
+    public CalendarDTO(BigInteger id, String title, ZonedDateTime start, ZonedDateTime end, boolean allDay, BigInteger groupId, boolean editable, String color, ExtendedProps extendedProps) {
         this.id = id;
         this.title = title;
         this.start = start;
         this.end = end;
         this.allDay = allDay;
         this.groupId = groupId;
+        this.editable = editable;
+        this.color = color;
         this.extendedProps = extendedProps;
     }
 
@@ -78,6 +82,22 @@ public class CalendarDTO {
         this.groupId = groupId;
     }
 
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
     public ExtendedProps getExtendedProps() {
         return extendedProps;
     }
@@ -95,6 +115,8 @@ public class CalendarDTO {
                 ", end=" + end +
                 ", allDay=" + allDay +
                 ", groupId=" + groupId +
+                ", editable=" + editable +
+                ", color='" + color + '\'' +
                 ", extendedProps=" + extendedProps +
                 '}';
     }
