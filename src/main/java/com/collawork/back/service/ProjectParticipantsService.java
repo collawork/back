@@ -73,26 +73,58 @@ public class ProjectParticipantsService {
                 .orElse(false);
     }
 
+    // 초대 처리
+    @Transactional
     public void inviteParticipants(Long projectId, List<Long> participantIds) {
-        // 프로젝트 및 사용자 정보 확인
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다."));
+        List<ProjectParticipant> existingParticipants = projectParticipantsRepository.findByProjectIdAndUserIdIn(projectId, participantIds);
 
-        List<User> users = userRepository.findAllById(participantIds);
+        // REJECTED 상태 업데이트
+        existingParticipants.stream()
+                .filter(participant -> participant.getStatus() == ProjectParticipant.Status.REJECTED)
+                .forEach(participant -> participant.setStatus(ProjectParticipant.Status.PENDING));
 
-        if (users.isEmpty()) {
-            throw new IllegalArgumentException("유효한 사용자 ID가 없습니다.");
-        }
-
-        // 초대 처리
-        List<ProjectParticipant> participants = users.stream()
-                .map(user -> new ProjectParticipant(
-                        new ProjectParticipantId(projectId, user.getId()),
-                        ProjectParticipant.Role.MEMBER
-                ))
+        List<Long> newParticipantIds = participantIds.stream()
+                .filter(userId -> existingParticipants.stream()
+                        .noneMatch(p -> p.getId().getUserId().equals(userId)))
                 .collect(Collectors.toList());
 
-        projectParticipantsRepository.saveAll(participants);
+        // 새로운 참가자 추가
+        List<ProjectParticipant> newParticipants = newParticipantIds.stream()
+                .map(userId -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+                    return new ProjectParticipant(
+                            new ProjectParticipantId(projectId, userId),
+                            ProjectParticipant.Role.MEMBER
+                    );
+                })
+                .collect(Collectors.toList());
+
+        projectParticipantsRepository.saveAll(newParticipants);
+    }
+
+    // 이미 참여 중인 사용자 확인
+    public List<Long> getAcceptedParticipantsIds(Long projectId, List<Long> participantIds) {
+        return projectParticipantsRepository.findByProjectIdAndUserIdIn(projectId, participantIds).stream()
+                .filter(participant -> participant.getStatus() == ProjectParticipant.Status.ACCEPTED)
+                .map(participant -> participant.getId().getUserId())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<Long> updateRejectedParticipantsToPending(Long projectId, List<Long> participantIds) {
+        List<ProjectParticipant> rejectedParticipants = projectParticipantsRepository.findByProjectIdAndUserIdIn(projectId, participantIds).stream()
+                .filter(participant -> participant.getStatus() == ProjectParticipant.Status.REJECTED)
+                .collect(Collectors.toList());
+
+        rejectedParticipants.forEach(participant -> participant.setStatus(ProjectParticipant.Status.PENDING));
+
+        projectParticipantsRepository.saveAll(rejectedParticipants);
+
+        return rejectedParticipants.stream()
+                .map(participant -> participant.getUser().getId())
+                .collect(Collectors.toList());
     }
 
 }

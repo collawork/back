@@ -332,4 +332,10 @@ public class ProjectService {
         List<VotingRecord> uservoting = votingRecordRepository.findByVotingId(votingId);
         return uservoting;
     }
+
+    public String getProjectNameById(Long projectId) {
+        return projectRepository.findById(projectId)
+                .map(Project::getProjectName)
+                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다. ID: " + projectId));
+    }
 }

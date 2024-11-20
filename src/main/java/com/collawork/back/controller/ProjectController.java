@@ -3,6 +3,7 @@ package com.collawork.back.controller;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
 import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.security.JwtTokenProvider;
@@ -46,6 +47,9 @@ public class ProjectController {
 
     @Autowired
     private ProjectParticipantRepository projectParticipantRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -374,13 +378,42 @@ public class ProjectController {
         }
 
         try {
+            // 이미 참여 중인 사용자 확인
+            List<Long> alreadyAccepted = projectParticipantsService.getAcceptedParticipantsIds(projectId, participantIds);
+            if (!alreadyAccepted.isEmpty()) {
+                // 사용자 정보 가져오기
+                List<String> alreadyAcceptedUserDetails = userRepository.findAllById(alreadyAccepted).stream()
+                        .map(user -> user.getUsername() + " (" + user.getEmail() + ")")
+                        .collect(Collectors.toList());
+                return ResponseEntity.badRequest().body("이미 참여 중인 사용자: " + alreadyAcceptedUserDetails);
+            }
+
+            // REJECTED 상태 사용자도 처리
+            List<Long> rejectedUsers = projectParticipantsService.updateRejectedParticipantsToPending(projectId, participantIds);
+            if (!rejectedUsers.isEmpty()) {
+                return ResponseEntity.ok("거절된 사용자의 상태를 '초대됨(PENDING)'으로 업데이트했습니다: " + rejectedUsers);
+            }
+
+            // 초대 처리
             projectParticipantsService.inviteParticipants(projectId, participantIds);
+
+            // **알림 처리 (NotificationService 사용)**
+            String projectName = projectService.getProjectNameById(projectId); // 프로젝트 이름 가져오기
+            for (Long participantId : participantIds) {
+                String message = "프로젝트 '" + projectName + "'에 초대되었습니다.";
+                notificationService.createOrUpdateNotification(participantId, projectId, message);
+            }
+
             return ResponseEntity.ok("프로젝트 참가자 초대 성공");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("프로젝트 참가자 초대 중 오류 발생 : " + e.getMessage());
         }
     }
+
+
+
+
 
 
 

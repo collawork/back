@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Service
 public class NotificationService {
 
@@ -61,6 +64,31 @@ public class NotificationService {
         System.out.println("알림 저장 완료: " + notification.getId());
     }
 
+    /**
+     * 프로젝트 초대 알림을 생성하거나 업데이트
+     * @param userId 사용자 ID
+     * @param projectId 프로젝트 ID
+     * @param message 알림 메시지
+     */
+    @Transactional
+    public void createOrUpdateNotification(Long userId, Long projectId, String message) {
+        // 기존 알림 조회
+        Optional<Notification> existingNotification = notificationRepository.findByUserIdAndProjectIdAndType(
+                userId, projectId, Notification.Type.PROJECT_INVITATION
+        );
+
+        if (existingNotification.isPresent()) {
+            // 기존 알림 업데이트
+            Notification notification = existingNotification.get();
+            notification.setMessage(message);
+            notification.setIsRead(false); // 읽음 상태 초기화
+            notification.setCreatedAt(LocalDateTime.now()); // 타임스탬프 갱신
+            notification.setIsActionCompleted(false); // 재처리 가능하도록 설정
+            notificationRepository.save(notification);
+        } else {
+            createNotification(userId, "PROJECT_INVITATION", message, null, projectId);
+        }
+    }
 
 }
 
