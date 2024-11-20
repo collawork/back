@@ -50,8 +50,17 @@ public class CalendarService {
         List<CalendarDTO> calendarDTOList = new ArrayList<>();
 
         System.out.println("data.getClass().getName() = " + data.getClass().getName());
-        if (data == "null") projectId = null;
-        else projectId = new BigInteger(String.valueOf(data));
+        if (data.toString().equals("null")) {
+            System.out.println("1");
+            projectId = null;
+            System.out.println("2");
+        }
+
+        else {
+            System.out.println("3");
+            projectId = new BigInteger(String.valueOf(data));
+            System.out.println("4");
+        }
 
         scheduleList = calendarRepository.findByProjectId(projectId);
         if (scheduleList.isEmpty()) return null;
@@ -71,6 +80,8 @@ public class CalendarService {
             calendarDTO.setAllDay(schedule.isAllDay());
             calendarDTO.setGroupId(schedule.getProjectId());
             calendarDTO.setId(schedule.getId());
+            calendarDTO.setEditable(schedule.isEditable());
+            calendarDTO.setColor(schedule.getColor());
 
 
             calendarDTO.setExtendedProps(extendedProps);
@@ -79,4 +90,26 @@ public class CalendarService {
         return calendarDTOList;
 
     }
+
+    public boolean updateSelectedEvent(BigInteger id, String title, String description) {
+
+        Calendar selectedEvent = calendarRepository.findById(id).orElse(null);
+
+        selectedEvent.setTitle(title);
+        selectedEvent.setDescription(description);
+
+        Calendar updateEvent = calendarRepository.save(selectedEvent);
+
+        if(updateEvent == null){
+            return false;
+        }
+        return true;
+    }
+
+
+//    public CalendarDTO updateSelectedEvent(Map<String, Object> data) {
+//        // Calendar selectedEvent = CalendarRepository.findById(data.get("id"));
+//        // selectedEvent.setTitle(data.get("title").toString());
+//    return null;
+//    }
 }

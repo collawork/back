@@ -48,10 +48,16 @@ public class Calendar {
     @Column(name = "project_id")
     private BigInteger projectId;
 
+    @Column(name = "editable")
+    private boolean editable;
+
+    @Column(name = "color")
+    private String color;
+
     public Calendar() {
     }
 
-    public Calendar(BigInteger id, String title, String description, ZonedDateTime startTime, ZonedDateTime endTime, ZonedDateTime createdAt, BigInteger createdBy, boolean allDay, BigInteger projectId) {
+    public Calendar(BigInteger id, String title, String description, ZonedDateTime startTime, ZonedDateTime endTime, ZonedDateTime createdAt, BigInteger createdBy, boolean allDay, BigInteger projectId, boolean editable, String color) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -61,6 +67,8 @@ public class Calendar {
         this.createdBy = createdBy;
         this.allDay = allDay;
         this.projectId = projectId;
+        this.editable = editable;
+        this.color = color;
     }
 
     public BigInteger getId() {
@@ -135,6 +143,22 @@ public class Calendar {
         this.projectId = projectId;
     }
 
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
     @Override
     public String toString() {
         return "Calendar{" +
@@ -147,6 +171,8 @@ public class Calendar {
                 ", createdBy=" + createdBy +
                 ", allDay=" + allDay +
                 ", projectId=" + projectId +
+                ", editable=" + editable +
+                ", color='" + color + '\'' +
                 '}';
     }
 }

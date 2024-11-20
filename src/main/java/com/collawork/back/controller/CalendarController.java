@@ -68,14 +68,32 @@ public class CalendarController {
         System.out.println("insert 시작");
 
         if(data.get("description") == null) {
+            System.out.println("1");
             extendedProps.setDescription(null);
+            System.out.println("2");
         }else {
+            System.out.println("3");
             extendedProps.setDescription(data.get("description").toString());
+            System.out.println("4");
         }
+        System.out.println("5");
         extendedProps.setCreatedAt(ZonedDateTime.now());
+        System.out.println("6");
         extendedProps.setCreatedBy(new BigInteger((String) data.get("createdBy")));
+        // extendedProps.setCreatedBy(new BigInteger(Integer.toString((Integer)data.get("createdBy"))));
+        // scheduleInfo.setGroupId(new BigInteger(Integer.toString((Integer)data.get("groupId"))));
+        System.out.println("7");
+        if(data.get("title") == null) {
+            System.out.println("1");
+            scheduleInfo.setTitle(null);
+            System.out.println("2");
+        }else {
+            System.out.println("3");
+            scheduleInfo.setTitle(data.get("title").toString());
+            System.out.println("4");
+        }
+        // scheduleInfo.setTitle(data.get("title").toString());
 
-        scheduleInfo.setTitle(data.get("title").toString());
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
 
@@ -151,5 +169,21 @@ public class CalendarController {
             return ResponseEntity.status(403).body(e.getMessage());
         }
         // return ResponseEntity.ok("test");
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<Object> update(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
+
+        Map<String, Object> data = (Map<String, Object>)rawData.get("updateData");
+
+        BigInteger id = new BigInteger(String.valueOf(data.get("id")));
+        String title = (String) data.get("title");
+        String description = (String) data.get("description");
+
+        System.out.println("id = ::::::::::::::::::::::::::::::" + id);
+
+        boolean result = calendarService.updateSelectedEvent(id, title, description);
+
+        return ResponseEntity.ok(result);
     }
 }
