@@ -23,6 +23,9 @@ public class Project {
     @Column(name = "project_code")
     private String projectCode; // 프로젝트 설명
 
+    @Column(name = "chat_room_id")
+    private Long chatRoomId;
+
     @Column(name = "created_at", columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt; // 생성일
 
@@ -38,12 +41,14 @@ public class Project {
     private List<ProjectParticipant> projectParticipants = new ArrayList<>();
 
 
-    public Project(Long id, String projectName, Long createdBy, String projectCode, LocalDateTime createdAt) {
+    public Project(Long id, String projectName, Long createdBy, String projectCode, Long chatRoomId, LocalDateTime createdAt, List<ProjectParticipant> projectParticipants) {
         this.id = id;
         this.projectName = projectName;
         this.createdBy = createdBy;
         this.projectCode = projectCode;
+        this.chatRoomId = chatRoomId;
         this.createdAt = createdAt;
+        this.projectParticipants = projectParticipants;
     }
 
     public Long getId() {
@@ -78,12 +83,28 @@ public class Project {
         this.projectCode = projectCode;
     }
 
+    public Long getChatRoomId() {
+        return chatRoomId;
+    }
+
+    public void setChatRoomId(Long chatRoomId) {
+        this.chatRoomId = chatRoomId;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<ProjectParticipant> getProjectParticipants() {
+        return projectParticipants;
+    }
+
+    public void setProjectParticipants(List<ProjectParticipant> projectParticipants) {
+        this.projectParticipants = projectParticipants;
     }
 
     @Override
@@ -93,7 +114,10 @@ public class Project {
                 ", projectName='" + projectName + '\'' +
                 ", createdBy=" + createdBy +
                 ", projectCode='" + projectCode + '\'' +
+                ", chatRoomId=" + chatRoomId +
                 ", createdAt=" + createdAt +
+                ", projectParticipants=" + projectParticipants +
                 '}';
     }
 }
+

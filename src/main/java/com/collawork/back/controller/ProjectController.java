@@ -1,5 +1,9 @@
 package com.collawork.back.controller;
 
+import com.collawork.back.model.ChatRooms;
+import com.collawork.back.model.project.*;
+import com.collawork.back.model.auth.User;
+import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
 import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
@@ -12,6 +16,7 @@ import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -38,6 +43,9 @@ public class ProjectController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private ChatRoomRepository chatRoomRepository;
 
     @Autowired
     private NotificationService notificationService;
@@ -74,6 +82,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
         log.debug("Received request data: {}", requestData);
+        System.out.println("왜안생김? : " + requestData);
 
         String token = request.getHeader("Authorization");
 
@@ -96,10 +105,22 @@ public class ProjectController {
                     .map(participant -> Long.valueOf(participant.toString()))
                     .toList();
 
+            User user = new User();
+
             log.debug("Project ID created: {}", userId);
 
+            // 프로젝트 생생 시 프로젝트 채팅방 생성
+            ChatRooms chatRoom = new ChatRooms();
+            chatRoom.setRoomName(title); // 채팅방 이름(=프로젝트 이름)
+            chatRoom.setCreatedBy(user.setId(userId)); // 만든사람
+            chatRoom.setCreatedAt(LocalDateTime.now()); // 생성 시간
+            List<ChatRooms> chatRoomm = Collections.singletonList(chatRoomRepository.save(chatRoom));
+            System.out.println("프로젝트 생성시 생성되는 채팅방 :: " + chatRoomm);
+            Long chatRoomId = chatRoomm.get(0).getId();
+            System.out.println("채팅방 id : " + chatRoomId);
+
             // 프로젝트 생성
-            Long projectId = projectService.insertProject(title, context, userId, participants);
+            Long projectId = projectService.insertProject(title, context, userId, participants,chatRoomId);
 
             // ADMIN 역할로 생성자 추가
             projectParticipantsService.addParticipant(projectId, userId, ProjectParticipant.Role.ADMIN);
@@ -144,7 +165,7 @@ public class ProjectController {
         // 프로젝트 ID와 이름을 모두 조회
         List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
 
-        System.out.println("조회된 프로젝트 목록: " + projectList);
+        System.out.println("조회된 프로젝트 목록oo: " + projectList);
 
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
@@ -179,6 +200,7 @@ public class ProjectController {
 
         // 프로젝트 생성자의 정보 조회
     Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
+        System.out.println("users 정보 조회 결과 ::: " + users);
 
         if (users.isEmpty()) {
             return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
@@ -528,13 +550,17 @@ public class ProjectController {
     }
 
 
-    // 투표 contents 불러오기
+    // 유저가 투표한 투표 항목 (voting_record 테이블) insert
     @PostMapping("uservoteinsert")
     public ResponseEntity<Object> findUserVoting(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("contentsId") Long contentsId, // 투표 한 항목 id
             @RequestParam("userId") Long userId, // user 고유 id
             HttpServletRequest request){
+
+        System.out.println("넘어온 유저 투표 정보 :: " + votingId);
+        System.out.println("넘어온 유저 투표 정보 :: " + contentsId);
+        System.out.println("넘어온 유저 투표 정보 :: " + userId);
 
         String token = request.getHeader("Authorization");
         System.out.println("Token: " + token);
@@ -558,7 +584,9 @@ public class ProjectController {
 
         }
     }
-    @PostMapping("findUserVoting") // 투표 별 유저가 투표한 항목 불러오기
+
+    // 투표 별 유저가 투표한 항목 불러오기
+    @PostMapping("findUserVoting")
     public ResponseEntity<Object> userVoteInsert(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("userId") Long userId, // 투표 한 항목 id
@@ -585,16 +613,33 @@ public class ProjectController {
         }else{
             System.out.println(uservoting);
 
+            // 투표의 고유 id 를 가지고 온다.
             // 이제 가지고 해당 userId 가 있는지 확인한다.
             uservoting.getClass();
             uservoting.toString();
-            System.out.println(uservoting.toString());
-            // boolean result = uservoting.toString().contains(userId);
-            if(true){
-                return ResponseEntity.ok(uservoting);
-            }else{
-                return ResponseEntity.status(404).body(uservoting);
+            System.out.println("확인 :: " + uservoting);
+            System.out.println("확인 :: " + uservoting.toString());
+            int please = 0;
+
+            for(VotingRecord user: uservoting) {
+                if (user.getUserId().equals(userId)) {
+                    List<Long> userVote = new ArrayList<>();
+                    userVote.add(user.getVotingId());
+                    userVote.add(user.getContentsId());
+                    please = 1;
+                    System.out.println(userVote.toString());
+                    System.out.println("please :: " + please);
+                    // 해당 유저 id 가 있으면(투표한 정보) 투표Id, 투표 항목 반환
+                    return ResponseEntity.ok(userVote.toString());
+                    // return user.getContentsId();
+                }else{
+                    System.out.println("user 정보가 없어서 여기 탐");
+                    please = 2;
+                }
             }
+            // 해당 유저 id 가 없다면(투표한 정보) null 반환
+            System.out.println("please:: " + please);
+            return ResponseEntity.ok(null);
 
 
         }
