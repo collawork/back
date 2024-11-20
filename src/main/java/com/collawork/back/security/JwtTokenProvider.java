@@ -66,12 +66,33 @@ public class JwtTokenProvider {
 
 
     public String getEmailFromToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(key)
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            System.err.println("JWT 토큰이 만료되었습니다.");
+            return null;
+        } catch (Exception e) {
+            System.err.println("JWT 파싱 실패: " + e.getMessage());
+            return null;
+        }
     }
+
+
+    public Long getUserIdFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(key)
+                    .parseClaimsJws(token)
+                    .getBody();
+            return Long.valueOf(claims.get("userId").toString());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 
 }
