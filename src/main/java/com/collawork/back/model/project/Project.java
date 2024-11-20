@@ -116,7 +116,7 @@ public class Project {
                 ", projectCode='" + projectCode + '\'' +
                 ", chatRoomId=" + chatRoomId +
                 ", createdAt=" + createdAt +
-                ", projectParticipants=" + projectParticipants +
+
                 '}';
     }
 }
