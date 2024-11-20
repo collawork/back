@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class ProjectParticipantsService {
 
@@ -57,6 +60,39 @@ public class ProjectParticipantsService {
 
         // 저장
         projectParticipantsRepository.save(participant);
+    }
+
+    public boolean isUserAdmin(Long projectId, String userEmail) {
+        User user = userRepository.findByEmail(userEmail);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found: " + userEmail);
+        }
+        return projectParticipantsRepository
+                .findByProjectIdAndUserId(projectId, user.getId())
+                .map(participant -> participant.getRole() == ProjectParticipant.Role.ADMIN)
+                .orElse(false);
+    }
+
+    public void inviteParticipants(Long projectId, List<Long> participantIds) {
+        // 프로젝트 및 사용자 정보 확인
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다."));
+
+        List<User> users = userRepository.findAllById(participantIds);
+
+        if (users.isEmpty()) {
+            throw new IllegalArgumentException("유효한 사용자 ID가 없습니다.");
+        }
+
+        // 초대 처리
+        List<ProjectParticipant> participants = users.stream()
+                .map(user -> new ProjectParticipant(
+                        new ProjectParticipantId(projectId, user.getId()),
+                        ProjectParticipant.Role.MEMBER
+                ))
+                .collect(Collectors.toList());
+
+        projectParticipantsRepository.saveAll(participants);
     }
 
 }
