@@ -429,13 +429,17 @@ public class ProjectController {
     }
 
 
-    // 투표 contents 불러오기
+    // 유저가 투표한 투표 항목 (voting_record 테이블) insert
     @PostMapping("uservoteinsert")
     public ResponseEntity<Object> findUserVoting(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("contentsId") Long contentsId, // 투표 한 항목 id
             @RequestParam("userId") Long userId, // user 고유 id
             HttpServletRequest request){
+
+        System.out.println("넘어온 유저 투표 정보 :: " + votingId);
+        System.out.println("넘어온 유저 투표 정보 :: " + contentsId);
+        System.out.println("넘어온 유저 투표 정보 :: " + userId);
 
         String token = request.getHeader("Authorization");
         System.out.println("Token: " + token);
@@ -459,7 +463,9 @@ public class ProjectController {
 
         }
     }
-    @PostMapping("findUserVoting") // 투표 별 유저가 투표한 항목 불러오기
+
+    // 투표 별 유저가 투표한 항목 불러오기
+    @PostMapping("findUserVoting")
     public ResponseEntity<Object> userVoteInsert(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
             @RequestParam("userId") Long userId, // 투표 한 항목 id
@@ -486,16 +492,33 @@ public class ProjectController {
         }else{
             System.out.println(uservoting);
 
+            // 투표의 고유 id 를 가지고 온다.
             // 이제 가지고 해당 userId 가 있는지 확인한다.
             uservoting.getClass();
             uservoting.toString();
-            System.out.println(uservoting.toString());
-            // boolean result = uservoting.toString().contains(userId);
-            if(true){
-                return ResponseEntity.ok(uservoting);
-            }else{
-                return ResponseEntity.status(404).body(uservoting);
+            System.out.println("확인 :: " + uservoting);
+            System.out.println("확인 :: " + uservoting.toString());
+            int please = 0;
+
+            for(VotingRecord user: uservoting) {
+                if (user.getUserId().equals(userId)) {
+                    List<Long> userVote = new ArrayList<>();
+                    userVote.add(user.getVotingId());
+                    userVote.add(user.getContentsId());
+                    please = 1;
+                    System.out.println(userVote.toString());
+                    System.out.println("please :: " + please);
+                    // 해당 유저 id 가 있으면(투표한 정보) 투표Id, 투표 항목 반환
+                    return ResponseEntity.ok(userVote.toString());
+                    // return user.getContentsId();
+                }else{
+                    System.out.println("user 정보가 없어서 여기 탐");
+                    please = 2;
+                }
             }
+            // 해당 유저 id 가 없다면(투표한 정보) null 반환
+            System.out.println("please:: " + please);
+            return ResponseEntity.ok(null);
 
 
         }
