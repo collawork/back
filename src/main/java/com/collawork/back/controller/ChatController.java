@@ -49,6 +49,9 @@ public class ChatController {
     @GetMapping("/{chatRoomId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable ("chatRoomId") Long chatRoomId) {
         List<Message> messages = chatMessageService.getMessagesByChatRoomId(chatRoomId);
+        for (Message message : messages) {
+            System.out.println(message);
+        }
 
         return ResponseEntity.ok(messages);
     }
@@ -60,6 +63,30 @@ public class ChatController {
 
         return ResponseEntity.ok(roomName);
     }
+
+    @DeleteMapping("/deleteMessages")
+    public ResponseEntity<?> deleteMessages(@RequestBody Map<String, List<Long>> requestBody) {
+        try {
+
+            List<Long> messageIds = requestBody.get("messageIds");
+            for(Long messageId : messageIds) {
+                System.out.println(messageId);
+            }
+
+            if (messageIds == null || messageIds.isEmpty()) {
+                return ResponseEntity.badRequest().body("삭제할 메시지가 없습니다.");
+            }
+
+            // 데이터베이스에서 메시지 삭제
+            messageRepository.deleteAllById(messageIds);
+
+            return ResponseEntity.ok("메시지 삭제 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("메시지 삭제 중 오류 발생: " + e.getMessage());
+        }
+    }
+
+
 
     //파일업로드 메서드
     @PostMapping("/upload")
