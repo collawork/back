@@ -4,7 +4,6 @@ import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.project.*;
 import com.collawork.back.repository.auth.UserRepository;
-import com.collawork.back.service.auth.SocialAuthService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,6 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class ProjectService {
@@ -48,6 +45,9 @@ public class ProjectService {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private BoardRepository boardRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
 
@@ -267,7 +267,8 @@ public class ProjectService {
     }
 
 
-    public List<Voting> votingInsert(String votingName, String projectId, String createdUser, String detail) {
+    public List<Voting> votingInsert(String votingName, String projectId, String createdUser, String detail, LocalDateTime date) {
+        // 마감일을 입력했으면 1, 개인 지정이면 2
 
         Voting voting = new Voting();
         voting.setVotingName(votingName);
@@ -275,7 +276,8 @@ public class ProjectService {
         voting.setCreatedUser(createdUser);
         voting.setVotingDetail(detail);
         LocalDate localDate = LocalDate.now();
-        voting.setCreatedAt(localDate.atStartOfDay());
+        voting.setCreatedAt(localDate.atStartOfDay());// 생성일
+        voting.setVotingEnd(date); // 입력받은 마감일 (LocalDateTime 또는 null)
         voting.setVote(true);
 
         List<Voting> result = Collections.singletonList(votingRepository.save(voting));
@@ -343,5 +345,26 @@ public class ProjectService {
         return projectRepository.findById(projectId)
                 .map(Project::getProjectName)
                 .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다. ID: " + projectId));
+    }
+
+
+    public boolean insertBoard(Long projectId, String boardTitle, String boardContents, Long boardBy) {
+
+        Board board = new Board();
+        board.setBoardTitle(boardTitle);
+        board.setBoardContents(boardContents);
+        board.setBoardBy(boardBy);
+        board.setProjectId(projectId);
+
+        if(boardRepository.save(board) != null){
+            return true;
+        }
+        return false;
+    }
+
+    public List<Board> findByProjectId(Long projectId) {
+
+        List<Board> board = boardRepository.findByProjectId(projectId);
+        return board;
     }
 }
