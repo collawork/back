@@ -10,7 +10,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.Paths;
+import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
 @Controller
@@ -45,7 +51,13 @@ public class MainController {
 
     // 사용자 정보 업데이트
     @PutMapping("/user/update")
-    public ResponseEntity<String> updateUserProfile(@RequestBody User updatedUser, HttpServletRequest request) {
+    public ResponseEntity<String> updateUserProfile(
+            @RequestParam("username") String username,
+            @RequestParam("company") String company,
+            @RequestParam("position") String position,
+            @RequestParam("fax") String fax,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            HttpServletRequest request) {
         String token = request.getHeader("Authorization").replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
 
@@ -54,13 +66,19 @@ public class MainController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
-            user.setUsername(updatedUser.getUsername());
-            user.setCompany(updatedUser.getCompany());
-            user.setPosition(updatedUser.getPosition());
-            user.setFax(updatedUser.getFax());
+            user.setUsername(username);
+            user.setCompany(company);
+            user.setPosition(position);
+            user.setFax(fax);
 
-            if (updatedUser.getProfileImage() != null) {
-                user.setProfileImage(updatedUser.getProfileImage());
+            if (profileImage != null && !profileImage.isEmpty()) {
+                try {
+                    // 이미지 저장 로직 (예: 서버에 저장하거나 S3에 업로드)
+                    String imagePath = saveProfileImage(profileImage);
+                    user.setProfileImage(imagePath);
+                } catch (IOException e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이미지 저장 실패");
+                }
             }
 
             userRepository.save(user);
@@ -69,6 +87,23 @@ public class MainController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
         }
     }
+
+    private String saveProfileImage(MultipartFile profileImage) throws IOException {
+        String uploadDir = "C:/back/uploads/";
+        String fileName = UUID.randomUUID() + "_" + profileImage.getOriginalFilename();
+        Path uploadPath = Paths.get(uploadDir);
+
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(profileImage.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        return fileName;
+    }
+
+
 
     @GetMapping("/user/detail")
     public ResponseEntity<User> getUserByEmailOrId(

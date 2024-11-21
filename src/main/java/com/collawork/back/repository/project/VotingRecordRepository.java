@@ -8,5 +8,9 @@ import java.util.List;
 
 @Repository
 public interface VotingRecordRepository extends JpaRepository<VotingRecord, Long> {
+    
+
     List<VotingRecord> findByVotingId(Long votingId);
+
+    List<Object> findByContentsId(Long id);
 }

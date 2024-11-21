@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/newproject").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/newvoting").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/selectAll").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/newBoard").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/projecthomeusers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                         .requestMatchers("/api/friends/**").permitAll()
@@ -61,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers("/chattingServer/**","/ws/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
+                        .requestMatchers("/api/category/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
