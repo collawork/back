@@ -7,15 +7,17 @@ public class ExtendedProps {
 
      private String description;
      private ZonedDateTime createdAt;
-     private BigInteger createdBy;
+     private Long createdBy;
+     private Long projectId;
 
-    public ExtendedProps() {
-    }
+     public ExtendedProps() {
+     }
 
-    public ExtendedProps(String description, ZonedDateTime createdAt, BigInteger createdBy) {
+    public ExtendedProps(String description, ZonedDateTime createdAt, Long createdBy, Long projectId) {
         this.description = description;
         this.createdAt = createdAt;
         this.createdBy = createdBy;
+        this.projectId = projectId;
     }
 
     public String getDescription() {
@@ -34,12 +36,20 @@ public class ExtendedProps {
         this.createdAt = createdAt;
     }
 
-    public BigInteger getCreatedBy() {
+    public Long getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(BigInteger createdBy) {
+    public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
     @Override
@@ -48,6 +58,7 @@ public class ExtendedProps {
                 "description='" + description + '\'' +
                 ", createdAt=" + createdAt +
                 ", createdBy=" + createdBy +
+                ", projectId=" + projectId +
                 '}';
     }
 }

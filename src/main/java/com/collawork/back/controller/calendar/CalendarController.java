@@ -1,10 +1,10 @@
-package com.collawork.back.controller;
+package com.collawork.back.controller.calendar;
 
 import com.collawork.back.dto.calendar.CalendarDTO;
 import com.collawork.back.dto.calendar.ExtendedProps;
-import com.collawork.back.model.Calendar;
+import com.collawork.back.model.calendar.Calendar;
 import com.collawork.back.security.JwtTokenProvider;
-import com.collawork.back.service.CalendarService;
+import com.collawork.back.service.calendar.CalendarService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,6 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +30,37 @@ public class CalendarController {
     private JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/events")
-    public ResponseEntity<Object> EventsByProjectId(@RequestParam("selectedProjectId") Object data, HttpServletRequest request) {
-        System.out.println("1111");
-        System.out.println("data~~~~~~~~~~~!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! = " + data);
+    public ResponseEntity<Object> EventsByProjectId(@RequestParam("selectedProjectId") String data, HttpServletRequest request) {
+        System.out.println("CalendarController: 프로젝트 아이디로 이벤트를 찾는 메소드:::::::::::::::::::::::::::");
 
-        List<CalendarDTO> result = calendarService.eventsByProjectId(data);
+        Long longValueNull = null;
+        List<CalendarDTO> result;
+        System.out.println("data : "+data);
+        System.out.println("data.getClass().getName() = " + data.getClass().getName());
+        if(data.equals("0")){
+            System.out.println("1");
+            result = calendarService.eventsByProjectId(longValueNull);
+            System.out.println("2");
+        }else{
+            System.out.println("3");
+            result = calendarService.eventsByProjectId(Long.parseLong(data));
+            System.out.println("4");
+        }
+        System.out.println("5");
+//        if(data != null) {
+//            try {
+//                longValue = Long.parseLong(data);
+//            } catch (NumberFormatException e) {
+//                e.printStackTrace();
+//            }
+//        }else {
+//            System.out.println("The string is null and cannot be converted to Long.");
+//        }
+//            System.out.println("1111111111111111111111111111");
+//            data = "";
+//            System.out.println("222222222222222222222222222");
+
+        // List<CalendarDTO> result = calendarService.eventsByProjectId(Long.parseLong(data));
 
         // 토큰..
         String token = request.getHeader("Authorization");
@@ -57,6 +82,7 @@ public class CalendarController {
 
     @PostMapping("/insert")
     public ResponseEntity<Object> insert(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
+        System.out.println("CalendarController: 스케쥴을 DB에 저장하는 메소드:::::::::::::::::::::::::::");
 
         System.out.println("test::::::::::::::::: "+rawData);
 
@@ -79,9 +105,20 @@ public class CalendarController {
         System.out.println("5");
         extendedProps.setCreatedAt(ZonedDateTime.now());
         System.out.println("6");
-        extendedProps.setCreatedBy(new BigInteger((String) data.get("createdBy")));
-        // extendedProps.setCreatedBy(new BigInteger(Integer.toString((Integer)data.get("createdBy"))));
+        extendedProps.setCreatedBy(Long.parseLong((String) data.get("createdBy")));
+
+        //extendedProps.setCreatedBy(new BigInteger(Integer.toString((Integer)data.get("createdBy"))));
         // scheduleInfo.setGroupId(new BigInteger(Integer.toString((Integer)data.get("groupId"))));
+        if(data.containsKey("projectId") && data.get("projectId") != null){
+            System.out.println("8");
+            extendedProps.setProjectId((Long) data.get("projectId"));
+        }else {
+            System.out.println("7");
+            extendedProps.setProjectId(null);
+        }
+
+
+
         System.out.println("7");
         if(data.get("title") == null) {
             System.out.println("1");
@@ -133,13 +170,15 @@ public class CalendarController {
         scheduleInfo.setAllDay(data.get("allDay").toString().equals("true"));
         System.out.println("04");
         if(data.get("groupId") == null || data.get("groupId").toString().isEmpty()){
-            scheduleInfo.setGroupId(null);
+            extendedProps.setProjectId(null);
         }else {
-            scheduleInfo.setGroupId(new BigInteger(Integer.toString((Integer)data.get("groupId"))));
+            extendedProps.setProjectId((Long) data.get("groupId"));
         }
-        System.out.println("scheduleInfo.getProjectId() = " + scheduleInfo.getGroupId());
+
 
         System.out.println("scheduleInfo.isAllDay() = " + scheduleInfo.isAllDay());
+
+
 
         scheduleInfo.setExtendedProps(extendedProps);
 
@@ -173,6 +212,7 @@ public class CalendarController {
 
     @PostMapping("/update")
     public ResponseEntity<Object> update(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
+        System.out.println("CalendarController: 아이디로 특정 스케쥴을 특정하고 해당 일정을 수정하는 메소드::::::::::::::::::::");
 
         Map<String, Object> data = (Map<String, Object>)rawData.get("updateData");
 
