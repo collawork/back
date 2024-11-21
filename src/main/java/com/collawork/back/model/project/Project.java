@@ -1,8 +1,6 @@
 package com.collawork.back.model.project;
 
 import jakarta.persistence.*;
-import net.minidev.json.annotate.JsonIgnore;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +38,6 @@ public class Project {
     }
 
 //    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonIgnore
 //    private List<ProjectParticipant> projectParticipants = new ArrayList<>();
 
 
@@ -51,7 +48,7 @@ public class Project {
         this.projectCode = projectCode;
         this.chatRoomId = chatRoomId;
         this.createdAt = createdAt;
-//        this.projectParticipants = projectParticipants;
+       // this.projectParticipants = projectParticipants;
     }
 
     public Long getId() {
@@ -101,7 +98,7 @@ public class Project {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
+//
 //    public List<ProjectParticipant> getProjectParticipants() {
 //        return projectParticipants;
 //    }
@@ -119,7 +116,7 @@ public class Project {
                 ", projectCode='" + projectCode + '\'' +
                 ", chatRoomId=" + chatRoomId +
                 ", createdAt=" + createdAt +
-//                ", projectParticipants=" + projectParticipants +
+                // ", projectParticipants=" + projectParticipants +
                 '}';
     }
 }
