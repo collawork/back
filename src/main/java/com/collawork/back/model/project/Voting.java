@@ -25,8 +25,14 @@ public class Voting {
     @Column(name = "created_user")
     private String createdUser;
 
+    @Column(name = "voting_end") // 지정한 마감일
+    private LocalDateTime votingEnd;
+
+    @Column(name = "user_voted") // 유저의 투표 유무
+    private Boolean userVoted;
+
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 생성일
 
     @Column(name = "is_vote", columnDefinition = "TIMESTAMP")
     private Boolean isVote;
@@ -34,15 +40,16 @@ public class Voting {
     public Voting() {
     }
 
-    public Voting(Long id, String votingName, String votingDetail, Long projectId, String createdUser, LocalDateTime createdAt, Boolean isVote) {
+    public Voting(Long id, String votingName, String votingDetail, Long projectId, String createdUser, LocalDateTime votingEnd, Boolean userVoted, LocalDateTime createdAt, Boolean isVote) {
         this.id = id;
         this.votingName = votingName;
         this.votingDetail = votingDetail;
         this.projectId = projectId;
         this.createdUser = createdUser;
+        this.votingEnd = votingEnd;
+        this.userVoted = userVoted;
         this.createdAt = createdAt;
         this.isVote = isVote;
-
     }
 
     public Long getId() {
@@ -85,6 +92,22 @@ public class Voting {
         this.createdUser = createdUser;
     }
 
+    public LocalDateTime getVotingEnd() {
+        return votingEnd;
+    }
+
+    public void setVotingEnd(LocalDateTime votingEnd) {
+        this.votingEnd = votingEnd;
+    }
+
+    public Boolean getUserVoted() {
+        return userVoted;
+    }
+
+    public void setUserVoted(Boolean userVoted) {
+        this.userVoted = userVoted;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -109,6 +132,8 @@ public class Voting {
                 ", votingDetail='" + votingDetail + '\'' +
                 ", projectId=" + projectId +
                 ", createdUser='" + createdUser + '\'' +
+                ", votingEnd=" + votingEnd +
+                ", userVoted=" + userVoted +
                 ", createdAt=" + createdAt +
                 ", isVote=" + isVote +
                 '}';
