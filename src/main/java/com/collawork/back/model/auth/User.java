@@ -1,6 +1,7 @@
 package com.collawork.back.model.auth;
 
 import com.collawork.back.model.friends.Category;
+import com.collawork.back.model.project.Notice;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -163,4 +164,5 @@ public class User {
                 ", createdAt=" + createdAt +
                 '}';
     }
+
 }
