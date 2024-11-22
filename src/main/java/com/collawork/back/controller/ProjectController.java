@@ -511,7 +511,7 @@ public class ProjectController {
 
         //System.out.println("findVoting 의 받아온 projectId :: " + projectId);
         List<Voting> vote = projectService.findByVoting(projectId);
-        //System.out.println("vote :: " + vote);
+        System.out.println("여기 vote :: " + vote);
         if (vote.isEmpty()) {
             return ResponseEntity.status(404).body(vote);
         } else {
@@ -580,7 +580,7 @@ public class ProjectController {
         }
     }
 
-    // 투표 별 (한사람)유저가 투표한 항목 불러오기
+    // 투표 별 (한사람) 유저가 투표한 항목 불러오기
     @PostMapping("findUserVoting")
     public ResponseEntity<Object> userVoteInsert(
             @RequestParam("votingId") Long votingId, // 투표 고유 id
@@ -588,7 +588,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
 
-        // 1. 투표 id 로
+        // 1. 투표 고유 id 로 이 투표에 투표한 유저 id와 항목 정보를 불러온다.
         List<VotingRecord> uservoting = projectService.findByVotingIdRecord(votingId);
         System.out.println("투표 별 유저들 투표 항목 : " + uservoting);
 
@@ -602,19 +602,14 @@ public class ProjectController {
             uservoting.getClass();
             uservoting.toString();
 
-            int please = 0;
 
             for (VotingRecord user : uservoting) {
-                if (user.getUserId().equals(userId)) {
+                if (user.getUserId().equals(userId)) { // 유저가 투표를 한 투표라면 true, 안했으면 false
                     List<Long> userVote = new ArrayList<>();
-                    userVote.add(user.getVotingId());
-                    userVote.add(user.getContentsId());
+                    userVote.add(user.getVotingId()); // 투표 id
+                    userVote.add(user.getContentsId()); // 유저가 투표 한 항목
 
-                    // 해당 유저 id 가 있으면(투표한 정보) 투표Id, 투표 항목 반환
-                    return ResponseEntity.ok(userVote.toString());
-                    // return user.getContentsId();
-                } else {
-                    System.out.println("user 정보가 없어서 여기 탐");
+                     return ResponseEntity.ok(userVote.toString());
                 }
             }
             // 해당 유저 id 가 없다면(투표한 정보) null 반환
@@ -626,53 +621,18 @@ public class ProjectController {
     @PostMapping("VoteOptionUsers")
     public ResponseEntity<Object> voteOptionUsers(
             @RequestParam("votingId") Long votingId, // 투표 id
-            @RequestParam("projectId") Long projectId,
+            @RequestParam("projectId") Long projectId, // 프로젝트 id
             HttpServletRequest request) {
 
-        // 2. 투표 안에 있는 항목 id
-        // 3. 그 항목들로 다 find
-        // 4. 그 결과들을 다 넘김
-
-        String token = request.getHeader("Authorization");
-        // System.out.println("Token: " + token);
-
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        try {
+            List<Map<String, Object>> results = projectService.getVoteCounts(votingId);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred while fetching vote counts.");
         }
 
-        token = token.replace("Bearer ", "");
-        String email = jwtTokenProvider.getEmailFromToken(token);
-        if (email == null) {
-            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
-        }
-
-        // 1. 먼저 투표 id 로 voting_contents 조회(항목들)
-        List<VotingContents> votingContents = projectService.findByVotingId(votingId);
-        System.out.println("투표id 로 contents 조회 항목들 :: " + votingContents);
-
-
-        // 2. 조회한 항목 id 로 voting_record 테이블 조회
-        for (VotingContents voting : votingContents) {
-            System.out.println("for 문 안 :: " + voting);
-            System.out.println("for 문 안 getId :: " + voting.getId());
-
-            List<Object> contents = votingRecordRepository.findByContentsId(voting.getId());
-            contents.add(votingRecordRepository.findByContentsId(voting.getId()));
-             System.out.println("이건 찍히나? :: " + votingRecordRepository.findByContentsId(voting.getId()));
-             System.out.println("두번째 조회 결과 List임  :: " + contents);
-        }
-
-
-         List<VotingRecord> uservoting = projectService.findByVotingIdRecord(votingId);
-        System.out.println(uservoting);
-
-        if (uservoting.isEmpty()) {
-            return ResponseEntity.status(404).body(uservoting);
-        } else {
-            return ResponseEntity.ok(Map.of(
-
-            ));
-        }
     }
 
     // 공지사항 등록
@@ -710,6 +670,33 @@ public class ProjectController {
             return ResponseEntity.ok(board);
         }else{
             return ResponseEntity.status(404).body("공지사항 목록 조회에 실패하였습니다.");
+        }
+    }
+
+    // 투표 생성자 정보 조회
+    @PostMapping("votingByUser")
+    public ResponseEntity<Object> votingByUser(
+            @RequestParam("userId") Long userId){
+        System.out.println("투표 생성자 정보 조회 :: " + userId);
+
+        Optional<User> user = projectService.findById(userId);
+        if(user.isEmpty()){
+            return ResponseEntity.status(404).body(user);
+        }else{
+            return ResponseEntity.ok(user);
+        }
+    }
+
+    // 투표 상태(진행중 or 진행종료) 값 변경
+    @PostMapping("isVoteUpdate")
+    public ResponseEntity<Object> isVoteUpdate(
+            @RequestParam("votingId") Long voteId){
+        try {
+            System.out.println("봐봐 이거"+ voteId);
+            projectService.updateVoteStatus(voteId);
+            return ResponseEntity.ok("투표 상태 변경 성공 !");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("투표 상태 변경 중 에러 : " + e.getMessage());
         }
     }
 

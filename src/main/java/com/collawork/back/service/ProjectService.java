@@ -367,4 +367,41 @@ public class ProjectService {
         List<Board> board = boardRepository.findByProjectId(projectId);
         return board;
     }
+
+    public VotingRecord findByContentsId(String contentsList) {
+
+        List<Object> result = votingRecordRepository.findByContentsId(Long.valueOf(contentsList));
+        return (VotingRecord) result;
+    }
+
+    public List<Map<String, Object>> getVoteCounts(Long votingId) {
+        List<VoteCountProjection> results = votingRecordRepository.countUserVotesByVotingId(votingId);
+
+        // Convert projection to a list of maps for response
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (VoteCountProjection result : results) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("contentsId", result.getContentsId());
+            map.put("userCount", result.getUserCount());
+            response.add(map);
+        }
+        return response;
+    }
+
+    public Optional<User> findById(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        return user;
+    }
+
+    @Transactional
+    public void updateVoteStatus(Long voteId) {
+        Voting voting = votingRepository.findById(voteId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+
+        // Set the is_vote to false to mark it as ended
+        voting.setVote(false);
+
+        // Save the updated voting entity back to the database
+        votingRepository.save(voting);
+    }
 }
+
