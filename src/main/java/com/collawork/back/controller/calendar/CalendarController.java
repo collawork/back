@@ -31,36 +31,20 @@ public class CalendarController {
 
     @GetMapping("/events")
     public ResponseEntity<Object> EventsByProjectId(@RequestParam("selectedProjectId") String data, HttpServletRequest request) {
-        System.out.println("CalendarController: 프로젝트 아이디로 이벤트를 찾는 메소드:::::::::::::::::::::::::::");
+        System.out.println("CalendarController: 프로젝트 아이디로 스케쥴 리스트를 찾는 메소드:::::::::::::::::::::::::::");
 
-        Long longValueNull = null;
+        // 결과를 받을 DTO 리스트, 프론트에서 사용하는 Fullcalendar API가 제공해 주는 기능과 DB의 컬럼명이 상이하여
+        // 엔티티로 받은 값을 다시 DTO에 담아서 프론트로 보내준다.
         List<CalendarDTO> result;
-        System.out.println("data : "+data);
-        System.out.println("data.getClass().getName() = " + data.getClass().getName());
-        if(data.equals("0")){
-            System.out.println("1");
-            result = calendarService.eventsByProjectId(longValueNull);
-            System.out.println("2");
-        }else{
-            System.out.println("3");
-            result = calendarService.eventsByProjectId(Long.parseLong(data));
-            System.out.println("4");
-        }
-        System.out.println("5");
-//        if(data != null) {
-//            try {
-//                longValue = Long.parseLong(data);
-//            } catch (NumberFormatException e) {
-//                e.printStackTrace();
-//            }
-//        }else {
-//            System.out.println("The string is null and cannot be converted to Long.");
-//        }
-//            System.out.println("1111111111111111111111111111");
-//            data = "";
-//            System.out.println("222222222222222222222222222");
 
-        // List<CalendarDTO> result = calendarService.eventsByProjectId(Long.parseLong(data));
+        // 프로젝트 아이디가 있으면 프로젝트에 속한 스케쥴이고, 없다면 개인 스케쥴이다.
+        // 하나의 달력 컴포넌트로 프로젝트 달력과 개인 달력을 출력할 수 있도록 했다.
+        Long longValueNull = null;
+        if(data.equals("0")){
+            result = calendarService.eventsByProjectId(longValueNull);
+        }else{
+            result = calendarService.eventsByProjectId(Long.parseLong(data));
+        }
 
         // 토큰..
         String token = request.getHeader("Authorization");
@@ -76,110 +60,67 @@ public class CalendarController {
         System.out.println("result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! = " + result);
 
         return ResponseEntity.ok(result);
-
-
     }
 
     @PostMapping("/insert")
     public ResponseEntity<Object> insert(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
         System.out.println("CalendarController: 스케쥴을 DB에 저장하는 메소드:::::::::::::::::::::::::::");
 
-        System.out.println("test::::::::::::::::: "+rawData);
+        Map<String, Object> data = (Map<String, Object>)rawData.get("newData"); // 프론트에서 객체를 감싸서, 백에서 껍질을 깠다.
 
-        Map<String, Object> data = (Map<String, Object>)rawData.get("newData");
-        System.out.println("data = " + data);
-        ExtendedProps extendedProps = new ExtendedProps();
         CalendarDTO scheduleInfo = new CalendarDTO();
+        ExtendedProps extendedProps = new ExtendedProps(); // CalendarDTO에 존재하는 필드 클래스, 모두 담은 후 밑에서 합칠 예정.
 
-        System.out.println("insert 시작");
-
+        // 스케쥴의 상세 내용을 DTO에 담고 있다.
         if(data.get("description") == null) {
-            System.out.println("1");
             extendedProps.setDescription(null);
-            System.out.println("2");
         }else {
-            System.out.println("3");
             extendedProps.setDescription(data.get("description").toString());
-            System.out.println("4");
         }
-        System.out.println("5");
+        // 스케쥴의 생성일
         extendedProps.setCreatedAt(ZonedDateTime.now());
-        System.out.println("6");
-        extendedProps.setCreatedBy(Long.parseLong((String) data.get("createdBy")));
-
-        //extendedProps.setCreatedBy(new BigInteger(Integer.toString((Integer)data.get("createdBy"))));
-        // scheduleInfo.setGroupId(new BigInteger(Integer.toString((Integer)data.get("groupId"))));
+        // 스케쥴을 등록한 유저 ID (DB에 저장된 고유값)
+        Long createdBy = Long.valueOf(data.get("createdBy").toString());
+        extendedProps.setCreatedBy(createdBy);
+        // 스케쥴의 소속 (해당 스케쥴의 프로젝트 아이디)
         if(data.containsKey("projectId") && data.get("projectId") != null){
-            System.out.println("8");
-            extendedProps.setProjectId((Long) data.get("projectId"));
+            extendedProps.setProjectId(Long.parseLong(data.get("projectId").toString()));
         }else {
-            System.out.println("7");
             extendedProps.setProjectId(null);
         }
-
-
-
-        System.out.println("7");
+        // 스케쥴의 제목
         if(data.get("title") == null) {
-            System.out.println("1");
             scheduleInfo.setTitle(null);
-            System.out.println("2");
         }else {
-            System.out.println("3");
             scheduleInfo.setTitle(data.get("title").toString());
-            System.out.println("4");
         }
-        // scheduleInfo.setTitle(data.get("title").toString());
-
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
-
+        // 스케쥴의 시작 시점과 종료 시점
+        // 시분(00:00)이 있는 정보는 ZonedDateTime에 그대로 담고, 그렇지 않은 데이터는 붙여서 담는다.
         try {
             ZonedDateTime start = ZonedDateTime.parse((String) data.get("start"));
             ZonedDateTime end = ZonedDateTime.parse((String) data.get("end"));
-            System.out.println("zone ::::::::::" + start);
-            System.out.println(end);
+
             scheduleInfo.setStart(start);
             scheduleInfo.setEnd(end);
         }catch (DateTimeParseException e){
-            
             try {
                 ZoneId zoneId = ZoneId.of("Asia/Seoul");
                 LocalDate start = LocalDate.parse((String) data.get("start"));
                 LocalDate end = LocalDate.parse((String) data.get("end"));
-                System.out.println("local::::::::::::"+start);
-                System.out.println(end);
 
                 ZonedDateTime zoneStart = start.atStartOfDay(zoneId);
                 ZonedDateTime zoneEnd = end.atStartOfDay(zoneId);
 
-                System.out.println(zoneStart);
-                System.out.println(zoneEnd);
-
                 scheduleInfo.setStart(zoneStart);
                 scheduleInfo.setEnd(zoneEnd);
             }catch (DateTimeParseException e2){
-                System.out.println("아무것도 안담김");
                 return null;
             }
-           
-            
         }
-
-        System.out.println("03");
+        // 스케쥴의 allDay 여부 (true면 정확한 시분 정보가 있어도 종일 스케쥴로 표기된다.)
         scheduleInfo.setAllDay(data.get("allDay").toString().equals("true"));
-        System.out.println("04");
-        if(data.get("groupId") == null || data.get("groupId").toString().isEmpty()){
-            extendedProps.setProjectId(null);
-        }else {
-            extendedProps.setProjectId((Long) data.get("groupId"));
-        }
 
-
-        System.out.println("scheduleInfo.isAllDay() = " + scheduleInfo.isAllDay());
-
-
-
+        // CalendarDTO에 ExtendedProps를 담는다.
         scheduleInfo.setExtendedProps(extendedProps);
 
 
@@ -212,18 +153,49 @@ public class CalendarController {
 
     @PostMapping("/update")
     public ResponseEntity<Object> update(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
-        System.out.println("CalendarController: 아이디로 특정 스케쥴을 특정하고 해당 일정을 수정하는 메소드::::::::::::::::::::");
+        System.out.println("CalendarController: 아이디로 특정 스케쥴을 특정하고 제목 설명을 수정하는 메소드::::::::::::::::::::");
 
-        Map<String, Object> data = (Map<String, Object>)rawData.get("updateData");
+        Map<String, Object> data = (Map<String, Object>)rawData.get("updateData"); // 프론트에서 객체를 감싸서, 백에서 껍질을 깠다.
 
+        // 데이터를 알맞은 형으로 변환
         BigInteger id = new BigInteger(String.valueOf(data.get("id")));
         String title = (String) data.get("title");
         String description = (String) data.get("description");
 
-        System.out.println("id = ::::::::::::::::::::::::::::::" + id);
-
+        // 서비스로 형변환한 데이터 전달
         boolean result = calendarService.updateSelectedEvent(id, title, description);
 
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/updatedate")
+    public ResponseEntity<Object> updatedate(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
+        System.out.println("CalendarController: 아이디로 특정 스케쥴을 특정하고 날짜를 수정하는 메소드::::::::::::::::::::");
+
+        Map<String, Object> data = (Map<String, Object>)rawData.get("updateData"); // 프론트에서 객체를 감싸서, 백에서 껍질을 깠다.
+
+        // 알맞은 형으로 타입 변환 중..
+        BigInteger id = new BigInteger(String.valueOf(data.get("id")));
+        boolean allDay = data.get("allDay").toString().equals("true");
+
+        // allDay 여부로 스케줄 시종의 타입을 전환하고, 해다 allDay 여부까지 서비스로 전달한다.
+        if(!allDay){
+            ZonedDateTime start = ZonedDateTime.parse((String) data.get("start"));
+            ZonedDateTime end = ZonedDateTime.parse((String) data.get("end"));
+
+            boolean result = calendarService.updateDateSelectedEvent(id, start, end, allDay);
+            return ResponseEntity.ok(result);
+        }else{
+            ZoneId zoneId = ZoneId.of("Asia/Seoul"); // 시분이 없는 날짜 정보에 시분을 붙이기 위한 변수.
+
+            LocalDate localDatestart = LocalDate.parse((String) data.get("start"));
+            LocalDate localDateend = LocalDate.parse((String) data.get("end"));
+
+            ZonedDateTime start = localDatestart.atStartOfDay(zoneId);
+            ZonedDateTime end = localDateend.atStartOfDay(zoneId);
+
+            boolean result = calendarService.updateDateSelectedEvent(id, start, end, allDay);
+            return ResponseEntity.ok(result);
+        }
     }
 }

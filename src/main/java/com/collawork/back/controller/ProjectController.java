@@ -1,13 +1,13 @@
 package com.collawork.back.controller;
 
 import com.collawork.back.model.ChatRooms;
+import com.collawork.back.model.calendar.Calendar;
 import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
-import com.collawork.back.model.project.*;
-import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.auth.UserRepository;
+import com.collawork.back.repository.calendar.CalendarRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.project.VotingRecordRepository;
@@ -17,6 +17,7 @@ import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -55,6 +56,9 @@ public class ProjectController {
     private NotificationService notificationService;
 
     @Autowired
+    private CalendarRepository calendarRepository;
+
+    @Autowired
     private ProjectParticipantsService projectParticipantsService;
 
     @Autowired
@@ -86,7 +90,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
         log.debug("Received request data: {}", requestData);
-        System.out.println("왜안생김? : " + requestData);
+
 
         String token = request.getHeader("Authorization");
 
@@ -119,9 +123,9 @@ public class ProjectController {
             chatRoom.setCreatedBy(user.setId(userId)); // 만든사람
             chatRoom.setCreatedAt(LocalDateTime.now()); // 생성 시간
             List<ChatRooms> chatRoomm = Collections.singletonList(chatRoomRepository.save(chatRoom));
-            System.out.println("프로젝트 생성시 생성되는 채팅방 :: " + chatRoomm);
+
             Long chatRoomId = chatRoomm.get(0).getId();
-            System.out.println("채팅방 id : " + chatRoomId);
+
 
             // 프로젝트 생성
             Long projectId = projectService.insertProject(title, context, userId, participants, chatRoomId);
@@ -153,7 +157,7 @@ public class ProjectController {
 
         token = token.replace("Bearer ", "");
         String email = jwtTokenProvider.getEmailFromToken(token);
-        System.out.println("추출한 이메일: " + email);
+
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
@@ -161,15 +165,13 @@ public class ProjectController {
         Long userId;
         try {
             userId = Long.valueOf(requestBody.get("userId").toString());
-            System.out.println("추출한 userId: " + userId);
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
         }
 
         // 프로젝트 ID와 이름을 모두 조회
         List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
-
-        System.out.println("조회된 프로젝트 목록oo: " + projectList);
 
         if (projectList == null || projectList.isEmpty()) {
             return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
@@ -186,8 +188,6 @@ public class ProjectController {
 
         String token = request.getHeader("Authorization");
 
-        System.out.println("token : " + token);
-        System.out.println("플젝의 userId : " + userId);
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -197,11 +197,11 @@ public class ProjectController {
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
-        System.out.println("selectAll");
+
 
         // 프로젝트 생성자의 정보 조회
         Optional<User> users = projectService.selectUserNameByUserId(Long.valueOf(userId));
-        System.out.println("users 정보 조회 결과 ::: " + users);
+
 
         if (users.isEmpty()) {
             return ResponseEntity.ok("프로젝트 생성자의 정보가 없습니다.");
@@ -214,11 +214,11 @@ public class ProjectController {
     public ResponseEntity<Object> getProjectSelect(@RequestParam("projectName") String projectName,
                                                    HttpServletRequest request) {
 
-        System.out.println("projectInformation 의 projectName : " + projectName);
+
 
         String token = request.getHeader("Authorization");
 
-        System.out.println("token : " + token);
+
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -228,11 +228,11 @@ public class ProjectController {
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
-        System.out.println("selectAll");
+
 
         // projectName 으로 project 엔티티 조회 후 가져옴
         List<Project> projectList = projectService.selectByProjectName(projectName);
-        System.out.println("projectController 의 프로젝트 정보 조회 ::: " + projectList);
+
         if (projectList.isEmpty()) {
             return ResponseEntity.status(403).body("조회된 정보가 없습니다.");
         }
@@ -448,16 +448,14 @@ public class ProjectController {
         if (payload.get("selectedOption") != null) {
             date = (LocalDateTime) payload.get("selectedOption");
         }
-        System.out.println("받아온 마감일 :: " + date);
+
         List<String> contents = (List<String>) payload.get("contents");
 
-        System.out.println("Voting Name: " + votingName);
-        System.out.println("Project ID: " + projectId);
-        System.out.println("Created User: " + createdUser);
+
         contents.forEach(content -> System.out.println("Content: " + content));
 
         String token = request.getHeader("Authorization");
-        System.out.println("Token: " + token);
+
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -472,13 +470,11 @@ public class ProjectController {
         List<Voting> result = projectService.votingInsert(votingName, projectId, createdUser, detail, date);
 
         if (result.size() > 0) {
-            System.out.println(result.stream().map(Voting::getId).collect(Collectors.toSet()).toString());
-            System.out.println("votecontents 의 contents 값 :: " + contents);
+
             String listId = result.stream().map(Voting::getId).collect(Collectors.toSet()).toString();
             listId = listId.replaceAll("[\\[\\]]", "");
             boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
-            System.out.println("listId :: " + listId);
-            System.out.println("result2 ::: " + result2);
+
             if (true) {
                 return ResponseEntity.ok("항목 저장에 성공.");
             } else {
@@ -497,7 +493,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
         String token = request.getHeader("Authorization");
-        // System.out.println("Token: " + token);
+
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -509,9 +505,8 @@ public class ProjectController {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
 
-        //System.out.println("findVoting 의 받아온 projectId :: " + projectId);
         List<Voting> vote = projectService.findByVoting(projectId);
-        System.out.println("여기 vote :: " + vote);
+
         if (vote.isEmpty()) {
             return ResponseEntity.status(404).body(vote);
         } else {
@@ -527,7 +522,6 @@ public class ProjectController {
             HttpServletRequest request) {
 
         String token = request.getHeader("Authorization");
-        //System.out.println("Token: " + token);
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -538,10 +532,10 @@ public class ProjectController {
         if (email == null) {
             return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
         }
-        // System.out.println("받아오는 vote 고유 id : :" + votingId);
+
 
         List<VotingContents> contents = projectService.findByVotingId(votingId);
-        System.out.println("contents :: " + contents);
+
         if (contents.isEmpty()) {
             return ResponseEntity.status(404).body(contents);
         } else {
@@ -559,7 +553,7 @@ public class ProjectController {
             HttpServletRequest request) {
 
         String token = request.getHeader("Authorization");
-        //System.out.println("Token: " + token);
+
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -590,7 +584,7 @@ public class ProjectController {
 
         // 1. 투표 고유 id 로 이 투표에 투표한 유저 id와 항목 정보를 불러온다.
         List<VotingRecord> uservoting = projectService.findByVotingIdRecord(votingId);
-        System.out.println("투표 별 유저들 투표 항목 : " + uservoting);
+
 
         if (uservoting.isEmpty()) {
             return ResponseEntity.status(404).body(uservoting);
@@ -644,10 +638,6 @@ public class ProjectController {
             @RequestParam("boardBy") Long boardBy,
             HttpServletRequest request){
 
-        System.out.println("공지사항 확인 :: " + projectId);
-        System.out.println("공지사항 확인 :: " + boardTitle);
-        System.out.println("공지사항 확인 :: " + boardContents);
-        System.out.println("공지사항 확인 :: " + boardBy);
 
        boolean result = projectService.insertBoard(projectId, boardTitle,boardContents,boardBy);
        if (result) {
@@ -662,10 +652,8 @@ public class ProjectController {
     public ResponseEntity<Object> findBoard(
             @RequestParam("projectId") Long projectId){
 
-        System.out.println("공지사항 list 조회 부분 :: " + projectId);
-
         List<Board> board = projectService.findByProjectId(projectId);
-        System.out.println("공지사항 조회 후 반환 직전 :: " + board);
+
         if(!board.isEmpty()){
             return ResponseEntity.ok(board);
         }else{
@@ -677,7 +665,7 @@ public class ProjectController {
     @PostMapping("votingByUser")
     public ResponseEntity<Object> votingByUser(
             @RequestParam("userId") Long userId){
-        System.out.println("투표 생성자 정보 조회 :: " + userId);
+
 
         Optional<User> user = projectService.findById(userId);
         if(user.isEmpty()){
@@ -692,7 +680,7 @@ public class ProjectController {
     public ResponseEntity<Object> isVoteUpdate(
             @RequestParam("votingId") Long voteId){
         try {
-            System.out.println("봐봐 이거"+ voteId);
+
             projectService.updateVoteStatus(voteId);
             return ResponseEntity.ok("투표 상태 변경 성공 !");
         } catch (Exception e) {
@@ -700,6 +688,42 @@ public class ProjectController {
         }
     }
 
+//    // 다가오는 프로젝트 캘린더 일정 조회
+//    @PostMapping("calendarList")
+//    public ResponseEntity<Object> calendarList(
+//            @RequestParam("projectId") Long projectId,
+//            @RequestParam("userId") Long userId) {
+//
+//
+//        List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
+//        System.out.println("Project calendar :: " + calendars);
+//
+//        LocalDate today = LocalDate.now();
+//        LocalDate sevenDaysLater = today.plusDays(7);
+//
+//        List<Map<String, Object>> upcomingCalendars = new ArrayList<>();
+//
+//
+//        for (Calendar calendar : calendars) {
+//            LocalDate startTime = calendar.getStartTime().toLocalDate();
+//            LocalDate endTime = calendar.getEndTime().toLocalDate();
+//
+//            if (calendar.getCreatedBy().equals(userId) &&
+//                    (startTime.isBefore(sevenDaysLater) && startTime.isAfter(today.minusDays(1)) ||
+//                            endTime.isBefore(sevenDaysLater) && endTime.isAfter(today.minusDays(1)))) {
+//
+//                Map<String, Object> calendarDetails = new HashMap<>();
+//                calendarDetails.put("title", calendar.getTitle());
+//                calendarDetails.put("start_time", calendar.getStartTime());
+//                calendarDetails.put("end_time", calendar.getEndTime());
+//                upcomingCalendars.add(calendarDetails);
+//            }
+//        }
+//
+//        System.out.println("유저의 다가올 일정 :: " + upcomingCalendars);
+//
+//        return ResponseEntity.ok(upcomingCalendars);
+//    }
 }
 
 

@@ -12,5 +12,5 @@ import java.util.List;
 public interface CategoryFriendRepository extends JpaRepository<CategoryFriend, Long> {
     List<CategoryFriend> findByCategoryId(Long categoryId);
 
-    List<CategoryFriend> findByCategoryIdAndFriendIdIn(Long categoryId, List<Long> friendIds);
+    List<CategoryFriend> findByCategoryIdAndFriendIdIn(Long categoryId, java.util.List<java.lang.Long> friendIds);
 }
