@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,10 @@ public class CalendarService {
     public Optional<Calendar> insertSchedule(CalendarDTO scheduleInfo, Map<String, Object> data) {
         System.out.println("CalendarService: 스케쥴을 DB에 저장하는 메소드:::::::::::::::::::::::::::::::::::");
 
+        // 달력 엔티티
         Calendar calendar = new Calendar();
 
+        System.out.println("scheduleInfo = " + scheduleInfo);
         calendar.setDescription(scheduleInfo.getExtendedProps().getDescription());
         calendar.setCreatedAt(scheduleInfo.getExtendedProps().getCreatedAt());
         calendar.setCreatedBy(scheduleInfo.getExtendedProps().getCreatedBy());
@@ -34,7 +37,6 @@ public class CalendarService {
         calendar.setStartTime(scheduleInfo.getStart());
         calendar.setEndTime(scheduleInfo.getEnd());
         calendar.setAllDay(scheduleInfo.isAllDay());
-
 
         if(calendarRepository.save(calendar) != null){
             return Optional.of(calendar);
@@ -46,33 +48,15 @@ public class CalendarService {
     public List<CalendarDTO> eventsByProjectId(Long data) {
         System.out.println("CalendarService: 프로젝트 아이디로 이벤트를 찾는 메소드:::::::::::::::::::::::::::");
 
-        // Long projectId;
-        // List<Calendar> scheduleList;
         CalendarDTO calendarDTO;
         ExtendedProps extendedProps;
         List<CalendarDTO> calendarDTOList = new ArrayList<>();
-
-       // System.out.println("data.getClass().getName() = " + data.getClass().getName());
-        // projectId = (Long) data;
-//        if (data.toString().equals("null")) {
-//            System.out.println("1");
-//            projectId = null;
-//            System.out.println("2");
-//            System.out.println("222222");
-//        }
-//        else {
-//            System.out.println("3");
-//            projectId = (Long)data;
-//            System.out.println("4");
-//        }
-        System.out.println("5");
         List<Calendar> scheduleList = calendarRepository.findByProjectId(data);
-        System.out.println("6");
         if (scheduleList.isEmpty()) {
             return null;
         }
 
-        System.out.println("scheduleList = " + scheduleList);
+        // 프로젝트 아이디로 조회된 정보 곧장 프로트에서 뿌려져 실시간으로 사용자에게 전달된다. 스케쥴을 복수일 테니 List로 받는다.
         for(Calendar schedule : scheduleList){
             calendarDTO = new CalendarDTO();
             extendedProps = new ExtendedProps();
@@ -99,13 +83,14 @@ public class CalendarService {
     }
 
     public boolean updateSelectedEvent(BigInteger id, String title, String description) {
-        System.out.println("CalendarService: 아이디로 스케쥴을 특정하고 해당 일정을 수정하는 메소드:::::::::::::::::::::::::::");
+        System.out.println("CalendarService: 아이디로 특정 스케쥴을 특정하고 제목 설명을 수정하는 메소드:::::::::::::::::::::::::::");
 
+        // 먼저 아이디로 특정 행을 조회한 후 해당 엔티티를 받아 온다.
         Calendar selectedEvent = calendarRepository.findById(id).orElse(null);
-
+        // 그리고 수정..
         selectedEvent.setTitle(title);
         selectedEvent.setDescription(description);
-
+        // 저장
         Calendar updateEvent = calendarRepository.save(selectedEvent);
 
         if(updateEvent == null){
@@ -114,10 +99,19 @@ public class CalendarService {
         return true;
     }
 
+    public boolean updateDateSelectedEvent(BigInteger id, ZonedDateTime start, ZonedDateTime end, boolean allDay) {
+        System.out.println("CalendarService: 아이디로 특정 스케쥴을 특정하고 날짜를 수정하는 메소드::::::::::::::::::::");
+        // 날짜 정보를 처리하는 메소드
 
-//    public CalendarDTO updateSelectedEvent(Map<String, Object> data) {
-//        // Calendar selectedEvent = CalendarRepository.findById(data.get("id"));
-//        // selectedEvent.setTitle(data.get("title").toString());
-//    return null;
-//    }
+        Calendar selectedEvent = calendarRepository.findById(id).orElse(null);
+
+        selectedEvent.setStartTime(start);
+        selectedEvent.setEndTime(end);
+        selectedEvent.setAllDay(allDay);
+        Calendar updateEvent = calendarRepository.save(selectedEvent);
+        if(updateEvent == null){
+            return false;
+        }
+        return true;
+    }
 }
