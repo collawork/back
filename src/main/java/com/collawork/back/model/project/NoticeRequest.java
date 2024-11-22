@@ -10,7 +10,6 @@ public class NoticeRequest {
     private boolean important;
     private List<MultipartFile> attachments; // 여러 파일 업로드
 
-    // Getters and Setters
     public String getTitle() {
         return title;
     }
