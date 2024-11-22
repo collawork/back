@@ -66,5 +66,16 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
 
     @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId AND pp.id.userId IN :userIds")
     List<ProjectParticipant> findByProjectIdAndUserIdIn(@Param("projectId") Long projectId, @Param("userIds") List<Long> userIds);
+
+    /**
+     * 특정 프로젝트에서 특정 사용자가 지정된 역할을 가지고 있는지 확인.
+     *
+     * @param projectId 프로젝트 ID
+     * @param userId 사용자 ID
+     * @param role 역할 (예: "ADMIN", "MEMBER")
+     * @return 역할 여부 확인 결과 (true: 역할 존재, false: 역할 없음)
+     */
+    boolean existsByProjectIdAndUserIdAndRole(Long projectId, Long userId, ProjectParticipant.Role role);
+
 }
 
