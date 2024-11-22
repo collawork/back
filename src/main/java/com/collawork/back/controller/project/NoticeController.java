@@ -8,6 +8,7 @@ import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.project.NoticeRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
+import com.collawork.back.service.auth.SocialAuthService;
 import com.collawork.back.utils.UnauthorizedException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +20,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
@@ -28,6 +31,8 @@ import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.*;
 
 @RestController
@@ -46,6 +51,8 @@ public class NoticeController {
     @Autowired
     private UserRepository userRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(NoticeController.class);
+
     // 특정 프로젝트의 공지사항 목록 조회
     @GetMapping("/{projectId}/notices")
     public List<Notice> getNotices(@PathVariable Long projectId) throws NotFoundException {
@@ -63,15 +70,21 @@ public class NoticeController {
                 .filter(n -> n.getProjectId().equals(projectId))
                 .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다."));
 
+        User creator = userRepository.findById(notice.getCreatorId())
+                .orElseThrow(() -> new NotFoundException("작성자를 찾을 수 없습니다."));
+
         Map<String, Object> response = new HashMap<>();
         response.put("id", notice.getId());
         response.put("title", notice.getTitle());
         response.put("content", notice.getContent());
         response.put("important", notice.getImportant());
-        response.put("creatorId", notice.getCreatorId());
+        response.put("creatorId", notice.getCreatorId()); // 작성자 ID 추가
+        response.put("creatorName", creator.getUsername()); // 작성자 이름 추가
         response.put("attachments", notice.getAttachments() != null
                 ? new ObjectMapper().readValue(notice.getAttachments(), List.class)
                 : new ArrayList<>());
+        response.put("createdAt", notice.getCreatedAt());
+        response.put("viewCount", notice.getViewCount());
 
         return ResponseEntity.ok(response);
     }
@@ -89,13 +102,16 @@ public class NoticeController {
             throw new UnauthorizedException("사용자 인증 실패: user 객체가 null입니다.");
         }
 
+        // 사용자 정보 가져오기
         String email = user.getUsername();
         User foundUser = userRepository.findByEmail(email);
         if (foundUser == null) {
             throw new UnauthorizedException("사용자를 찾을 수 없습니다.");
         }
         Long userId = foundUser.getId();
+        String userName = foundUser.getUsername(); // 작성자 이름 가져오기
 
+        // 작성자가 ADMIN인지 확인
         boolean isAdmin = participantRepository.existsByProjectIdAndUserIdAndRole(
                 projectId, userId, ProjectParticipant.Role.ADMIN);
         if (!isAdmin) {
@@ -109,6 +125,8 @@ public class NoticeController {
         notice.setImportant(noticeRequest.isImportant());
         notice.setProjectId(projectId);
         notice.setCreatorId(userId);
+        notice.setCreatorName(userName); // 작성자 이름 설정
+        notice.setViewCount(0);
 
         // 파일 처리 및 JSON 변환
         if (noticeRequest.getAttachments() != null && !noticeRequest.getAttachments().isEmpty()) {
@@ -122,9 +140,11 @@ public class NoticeController {
             }
         }
 
+        // 공지사항 저장
         Notice savedNotice = noticeRepository.save(notice);
         return new ResponseEntity<>(savedNotice, HttpStatus.CREATED);
     }
+
 
 
     private List<Map<String, String>> saveAttachmentsAsJson(List<MultipartFile> attachments) throws IOException {
@@ -192,8 +212,25 @@ public class NoticeController {
     public ResponseEntity<Notice> updateNotice(
             @PathVariable Long projectId,
             @PathVariable Long noticeId,
-            @RequestBody Notice updatedNotice,
-            @AuthenticationPrincipal User user) throws NotFoundException {
+            @RequestBody Notice updatedNotice) throws NotFoundException {
+
+        // SecurityContext에서 Authentication 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User)) {
+            throw new UnauthorizedException("사용자 인증 실패: 유효하지 않은 인증 객체입니다.");
+        }
+
+        // Principal에서 사용자 정보 추출
+        org.springframework.security.core.userdetails.User principal =
+                (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+
+        // 이메일로 사용자 조회
+        User foundUser = userRepository.findByEmail(principal.getUsername());
+        if (foundUser == null) {
+            throw new UnauthorizedException("사용자를 찾을 수 없습니다.");
+        }
+
+        Long userId = foundUser.getId();
 
         // 공지사항 존재 여부 확인
         Notice existingNotice = noticeRepository.findById(noticeId)
@@ -201,7 +238,7 @@ public class NoticeController {
                 .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다."));
 
         // 작성자 권한 확인
-        if (!existingNotice.getCreatorId().equals(user.getId())) {
+        if (!existingNotice.getCreatorId().equals(userId)) {
             throw new UnauthorizedException("공지사항을 수정할 권한이 없습니다.");
         }
 
@@ -214,12 +251,25 @@ public class NoticeController {
         return new ResponseEntity<>(savedNotice, HttpStatus.OK);
     }
 
+
+
+
     // 공지사항 삭제
     @DeleteMapping("/{projectId}/notices/{noticeId}")
     public ResponseEntity<Void> deleteNotice(
             @PathVariable Long projectId,
-            @PathVariable Long noticeId,
-            @AuthenticationPrincipal User user) throws NotFoundException {
+            @PathVariable Long noticeId) throws NotFoundException {
+
+        // 현재 사용자 정보 가져오기
+        org.springframework.security.core.userdetails.User principal =
+                (org.springframework.security.core.userdetails.User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String email = principal.getUsername(); // 사용자 이메일 가져오기
+        User foundUser = userRepository.findByEmail(email);
+        if (foundUser == null) {
+            throw new UnauthorizedException("사용자를 찾을 수 없습니다.");
+        }
+        Long userId = foundUser.getId();
 
         // 공지사항 존재 여부 확인
         Notice existingNotice = noticeRepository.findById(noticeId)
@@ -227,7 +277,7 @@ public class NoticeController {
                 .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다."));
 
         // 작성자 권한 확인
-        if (!existingNotice.getCreatorId().equals(user.getId())) {
+        if (!existingNotice.getCreatorId().equals(userId)) {
             throw new UnauthorizedException("공지사항을 삭제할 권한이 없습니다.");
         }
 
@@ -235,4 +285,5 @@ public class NoticeController {
         noticeRepository.delete(existingNotice);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
 }

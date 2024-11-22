@@ -40,6 +40,29 @@ public class Notice {
     @Column(columnDefinition = "JSON")
     private String attachments; // 첨부파일 정보 (JSON)
 
+    @Column(name = "view_count", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer viewCount = 0; // 조회수
+
+    @Column(name = "creator_name", nullable = false)
+    private String creatorName;
+
+    public String getCreatorName() {
+        return creatorName;
+    }
+
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName;
+    }
+
+
+    public Integer getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(Integer viewCount) {
+        this.viewCount = viewCount;
+    }
+
     public String getAttachments() {
         return attachments;
     }
