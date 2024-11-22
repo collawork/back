@@ -14,7 +14,7 @@ public class Calendar {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 일정의 제목, not null
+    // 일정의 제목
     @Column(name = "title")
     private String title;
 
@@ -26,11 +26,11 @@ public class Calendar {
     @Column(name = "start_time")
     private ZonedDateTime startTime;
 
-    // 일정의 종료일, 없으면 일정의 시작일만 존재하도록..
+    // 일정의 종료일
     @Column(name = "end_time")
     private ZonedDateTime endTime;
 
-    // 일정이 추가된 날짜, not null
+    // 일정이 추가된 날짜
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
 
@@ -38,17 +38,18 @@ public class Calendar {
     @Column(name = "created_by")
     private Long createdBy;
 
+    // 일정의 종일 여부
     @Column(name = "all_day")
     private boolean allDay;
 
+    // 일정의 소속, 없으면 개인 일정
     @Column(name = "project_id")
     private Long projectId;
 
-    //@Column(name = "editable")
-    //private boolean editable;
-
+    // 일정의 개별 색깔
     @Column(name = "color")
     private String color;
+
 
     public Calendar() {
     }

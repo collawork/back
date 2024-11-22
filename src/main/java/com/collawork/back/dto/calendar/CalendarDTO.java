@@ -5,19 +5,14 @@ import java.time.ZonedDateTime;
 
 public class CalendarDTO {
 
-    // private BigInteger id; // 스케쥴의 고유 아이디는 DB에서 부여한다. 그러니 사용자로부터 값을 받을 필요가 없다.
-    // private Timestamp createAt; // 스케쥴 생성일을 DB에서 부여한다. 그러니 사용자로부터 값을 받을 필요가 없다.
-
     private Long id;
     private String title;
     private ZonedDateTime start;
     private ZonedDateTime end;
     private boolean allDay;
-    // private BigInteger groupId;
-    // private boolean editable;
     private String color;
-
     private ExtendedProps extendedProps;
+
 
     public CalendarDTO() {
     }
