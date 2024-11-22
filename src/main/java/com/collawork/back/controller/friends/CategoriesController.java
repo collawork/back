@@ -151,5 +151,16 @@ public class CategoriesController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/categories/{categoryId}/delete")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
+        try {
+            categoryFriendService.deleteCategory(categoryId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
 
 }

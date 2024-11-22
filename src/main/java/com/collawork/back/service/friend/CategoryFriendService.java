@@ -56,5 +56,13 @@ public class CategoryFriendService {
             categoryFriendRepository.deleteAll(categoryFriends);
         }
     }
+
+    public void deleteCategory(Long categoryId) {
+        if (categoryRepository.existsById(categoryId)) {
+            categoryRepository.deleteById(categoryId);
+        } else {
+            throw new IllegalArgumentException("카테고리 아이디  " + categoryId + " 은(는) 존재하지 않습니다.");
+        }
+    }
 }
 
