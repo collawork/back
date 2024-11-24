@@ -8,7 +8,7 @@ import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.calendar.CalendarRepository;
-// import com.collawork.back.repository.project.NoticeRepository;
+ import com.collawork.back.repository.project.NoticeRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.project.VotingRecordRepository;
@@ -69,8 +69,8 @@ public class ProjectController {
     @Autowired
     private UserRepository userRepository;
 
-//    @Autowired
-//    private No
+    @Autowired
+    private NoticeRepository noticeRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -759,16 +759,16 @@ public class ProjectController {
         }
     }
 
-//    // 등록된 중요 공지사항 조회
-//    @PostMapping("noticesSend")
-//    public ResponseEntity<Object> noticesSend(
-//            @RequestParam("projectId") Long projectId
-//    ){
-//
-//
-//        List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
-//        System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
-//        return ResponseEntity.ok(noticesList);
-//    }
+    // 등록된 중요 공지사항 조회
+    @PostMapping("noticesSend")
+    public ResponseEntity<Object> noticesSend(
+            @RequestParam("projectId") Long projectId
+    ){
+
+
+        List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
+        System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
+        return ResponseEntity.ok(noticesList);
+    }
 
 }
