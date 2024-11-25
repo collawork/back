@@ -654,19 +654,6 @@ public class ProjectController {
         }
     }
 
-//    // 공지사항 list 조회
-//    @PostMapping("findBoard")
-//    public ResponseEntity<Object> findBoard(
-//            @RequestParam("projectId") Long projectId){
-//
-//        List<Board> board = projectService.findByProjectId(projectId);
-//
-//        if(!board.isEmpty()){
-//            return ResponseEntity.ok(board);
-//        }else{
-//            return ResponseEntity.status(404).body("공지사항 목록 조회에 실패하였습니다.");
-//        }
-//    }
 
     // 투표 생성자 정보 조회
     @PostMapping("votingByUser")
@@ -751,10 +738,11 @@ public class ProjectController {
     // 프로젝트 담당자 변경
     @PostMapping("managerModify")
     public ResponseEntity<Object> managerModify(
-            @RequestParam("id") Long userId,
+            @RequestParam("email") String email,
             @RequestParam("projectId") Long projectId){
         try {
-            projectService.updateProjectCreatedBy(userId, projectId);
+            System.out.println("담당자 변경 메소드 :: " + email);
+            projectService.updateProjectCreatedBy(email, projectId);
             return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("프로젝트 담당자 변경 중 에러 : " + e.getMessage());
@@ -769,6 +757,37 @@ public class ProjectController {
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
+    }
+
+
+    // 회원의 프로젝트 탈퇴
+    @PostMapping("deleteSend")
+    public ResponseEntity<Object> ProjectDeleteUser(
+            @RequestParam("userId") Long userId,
+            @RequestParam("projectId") Long projectId){
+        try {
+            System.out.println("프로젝트 탈퇴로 넘오옴.");
+            projectService.removeUserFromProject(userId, projectId);
+            return ResponseEntity.ok("프로젝트 나가기 성공. ");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 탈퇴 중 오류");
+        }
+    }
+
+
+    // 관리자의 프로젝트 삭제
+    @PostMapping("projectDelete")
+    public ResponseEntity<Object> projectDelete(
+            @RequestParam("projectId") Long projectId){
+
+        try{
+            projectService.deleteByProjectId(projectId);
+            return ResponseEntity.ok("프로젝트 삭제 성공.");
+
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 삭제 중 오류");
+        }
+
     }
 
 }
