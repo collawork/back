@@ -16,7 +16,7 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
-import com.mysql.cj.protocol.x.Notice;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -764,8 +764,6 @@ public class ProjectController {
     public ResponseEntity<Object> noticesSend(
             @RequestParam("projectId") Long projectId
     ){
-
-
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
