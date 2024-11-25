@@ -26,4 +26,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
      * @return 공지사항 존재 여부
      */
     boolean existsByIdAndProjectId(Long id, Long projectId);
+
+    List<com.mysql.cj.protocol.x.Notice> findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(Long projectId, boolean b);
 }

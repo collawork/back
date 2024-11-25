@@ -8,6 +8,7 @@ import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.calendar.CalendarRepository;
+ import com.collawork.back.repository.project.NoticeRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.project.VotingRecordRepository;
@@ -15,6 +16,7 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
+import com.mysql.cj.protocol.x.Notice;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -66,6 +68,9 @@ public class ProjectController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NoticeRepository noticeRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -603,7 +608,7 @@ public class ProjectController {
                     userVote.add(user.getVotingId()); // 투표 id
                     userVote.add(user.getContentsId()); // 유저가 투표 한 항목
 
-                     return ResponseEntity.ok(userVote.toString());
+                    return ResponseEntity.ok(userVote.toString());
                 }
             }
             // 해당 유저 id 가 없다면(투표한 정보) null 반환
@@ -639,27 +644,27 @@ public class ProjectController {
             HttpServletRequest request){
 
 
-       boolean result = projectService.insertBoard(projectId, boardTitle,boardContents,boardBy);
-       if (result) {
-           return ResponseEntity.ok("공지사항 등록 성공");
-       }else{
-           return ResponseEntity.status(404).body("공지사항 등록 실패");
-       }
-    }
-
-    // 공지사항 list 조회
-    @PostMapping("findBoard")
-    public ResponseEntity<Object> findBoard(
-            @RequestParam("projectId") Long projectId){
-
-        List<Board> board = projectService.findByProjectId(projectId);
-
-        if(!board.isEmpty()){
-            return ResponseEntity.ok(board);
+        boolean result = projectService.insertBoard(projectId, boardTitle,boardContents,boardBy);
+        if (result) {
+            return ResponseEntity.ok("공지사항 등록 성공");
         }else{
-            return ResponseEntity.status(404).body("공지사항 목록 조회에 실패하였습니다.");
+            return ResponseEntity.status(404).body("공지사항 등록 실패");
         }
     }
+
+//    // 공지사항 list 조회
+//    @PostMapping("findBoard")
+//    public ResponseEntity<Object> findBoard(
+//            @RequestParam("projectId") Long projectId){
+//
+//        List<Board> board = projectService.findByProjectId(projectId);
+//
+//        if(!board.isEmpty()){
+//            return ResponseEntity.ok(board);
+//        }else{
+//            return ResponseEntity.status(404).body("공지사항 목록 조회에 실패하였습니다.");
+//        }
+//    }
 
     // 투표 생성자 정보 조회
     @PostMapping("votingByUser")
@@ -688,42 +693,82 @@ public class ProjectController {
         }
     }
 
-//    // 다가오는 프로젝트 캘린더 일정 조회
-//    @PostMapping("calendarList")
-//    public ResponseEntity<Object> calendarList(
-//            @RequestParam("projectId") Long projectId,
-//            @RequestParam("userId") Long userId) {
-//
-//
-//        List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
-//        System.out.println("Project calendar :: " + calendars);
-//
-//        LocalDate today = LocalDate.now();
-//        LocalDate sevenDaysLater = today.plusDays(7);
-//
-//        List<Map<String, Object>> upcomingCalendars = new ArrayList<>();
-//
-//
-//        for (Calendar calendar : calendars) {
-//            LocalDate startTime = calendar.getStartTime().toLocalDate();
-//            LocalDate endTime = calendar.getEndTime().toLocalDate();
-//
-//            if (calendar.getCreatedBy().equals(userId) &&
-//                    (startTime.isBefore(sevenDaysLater) && startTime.isAfter(today.minusDays(1)) ||
-//                            endTime.isBefore(sevenDaysLater) && endTime.isAfter(today.minusDays(1)))) {
-//
-//                Map<String, Object> calendarDetails = new HashMap<>();
-//                calendarDetails.put("title", calendar.getTitle());
-//                calendarDetails.put("start_time", calendar.getStartTime());
-//                calendarDetails.put("end_time", calendar.getEndTime());
-//                upcomingCalendars.add(calendarDetails);
-//            }
-//        }
-//
-//        System.out.println("유저의 다가올 일정 :: " + upcomingCalendars);
-//
-//        return ResponseEntity.ok(upcomingCalendars);
-//    }
+    // 다가오는 프로젝트 캘린더 일정 조회
+    @PostMapping("calendarList")
+    public ResponseEntity<Object> calendarList(
+            @RequestParam("projectId") Long projectId,
+            @RequestParam("userId") Long userId) {
+
+
+        List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
+        System.out.println("Project calendar :: " + calendars);
+
+        LocalDate today = LocalDate.now();
+        LocalDate sevenDaysLater = today.plusDays(7); // 앞으로 7일간
+
+        List<Map<String, Object>> upcomingCalendars = new ArrayList<>();
+
+
+        for (Calendar calendar : calendars) {
+            LocalDate startTime = calendar.getStartTime().toLocalDate();
+            LocalDate endTime = calendar.getEndTime().toLocalDate();
+
+            if (calendar.getCreatedBy().equals(userId) &&
+                    (startTime.isBefore(sevenDaysLater) && startTime.isAfter(today.minusDays(1)) ||
+                            endTime.isBefore(sevenDaysLater) && endTime.isAfter(today.minusDays(1)))) {
+
+                Map<String, Object> calendarDetails = new HashMap<>();
+                calendarDetails.put("title", calendar.getTitle());
+                calendarDetails.put("start_time", calendar.getStartTime());
+                calendarDetails.put("end_time", calendar.getEndTime());
+                upcomingCalendars.add(calendarDetails);
+            }
+        }
+
+        System.out.println("유저의 다가올 일정 :: " + upcomingCalendars);
+
+        return ResponseEntity.ok(upcomingCalendars);
+    }
+
+
+    // 프로젝트 이름 변경
+    @PostMapping("nameModify")
+    public ResponseEntity<Object> modifyProjectName(
+            @RequestParam("id") Long projectId,
+            @RequestParam("name") String title) {
+
+        try {
+            projectService.updateProjectTitle(projectId, title);
+            return ResponseEntity.ok("프로젝트 이름 변경 성공 !");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("프로젝트 이름 변경 중 에러 : " + e.getMessage());
+        }
+    }
+
+
+    // 프로젝트 담당자 변경
+    @PostMapping("managerModify")
+    public ResponseEntity<Object> managerModify(
+            @RequestParam("id") Long userId,
+            @RequestParam("projectId") Long projectId){
+        try {
+            projectService.updateProjectCreatedBy(userId, projectId);
+            return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("프로젝트 담당자 변경 중 에러 : " + e.getMessage());
+        }
+    }
+
+    // 등록된 중요 공지사항 조회
+    @PostMapping("noticesSend")
+    public ResponseEntity<Object> noticesSend(
+            @RequestParam("projectId") Long projectId
+    ){
+
+
+        List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
+        System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
+        return ResponseEntity.ok(noticesList);
+    }
+
 }
-
-
