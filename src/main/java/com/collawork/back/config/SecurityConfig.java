@@ -67,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/category/**").permitAll()
                         .requestMatchers("/api/projects/**").authenticated()
                         .requestMatchers("/downloads/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
