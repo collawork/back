@@ -16,6 +16,7 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -425,7 +426,7 @@ public class ProjectController {
             projectParticipantsService.inviteParticipants(projectId, participantIds);
 
             // **알림 처리 (NotificationService 사용)**
-            String projectName = projectService.getProjectNameById(projectId); // 프로젝트 이름 가져오기
+            String projectName = projectService.getProjectNameById(projectId);
             for (Long participantId : participantIds) {
                 String message = "프로젝트 '" + projectName + "'에 초대되었습니다.";
                 notificationService.createOrUpdateNotification(participantId, projectId, message);
@@ -651,19 +652,6 @@ public class ProjectController {
         }
     }
 
-//    // 공지사항 list 조회
-//    @PostMapping("findBoard")
-//    public ResponseEntity<Object> findBoard(
-//            @RequestParam("projectId") Long projectId){
-//
-//        List<Board> board = projectService.findByProjectId(projectId);
-//
-//        if(!board.isEmpty()){
-//            return ResponseEntity.ok(board);
-//        }else{
-//            return ResponseEntity.status(404).body("공지사항 목록 조회에 실패하였습니다.");
-//        }
-//    }
 
     // 투표 생성자 정보 조회
     @PostMapping("votingByUser")
@@ -699,7 +687,6 @@ public class ProjectController {
             @RequestParam("userId") Long userId) {
 
 
-        System.out.println("다가오는 캘린더 넘어옴");
         List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
         System.out.println("Project calendar :: " + calendars);
 
@@ -749,11 +736,11 @@ public class ProjectController {
     // 프로젝트 담당자 변경
     @PostMapping("managerModify")
     public ResponseEntity<Object> managerModify(
-            @RequestParam("id") Long userId,
+            @RequestParam("email") String email,
             @RequestParam("projectId") Long projectId){
-        System.out.println("관리자 변경 메소드 들어옴" +userId+projectId );
         try {
-            projectService.updateProjectCreatedBy(userId, projectId);
+            System.out.println("담당자 변경 메소드 :: " + email);
+            projectService.updateProjectCreatedBy(email, projectId);
             return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("프로젝트 담당자 변경 중 에러 : " + e.getMessage());
@@ -763,12 +750,13 @@ public class ProjectController {
     // 등록된 중요 공지사항 조회
     @PostMapping("noticesSend")
     public ResponseEntity<Object> noticesSend(
-            @RequestParam("projectId") Long projectId){
-
+            @RequestParam("projectId") Long projectId
+    ){
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
     }
+
 
     // 회원의 프로젝트 탈퇴
     @PostMapping("deleteSend")
@@ -784,6 +772,7 @@ public class ProjectController {
         }
     }
 
+
     // 관리자의 프로젝트 삭제
     @PostMapping("projectDelete")
     public ResponseEntity<Object> projectDelete(
@@ -798,6 +787,6 @@ public class ProjectController {
         }
 
     }
-}
 
+}
 

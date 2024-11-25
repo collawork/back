@@ -28,6 +28,9 @@ public class ProjectParticipant {
     @Column(name = "status", nullable = false)
     private Status status = Status.PENDING;
 
+    public ProjectParticipant(Project project, User user, Role role, Status status) {
+    }
+
     public enum Role {
         MEMBER,
         ADMIN

@@ -413,32 +413,43 @@ public class ProjectService {
     }
 
     @Transactional
-    public void updateProjectCreatedBy(Long userId, Long projectId) {
+    public void updateProjectCreatedBy(String email, Long projectId) {
+
+        User userList = userRepository.findByEmail(email);
+        // List<User> userList = (List<User>) userRepository.findByEmail(email);
+        System.out.println("userList : " + userList);
+        Long userId = userList.getId();
 
         // projectTable createdBy 변경
         Project project = projectRepository.findById(projectId).orElseThrow(()-> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
         project.setCreatedBy(userId);
         projectRepository.save(project);
+        System.out.println("담당자 변경 후 엔티티 뽑아보기 : " + projectRepository.findById(projectId));
         Long ExistManager = project.getCreatedBy();
+        System.out.println("기존의 담당자 뽑기: " + ExistManager);
 
         // 2. project_participants 테이블에서 role 변경
-        // --1. 새로운 관리자 admin 으로 변경
+
         ProjectParticipant participant = projectParticipantRepository.findByProjectIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
+        System.out.println("새로운 담당자 변경 직전 :: " + participant);
         participant.setRole(ProjectParticipant.Role.valueOf("ADMIN"));
-        projectParticipantRepository.save(participant);
 
 
         // --2. 기존 관리자 member 로 변경
         ProjectParticipant participant2 = projectParticipantRepository.findByProjectIdAndUserId(projectId,ExistManager)
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
+        System.out.println("기존담당자 변경 직전 :: " + participant2);
         participant.setRole(ProjectParticipant.Role.valueOf("MEMBER"));
         projectParticipantRepository.save(participant2);
 
+        // --1. 새로운 관리자 admin 으로 변경
+        projectParticipantRepository.save(participant);
+
     }
 
-
-        public void removeUserFromProject(Long userId, Long projectId) {
+    @Transactional
+    public void removeUserFromProject(Long userId, Long projectId) {
             try {
                 projectParticipantRepository.deleteByProjectIdAndUserId(projectId, userId);
                 System.out.println("삭제 진행중 ");
