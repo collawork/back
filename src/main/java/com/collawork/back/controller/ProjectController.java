@@ -8,6 +8,7 @@ import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.calendar.CalendarRepository;
+ import com.collawork.back.repository.project.NoticeRepository;
 import com.collawork.back.repository.project.ProjectParticipantRepository;
 import com.collawork.back.repository.project.ProjectRepository;
 import com.collawork.back.repository.project.VotingRecordRepository;
@@ -15,6 +16,7 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -66,6 +68,9 @@ public class ProjectController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NoticeRepository noticeRepository;
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
@@ -309,6 +314,8 @@ public class ProjectController {
         List<ProjectParticipant> participants = projectService.getAcceptedParticipants(projectId);
 
         System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
+        System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
+        System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
 
         // 사용자 정보 포함 여부 확인
         List<Map<String, Object>> formattedParticipants = participants.stream()
@@ -421,7 +428,7 @@ public class ProjectController {
             projectParticipantsService.inviteParticipants(projectId, participantIds);
 
             // **알림 처리 (NotificationService 사용)**
-            String projectName = projectService.getProjectNameById(projectId); // 프로젝트 이름 가져오기
+            String projectName = projectService.getProjectNameById(projectId);
             for (Long participantId : participantIds) {
                 String message = "프로젝트 '" + projectName + "'에 초대되었습니다.";
                 notificationService.createOrUpdateNotification(participantId, projectId, message);
@@ -647,19 +654,6 @@ public class ProjectController {
         }
     }
 
-    // 공지사항 list 조회
-    @PostMapping("findBoard")
-    public ResponseEntity<Object> findBoard(
-            @RequestParam("projectId") Long projectId){
-
-        List<Board> board = projectService.findByProjectId(projectId);
-
-        if(!board.isEmpty()){
-            return ResponseEntity.ok(board);
-        }else{
-            return ResponseEntity.status(404).body("공지사항 목록 조회에 실패하였습니다.");
-        }
-    }
 
     // 투표 생성자 정보 조회
     @PostMapping("votingByUser")
@@ -688,40 +682,113 @@ public class ProjectController {
         }
     }
 
-//    // 다가오는 프로젝트 캘린더 일정 조회
-//    @PostMapping("calendarList")
-//    public ResponseEntity<Object> calendarList(
-//            @RequestParam("projectId") Long projectId,
-//            @RequestParam("userId") Long userId) {
-//
-//
-//        List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
-//        System.out.println("Project calendar :: " + calendars);
-//
-//        LocalDate today = LocalDate.now();
-//        LocalDate sevenDaysLater = today.plusDays(7);
-//
-//        List<Map<String, Object>> upcomingCalendars = new ArrayList<>();
-//
-//
-//        for (Calendar calendar : calendars) {
-//            LocalDate startTime = calendar.getStartTime().toLocalDate();
-//            LocalDate endTime = calendar.getEndTime().toLocalDate();
-//
-//            if (calendar.getCreatedBy().equals(userId) &&
-//                    (startTime.isBefore(sevenDaysLater) && startTime.isAfter(today.minusDays(1)) ||
-//                            endTime.isBefore(sevenDaysLater) && endTime.isAfter(today.minusDays(1)))) {
-//
-//                Map<String, Object> calendarDetails = new HashMap<>();
-//                calendarDetails.put("title", calendar.getTitle());
-//                calendarDetails.put("start_time", calendar.getStartTime());
-//                calendarDetails.put("end_time", calendar.getEndTime());
-//                upcomingCalendars.add(calendarDetails);
-//            }
-//        }
-//
-//        System.out.println("유저의 다가올 일정 :: " + upcomingCalendars);
-//
-//        return ResponseEntity.ok(upcomingCalendars);
-//    }
+    // 다가오는 프로젝트 캘린더 일정 조회
+    @PostMapping("calendarList")
+    public ResponseEntity<Object> calendarList(
+            @RequestParam("projectId") Long projectId,
+            @RequestParam("userId") Long userId) {
+
+
+        List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
+        System.out.println("Project calendar :: " + calendars);
+
+        LocalDate today = LocalDate.now();
+        LocalDate sevenDaysLater = today.plusDays(7); // 앞으로 7일간
+
+        List<Map<String, Object>> upcomingCalendars = new ArrayList<>();
+
+
+        for (Calendar calendar : calendars) {
+            LocalDate startTime = calendar.getStartTime().toLocalDate();
+            LocalDate endTime = calendar.getEndTime().toLocalDate();
+
+            if (calendar.getCreatedBy().equals(userId) &&
+                    (startTime.isBefore(sevenDaysLater) && startTime.isAfter(today.minusDays(1)) ||
+                            endTime.isBefore(sevenDaysLater) && endTime.isAfter(today.minusDays(1)))) {
+
+                Map<String, Object> calendarDetails = new HashMap<>();
+                calendarDetails.put("title", calendar.getTitle());
+                calendarDetails.put("start_time", calendar.getStartTime());
+                calendarDetails.put("end_time", calendar.getEndTime());
+                upcomingCalendars.add(calendarDetails);
+            }
+        }
+
+        System.out.println("유저의 다가올 일정 :: " + upcomingCalendars);
+
+        return ResponseEntity.ok(upcomingCalendars);
+    }
+
+
+    // 프로젝트 이름 변경
+    @PostMapping("nameModify")
+    public ResponseEntity<Object> modifyProjectName(
+            @RequestParam("id") Long projectId,
+            @RequestParam("name") String title) {
+
+        try {
+            projectService.updateProjectTitle(projectId, title);
+            return ResponseEntity.ok("프로젝트 이름 변경 성공 !");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("프로젝트 이름 변경 중 에러 : " + e.getMessage());
+        }
+    }
+
+
+    // 프로젝트 담당자 변경
+    @PostMapping("managerModify")
+    public ResponseEntity<Object> managerModify(
+            @RequestParam("email") String email,
+            @RequestParam("projectId") Long projectId){
+        try {
+            System.out.println("담당자 변경 메소드 :: " + email);
+            projectService.updateProjectCreatedBy(email, projectId);
+            return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("프로젝트 담당자 변경 중 에러 : " + e.getMessage());
+        }
+    }
+
+    // 등록된 중요 공지사항 조회
+    @PostMapping("noticesSend")
+    public ResponseEntity<Object> noticesSend(
+            @RequestParam("projectId") Long projectId
+    ){
+        List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
+        System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
+        return ResponseEntity.ok(noticesList);
+    }
+
+
+    // 회원의 프로젝트 탈퇴
+    @PostMapping("deleteSend")
+    public ResponseEntity<Object> ProjectDeleteUser(
+            @RequestParam("userId") Long userId,
+            @RequestParam("projectId") Long projectId){
+        try {
+            System.out.println("프로젝트 탈퇴로 넘오옴.");
+            projectService.removeUserFromProject(userId, projectId);
+            return ResponseEntity.ok("프로젝트 나가기 성공. ");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 탈퇴 중 오류");
+        }
+    }
+
+
+    // 관리자의 프로젝트 삭제
+    @PostMapping("projectDelete")
+    public ResponseEntity<Object> projectDelete(
+            @RequestParam("projectId") Long projectId){
+
+        try{
+            projectService.deleteByProjectId(projectId);
+            return ResponseEntity.ok("프로젝트 삭제 성공.");
+
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 삭제 중 오류");
+        }
+
+    }
+
 }
+

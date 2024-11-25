@@ -21,7 +21,7 @@ public class CalendarService {
     @Autowired
     private CalendarRepository calendarRepository;
 
-    public Optional<Calendar> insertSchedule(CalendarDTO scheduleInfo, Map<String, Object> data) {
+    public boolean insertSchedule(CalendarDTO scheduleInfo, Map<String, Object> data) {
         System.out.println("CalendarService: 스케쥴을 DB에 저장하는 메소드:::::::::::::::::::::::::::::::::::");
 
         // 달력 엔티티
@@ -37,11 +37,14 @@ public class CalendarService {
         calendar.setStartTime(scheduleInfo.getStart());
         calendar.setEndTime(scheduleInfo.getEnd());
         calendar.setAllDay(scheduleInfo.isAllDay());
+        calendar.setColor(scheduleInfo.getColor());
 
-        if(calendarRepository.save(calendar) != null){
-            return Optional.of(calendar);
+        Calendar insertedCalendar = calendarRepository.save(calendar);
+        if (insertedCalendar == null) {
+            return false;
+        }else {
+            return true;
         }
-        return Optional.empty();
     }
 
 
@@ -82,7 +85,7 @@ public class CalendarService {
 
     }
 
-    public boolean updateSelectedEvent(BigInteger id, String title, String description) {
+    public boolean updateSelectedEvent(Long id, String title, String description, String color) {
         System.out.println("CalendarService: 아이디로 특정 스케쥴을 특정하고 제목 설명을 수정하는 메소드:::::::::::::::::::::::::::");
 
         // 먼저 아이디로 특정 행을 조회한 후 해당 엔티티를 받아 온다.
@@ -90,6 +93,7 @@ public class CalendarService {
         // 그리고 수정..
         selectedEvent.setTitle(title);
         selectedEvent.setDescription(description);
+        selectedEvent.setColor(color);
         // 저장
         Calendar updateEvent = calendarRepository.save(selectedEvent);
 
@@ -99,7 +103,7 @@ public class CalendarService {
         return true;
     }
 
-    public boolean updateDateSelectedEvent(BigInteger id, ZonedDateTime start, ZonedDateTime end, boolean allDay) {
+    public boolean updateDateSelectedEvent(Long id, ZonedDateTime start, ZonedDateTime end, boolean allDay) {
         System.out.println("CalendarService: 아이디로 특정 스케쥴을 특정하고 날짜를 수정하는 메소드::::::::::::::::::::");
         // 날짜 정보를 처리하는 메소드
 
@@ -113,5 +117,17 @@ public class CalendarService {
             return false;
         }
         return true;
+    }
+
+    public boolean deleteById(long id) {
+        System.out.println("CalendarService: 아이디로 특정 스케쥴을 삭제하는 메소드::::::::::::::::::::");
+
+        Calendar selectedCalendar = calendarRepository.findById(id).orElse(null);
+        if(selectedCalendar == null){
+            return false;
+        }else {
+            calendarRepository.delete(selectedCalendar);
+            return true;
+        }
     }
 }

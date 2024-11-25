@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
@@ -50,6 +53,9 @@ public class NoticeController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     private static final Logger log = LoggerFactory.getLogger(NoticeController.class);
 
@@ -208,23 +214,31 @@ public class NoticeController {
 
 
     // 공지사항 수정
-    @PutMapping("/{projectId}/notices/{noticeId}")
+    @PutMapping(value = "/{projectId}/notices/{noticeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Notice> updateNotice(
             @PathVariable Long projectId,
             @PathVariable Long noticeId,
-            @RequestBody Notice updatedNotice) throws NotFoundException {
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam("important") Boolean important,
+            @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments
+    ) throws NotFoundException, IOException {
 
-        // SecurityContext에서 Authentication 가져오기
+        // 업로드 디렉토리 설정
+        String uploadDir = "C:/back/uploads/";
+        File uploadDirectory = new File(uploadDir);
+        if (!uploadDirectory.exists() && !uploadDirectory.mkdirs()) {
+            throw new IOException("업로드 디렉토리를 생성할 수 없습니다.");
+        }
+
+        // 사용자 인증 및 권한 확인
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User)) {
             throw new UnauthorizedException("사용자 인증 실패: 유효하지 않은 인증 객체입니다.");
         }
 
-        // Principal에서 사용자 정보 추출
         org.springframework.security.core.userdetails.User principal =
                 (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
-
-        // 이메일로 사용자 조회
         User foundUser = userRepository.findByEmail(principal.getUsername());
         if (foundUser == null) {
             throw new UnauthorizedException("사용자를 찾을 수 없습니다.");
@@ -243,9 +257,28 @@ public class NoticeController {
         }
 
         // 공지사항 업데이트
-        existingNotice.setTitle(updatedNotice.getTitle());
-        existingNotice.setContent(updatedNotice.getContent());
-        existingNotice.setImportant(updatedNotice.getImportant());
+        existingNotice.setTitle(title);
+        existingNotice.setContent(content);
+        existingNotice.setImportant(important);
+
+        // 첨부파일 처리
+        if (attachments != null && !attachments.isEmpty()) {
+            List<String> attachmentPaths = new ArrayList<>();
+            for (MultipartFile file : attachments) {
+                if (!file.isEmpty()) {
+                    String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                    File destinationFile = new File(uploadDirectory, fileName);
+                    file.transferTo(destinationFile);
+                    attachmentPaths.add(destinationFile.getAbsolutePath());
+                }
+            }
+            // JSON 직렬화
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonAttachments = objectMapper.writeValueAsString(attachmentPaths);
+            existingNotice.setAttachments(jsonAttachments);
+        } else {
+            existingNotice.setAttachments("[]"); // 기본값으로 빈 JSON 배열 설정
+        }
 
         Notice savedNotice = noticeRepository.save(existingNotice);
         return new ResponseEntity<>(savedNotice, HttpStatus.OK);

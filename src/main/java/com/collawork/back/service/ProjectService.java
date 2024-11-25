@@ -122,10 +122,10 @@ public class ProjectService {
 
     // 프로젝트 참여자 기반으로 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
-      
+
         // Repository를 통해 프로젝트 목록 가져옴
         List<String> listTitle = projectParticipantRepository.findProjectTitlesByUserId(userId);
-      
+
         System.out.println("ProjectService 의 listTitle: " + listTitle);
 
         if (listTitle == null || listTitle.isEmpty()) {
@@ -362,12 +362,12 @@ public class ProjectService {
         }
         return false;
     }
-
-    public List<Board> findByProjectId(Long projectId) {
-
-        List<Board> board = boardRepository.findByProjectId(projectId);
-        return board;
-    }
+//
+//    public List<Notice> findByProjectId(Long projectId) {
+//
+//        List<Notice> noticesList = notificationService.findByProjectId(projectId);
+//        return noticesList;
+//    }
 
     public VotingRecord findByContentsId(String contentsList) {
 
@@ -378,7 +378,7 @@ public class ProjectService {
     public List<Map<String, Object>> getVoteCounts(Long votingId) {
         List<VoteCountProjection> results = votingRecordRepository.countUserVotesByVotingId(votingId);
 
-        // Convert projection to a list of maps for response
+
         List<Map<String, Object>> response = new ArrayList<>();
         for (VoteCountProjection result : results) {
             Map<String, Object> map = new HashMap<>();
@@ -396,13 +396,72 @@ public class ProjectService {
 
     @Transactional
     public void updateVoteStatus(Long voteId) {
-        Voting voting = votingRepository.findById(voteId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        Voting voting = votingRepository.findById(voteId).orElseThrow(() -> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
 
-        // Set the is_vote to false to mark it as ended
+
         voting.setVote(false);
 
-        // Save the updated voting entity back to the database
         votingRepository.save(voting);
     }
-}
 
+    @Transactional
+    public void updateProjectTitle(Long projectId, String title) {
+
+        Project project = projectRepository.findById(projectId).orElseThrow(()-> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
+        project.setProjectName(title);
+        projectRepository.save(project);
+    }
+
+    @Transactional
+    public void updateProjectCreatedBy(String email, Long projectId) {
+
+        User userList = userRepository.findByEmail(email);
+        // List<User> userList = (List<User>) userRepository.findByEmail(email);
+        System.out.println("userList : " + userList);
+        Long userId = userList.getId();
+
+        // projectTable createdBy 변경
+        Project project = projectRepository.findById(projectId).orElseThrow(()-> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
+        project.setCreatedBy(userId);
+        projectRepository.save(project);
+        System.out.println("담당자 변경 후 엔티티 뽑아보기 : " + projectRepository.findById(projectId));
+        Long ExistManager = project.getCreatedBy();
+        System.out.println("기존의 담당자 뽑기: " + ExistManager);
+
+        // 2. project_participants 테이블에서 role 변경
+
+        ProjectParticipant participant = projectParticipantRepository.findByProjectIdAndUserId(projectId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
+        System.out.println("새로운 담당자 변경 직전 :: " + participant);
+        participant.setRole(ProjectParticipant.Role.valueOf("ADMIN"));
+
+
+        // --2. 기존 관리자 member 로 변경
+        ProjectParticipant participant2 = projectParticipantRepository.findByProjectIdAndUserId(projectId,ExistManager)
+                .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
+        System.out.println("기존담당자 변경 직전 :: " + participant2);
+        participant.setRole(ProjectParticipant.Role.valueOf("MEMBER"));
+        projectParticipantRepository.save(participant2);
+
+        // --1. 새로운 관리자 admin 으로 변경
+        projectParticipantRepository.save(participant);
+
+    }
+
+    @Transactional
+    public void removeUserFromProject(Long userId, Long projectId) {
+            try {
+                projectParticipantRepository.deleteByProjectIdAndUserId(projectId, userId);
+                System.out.println("삭제 진행중 ");
+            } catch (Exception e) {
+                log.error("Failed to remove user {} from project {}", userId, projectId, e);
+                throw new RuntimeException("Error removing user from project", e);
+            }
+        }
+
+
+    public void deleteByProjectId(Long projectId) {
+
+        projectRepository.deleteById(projectId);
+    }
+}
