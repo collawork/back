@@ -751,6 +751,7 @@ public class ProjectController {
     public ResponseEntity<Object> managerModify(
             @RequestParam("id") Long userId,
             @RequestParam("projectId") Long projectId){
+        System.out.println("관리자 변경 메소드 들어옴" +userId+projectId );
         try {
             projectService.updateProjectCreatedBy(userId, projectId);
             return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
@@ -769,4 +770,19 @@ public class ProjectController {
         return ResponseEntity.ok(noticesList);
     }
 
+    // 회원의 프로젝트 탈퇴
+    @PostMapping("deleteSend")
+    public ResponseEntity<Object> ProjectDeleteUser(
+            @RequestParam("userId") Long userId,
+            @RequestParam("projectId") Long projectId){
+        try {
+            System.out.println("프로젝트 탈퇴로 넘오옴.");
+            projectService.removeUserFromProject(userId, projectId);
+            return ResponseEntity.ok("프로젝트 나가기 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 탈퇴 중 오류");
+        }
+    }
 }
+
+

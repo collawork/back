@@ -436,4 +436,16 @@ public class ProjectService {
 
     }
 
+
+        public void removeUserFromProject(Long userId, Long projectId) {
+            try {
+                projectParticipantRepository.deleteByProjectIdAndUserId(projectId, userId);
+                System.out.println("삭제 진행중 ");
+            } catch (Exception e) {
+                log.error("Failed to remove user {} from project {}", userId, projectId, e);
+                throw new RuntimeException("Error removing user from project", e);
+            }
+        }
+
+
 }
