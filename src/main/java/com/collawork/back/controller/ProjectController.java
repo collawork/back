@@ -16,6 +16,7 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -425,7 +426,7 @@ public class ProjectController {
             projectParticipantsService.inviteParticipants(projectId, participantIds);
 
             // **알림 처리 (NotificationService 사용)**
-            String projectName = projectService.getProjectNameById(projectId); // 프로젝트 이름 가져오기
+            String projectName = projectService.getProjectNameById(projectId);
             for (Long participantId : participantIds) {
                 String message = "프로젝트 '" + projectName + "'에 초대되었습니다.";
                 notificationService.createOrUpdateNotification(participantId, projectId, message);
@@ -699,7 +700,6 @@ public class ProjectController {
             @RequestParam("userId") Long userId) {
 
 
-        System.out.println("다가오는 캘린더 넘어옴");
         List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
         System.out.println("Project calendar :: " + calendars);
 
@@ -751,7 +751,6 @@ public class ProjectController {
     public ResponseEntity<Object> managerModify(
             @RequestParam("id") Long userId,
             @RequestParam("projectId") Long projectId){
-        System.out.println("관리자 변경 메소드 들어옴" +userId+projectId );
         try {
             projectService.updateProjectCreatedBy(userId, projectId);
             return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
@@ -763,26 +762,12 @@ public class ProjectController {
     // 등록된 중요 공지사항 조회
     @PostMapping("noticesSend")
     public ResponseEntity<Object> noticesSend(
-            @RequestParam("projectId") Long projectId){
-
+            @RequestParam("projectId") Long projectId
+    ){
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
     }
 
-    // 회원의 프로젝트 탈퇴
-    @PostMapping("deleteSend")
-    public ResponseEntity<Object> ProjectDeleteUser(
-            @RequestParam("userId") Long userId,
-            @RequestParam("projectId") Long projectId){
-        try {
-            System.out.println("프로젝트 탈퇴로 넘오옴.");
-            projectService.removeUserFromProject(userId, projectId);
-            return ResponseEntity.ok("프로젝트 나가기 성공");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 탈퇴 중 오류");
-        }
-    }
 }
-
 
