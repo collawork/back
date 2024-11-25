@@ -122,10 +122,10 @@ public class ProjectService {
 
     // 프로젝트 참여자 기반으로 이름 조회
     public List<String> selectProjectTitleByUserId(Long userId) {
-      
+
         // Repository를 통해 프로젝트 목록 가져옴
         List<String> listTitle = projectParticipantRepository.findProjectTitlesByUserId(userId);
-      
+
         System.out.println("ProjectService 의 listTitle: " + listTitle);
 
         if (listTitle == null || listTitle.isEmpty()) {
@@ -362,12 +362,12 @@ public class ProjectService {
         }
         return false;
     }
-
-    public List<Board> findByProjectId(Long projectId) {
-
-        List<Board> board = boardRepository.findByProjectId(projectId);
-        return board;
-    }
+//
+//    public List<Notice> findByProjectId(Long projectId) {
+//
+//        List<Notice> noticesList = notificationService.findByProjectId(projectId);
+//        return noticesList;
+//    }
 
     public VotingRecord findByContentsId(String contentsList) {
 
@@ -378,7 +378,7 @@ public class ProjectService {
     public List<Map<String, Object>> getVoteCounts(Long votingId) {
         List<VoteCountProjection> results = votingRecordRepository.countUserVotesByVotingId(votingId);
 
-        // Convert projection to a list of maps for response
+
         List<Map<String, Object>> response = new ArrayList<>();
         for (VoteCountProjection result : results) {
             Map<String, Object> map = new HashMap<>();
@@ -396,13 +396,44 @@ public class ProjectService {
 
     @Transactional
     public void updateVoteStatus(Long voteId) {
-        Voting voting = votingRepository.findById(voteId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        Voting voting = votingRepository.findById(voteId).orElseThrow(() -> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
 
-        // Set the is_vote to false to mark it as ended
+
         voting.setVote(false);
 
-        // Save the updated voting entity back to the database
         votingRepository.save(voting);
     }
-}
 
+    @Transactional
+    public void updateProjectTitle(Long projectId, String title) {
+
+        Project project = projectRepository.findById(projectId).orElseThrow(()-> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
+        project.setProjectName(title);
+        projectRepository.save(project);
+    }
+
+    @Transactional
+    public void updateProjectCreatedBy(Long userId, Long projectId) {
+
+        // projectTable createdBy 변경
+        Project project = projectRepository.findById(projectId).orElseThrow(()-> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
+        project.setCreatedBy(userId);
+        projectRepository.save(project);
+        Long ExistManager = project.getCreatedBy();
+
+        // 2. project_participants 테이블에서 role 변경
+        // --1. 새로운 관리자 admin 으로 변경
+        ProjectParticipant participant = projectParticipantRepository.findByProjectIdAndUserId(projectId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
+        participant.setRole(ProjectParticipant.Role.valueOf("ADMIN"));
+        projectParticipantRepository.save(participant);
+
+        // --2. 기존 관리자 member 로 변경
+        ProjectParticipant participant2 = projectParticipantRepository.findByProjectIdAndUserId(projectId,ExistManager)
+                .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
+        participant.setRole(ProjectParticipant.Role.valueOf("MEMBER"));
+        projectParticipantRepository.save(participant);
+
+    }
+
+}
