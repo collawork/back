@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -119,6 +118,8 @@ public class CalendarController {
         }
         // 스케쥴의 allDay 여부 (true면 정확한 시분 정보가 있어도 종일 스케쥴로 표기된다.)
         scheduleInfo.setAllDay(data.get("allDay").toString().equals("true"));
+        // 스케쥴의 color 정보 (프론트에서 기본값을 "2196f3" 으로 넘겨주고 있다.)
+        scheduleInfo.setColor((String) data.get("color"));
 
         // CalendarDTO에 ExtendedProps를 담는다.
         scheduleInfo.setExtendedProps(extendedProps);
@@ -139,33 +140,35 @@ public class CalendarController {
         }
 
         // DB에 일정 등록하기 - 서비스로 POST요청 처리 이관..
-        try {
-            Optional<Calendar> result = calendarService.insertSchedule(scheduleInfo, data);
-            if (result.isEmpty()) {
-                return ResponseEntity.status(403).body("입력된 일정이 없습니다.");
-            }
-            return ResponseEntity.ok("일정 등록에 성공하였습니다.");
-        }catch (Exception e){
-            return ResponseEntity.status(403).body(e.getMessage());
+        boolean result = calendarService.insertSchedule(scheduleInfo, data);
+
+        if(result){
+            return ResponseEntity.ok(result);
+        }else{
+            return ResponseEntity.status(404).body(result);
         }
-        // return ResponseEntity.ok("test");
     }
 
     @PostMapping("/update")
     public ResponseEntity<Object> update(@RequestBody Map<String,Object> rawData, HttpServletRequest request) {
-        System.out.println("CalendarController: 아이디로 특정 스케쥴을 특정하고 제목 설명을 수정하는 메소드::::::::::::::::::::");
+        System.out.println("CalendarController: 아이디로 특정 스케쥴을 특정하고 제목 설명을 컬러를 수정하는 메소드::::::::::::::::::::");
 
         Map<String, Object> data = (Map<String, Object>)rawData.get("updateData"); // 프론트에서 객체를 감싸서, 백에서 껍질을 깠다.
 
         // 데이터를 알맞은 형으로 변환
-        BigInteger id = new BigInteger(String.valueOf(data.get("id")));
+        Long id = Long.valueOf(data.get("id").toString());
         String title = (String) data.get("title");
         String description = (String) data.get("description");
+        String color = (String) data.get("color");
 
         // 서비스로 형변환한 데이터 전달
-        boolean result = calendarService.updateSelectedEvent(id, title, description);
+        boolean result = calendarService.updateSelectedEvent(id, title, description, color);
 
-        return ResponseEntity.ok(result);
+        if(result){
+            return ResponseEntity.ok(result);
+        }else{
+            return ResponseEntity.status(404).body(result);
+        }
     }
 
     @PostMapping("/updatedate")
@@ -175,7 +178,8 @@ public class CalendarController {
         Map<String, Object> data = (Map<String, Object>)rawData.get("updateData"); // 프론트에서 객체를 감싸서, 백에서 껍질을 깠다.
 
         // 알맞은 형으로 타입 변환 중..
-        BigInteger id = new BigInteger(String.valueOf(data.get("id")));
+        Long id = Long.valueOf(data.get("id").toString());
+
         boolean allDay = data.get("allDay").toString().equals("true");
 
         // allDay 여부로 스케줄 시종의 타입을 전환하고, 해다 allDay 여부까지 서비스로 전달한다.
@@ -197,5 +201,23 @@ public class CalendarController {
             boolean result = calendarService.updateDateSelectedEvent(id, start, end, allDay);
             return ResponseEntity.ok(result);
         }
+    }
+
+    @DeleteMapping("/delete/{code}")
+    public ResponseEntity<Object> delete(@PathVariable Long code, HttpServletRequest request) {
+        System.out.println("CalendarController: 아이디로 특정 스케쥴을 삭제하는 메소드::::::::::::::::::::");
+
+        System.out.println("rawData = " + code);
+        //Long id = rawData.get("id");
+        System.out.println("id = " + code);
+        boolean result = calendarService.deleteById(code);
+
+        //if(id != null)
+        if(result){
+            return ResponseEntity.ok(result);
+        }else{
+            return ResponseEntity.status(404).body(result);
+        }
+
     }
 }
