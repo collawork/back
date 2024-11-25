@@ -13,6 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -52,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/newproject").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/newvoting").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/selectAll").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/user/projects/newBoard").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/user/projects/projecthomeusers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/search").permitAll()
                         .requestMatchers("/api/friends/**").permitAll()
@@ -61,6 +64,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers("/chattingServer/**","/ws/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
+                        .requestMatchers("/api/category/**").permitAll()
+                        .requestMatchers("/api/projects/**").authenticated()
+                        .requestMatchers("/downloads/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
@@ -81,5 +88,15 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public HttpFirewall httpFirewall() {
+        StrictHttpFirewall firewall = new StrictHttpFirewall();
+
+        // `//`와 같은 URL 허용
+        firewall.setAllowUrlEncodedDoubleSlash(true);
+
+        return firewall;
     }
 }

@@ -4,7 +4,6 @@ import com.collawork.back.model.project.*;
 import com.collawork.back.model.auth.User;
 import com.collawork.back.repository.project.*;
 import com.collawork.back.repository.auth.UserRepository;
-import com.collawork.back.service.auth.SocialAuthService;
 import com.collawork.back.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,6 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class ProjectService {
@@ -49,16 +46,20 @@ public class ProjectService {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private BoardRepository boardRepository;
+
     private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
 
     @Transactional
-    public Long insertProject(String title, String context, Long userId, List<Long> participantIds) {
+    public Long insertProject(String title, String context, Long userId, List<Long> participantIds, Long chatRoomId) {
         // 프로젝트 엔터티 생성
         Project project = new Project();
         project.setProjectName(title);
         project.setCreatedBy(userId);
         project.setProjectCode(context);
         project.setCreatedAt(LocalDateTime.now());
+        project.setChatRoomId(chatRoomId);
 
 
         // 프로젝트 저장
@@ -194,9 +195,12 @@ public class ProjectService {
      * */
     public void rejectInvitation(Long projectId, Long userId) {
         ProjectParticipant participant = getParticipant(projectId, userId);
-        participant.setStatus(ProjectParticipant.Status.REJECTED);
-        projectParticipantRepository.save(participant);
+        if (participant != null) {
+            participant.setStatus(ProjectParticipant.Status.REJECTED);
+            projectParticipantRepository.saveAndFlush(participant);
+        }
     }
+
 
     /**
      * 프로젝트에 초대된 모든 사용자 조회
@@ -229,17 +233,19 @@ public class ProjectService {
     }
 
     public List<Map<String, Object>> getPendingParticipants(Long projectId) {
-        List<Object[]> participants = projectParticipantRepository.findPendingParticipantsByProjectId(projectId);
+        List<Object[]> pendingParticipants = projectParticipantRepository.findPendingParticipantsByProjectId(projectId);
 
-        return participants.stream()
+        // PENDING 상태만 반환 (REJECTED 상태는 이미 제외됨)
+        return pendingParticipants.stream()
                 .map(row -> {
                     Map<String, Object> participant = new HashMap<>();
-                    participant.put("username", row[0]); // 사용자 이름
-                    participant.put("email", row[1]);   // 사용자 이메일
+                    participant.put("username", row[0]);
+                    participant.put("email", row[1]);
                     return participant;
                 })
                 .collect(Collectors.toList());
     }
+
 
     /**
      * id 로 유저 정보 조회(관리자)
@@ -262,7 +268,8 @@ public class ProjectService {
     }
 
 
-    public List<Voting> votingInsert(String votingName, String projectId, String createdUser, String detail) {
+    public List<Voting> votingInsert(String votingName, String projectId, String createdUser, String detail, LocalDateTime date) {
+        // 마감일을 입력했으면 1, 개인 지정이면 2
 
         Voting voting = new Voting();
         voting.setVotingName(votingName);
@@ -270,7 +277,8 @@ public class ProjectService {
         voting.setCreatedUser(createdUser);
         voting.setVotingDetail(detail);
         LocalDate localDate = LocalDate.now();
-        voting.setCreatedAt(localDate.atStartOfDay());
+        voting.setCreatedAt(localDate.atStartOfDay());// 생성일
+        voting.setVotingEnd(date); // 입력받은 마감일 (LocalDateTime 또는 null)
         voting.setVote(true);
 
         List<Voting> result = Collections.singletonList(votingRepository.save(voting));
@@ -333,4 +341,68 @@ public class ProjectService {
         List<VotingRecord> uservoting = votingRecordRepository.findByVotingId(votingId);
         return uservoting;
     }
+
+    public String getProjectNameById(Long projectId) {
+        return projectRepository.findById(projectId)
+                .map(Project::getProjectName)
+                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다. ID: " + projectId));
+    }
+
+
+    public boolean insertBoard(Long projectId, String boardTitle, String boardContents, Long boardBy) {
+
+        Board board = new Board();
+        board.setBoardTitle(boardTitle);
+        board.setBoardContents(boardContents);
+        board.setBoardBy(boardBy);
+        board.setProjectId(projectId);
+
+        if(boardRepository.save(board) != null){
+            return true;
+        }
+        return false;
+    }
+
+    public List<Board> findByProjectId(Long projectId) {
+
+        List<Board> board = boardRepository.findByProjectId(projectId);
+        return board;
+    }
+
+    public VotingRecord findByContentsId(String contentsList) {
+
+        List<Object> result = votingRecordRepository.findByContentsId(Long.valueOf(contentsList));
+        return (VotingRecord) result;
+    }
+
+    public List<Map<String, Object>> getVoteCounts(Long votingId) {
+        List<VoteCountProjection> results = votingRecordRepository.countUserVotesByVotingId(votingId);
+
+        // Convert projection to a list of maps for response
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (VoteCountProjection result : results) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("contentsId", result.getContentsId());
+            map.put("userCount", result.getUserCount());
+            response.add(map);
+        }
+        return response;
+    }
+
+    public Optional<User> findById(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        return user;
+    }
+
+    @Transactional
+    public void updateVoteStatus(Long voteId) {
+        Voting voting = votingRepository.findById(voteId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+
+        // Set the is_vote to false to mark it as ended
+        voting.setVote(false);
+
+        // Save the updated voting entity back to the database
+        votingRepository.save(voting);
+    }
 }
+

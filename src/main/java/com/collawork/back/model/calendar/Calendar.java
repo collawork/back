@@ -1,13 +1,9 @@
-package com.collawork.back.model;
+package com.collawork.back.model.calendar;
 
 import jakarta.persistence.*;
 
 import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.Optional;
 
 @Entity
 @Table(name = "calendar_events")
@@ -16,9 +12,9 @@ public class Calendar {
     //일정의 고유 ID, DB에서 자동 부여
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private BigInteger id;
+    private Long id;
 
-    // 일정의 제목, not null
+    // 일정의 제목
     @Column(name = "title")
     private String title;
 
@@ -30,28 +26,35 @@ public class Calendar {
     @Column(name = "start_time")
     private ZonedDateTime startTime;
 
-    // 일정의 종료일, 없으면 일정의 시작일만 존재하도록..
+    // 일정의 종료일
     @Column(name = "end_time")
     private ZonedDateTime endTime;
 
-    // 일정이 추가된 날짜, not null
+    // 일정이 추가된 날짜
     @Column(name = "created_at")
     private ZonedDateTime createdAt;
 
     // 일정을 등록한 사람, not null
     @Column(name = "created_by")
-    private BigInteger createdBy;
+    private Long createdBy;
 
+    // 일정의 종일 여부
     @Column(name = "all_day")
     private boolean allDay;
 
+    // 일정의 소속, 없으면 개인 일정
     @Column(name = "project_id")
-    private BigInteger projectId;
+    private Long projectId;
+
+    // 일정의 개별 색깔
+    @Column(name = "color")
+    private String color;
+
 
     public Calendar() {
     }
 
-    public Calendar(BigInteger id, String title, String description, ZonedDateTime startTime, ZonedDateTime endTime, ZonedDateTime createdAt, BigInteger createdBy, boolean allDay, BigInteger projectId) {
+    public Calendar(Long id, String title, String description, ZonedDateTime startTime, ZonedDateTime endTime, ZonedDateTime createdAt, Long createdBy, boolean allDay, Long projectId, String color) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -61,13 +64,14 @@ public class Calendar {
         this.createdBy = createdBy;
         this.allDay = allDay;
         this.projectId = projectId;
+        this.color = color;
     }
 
-    public BigInteger getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(BigInteger id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -111,11 +115,11 @@ public class Calendar {
         this.createdAt = createdAt;
     }
 
-    public BigInteger getCreatedBy() {
+    public Long getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(BigInteger createdBy) {
+    public void setCreatedBy(Long createdBy) {
         this.createdBy = createdBy;
     }
 
@@ -127,12 +131,20 @@ public class Calendar {
         this.allDay = allDay;
     }
 
-    public BigInteger getProjectId() {
+    public Long getProjectId() {
         return projectId;
     }
 
-    public void setProjectId(BigInteger projectId) {
+    public void setProjectId(Long projectId) {
         this.projectId = projectId;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     @Override
@@ -147,6 +159,7 @@ public class Calendar {
                 ", createdBy=" + createdBy +
                 ", allDay=" + allDay +
                 ", projectId=" + projectId +
+                ", color='" + color + '\'' +
                 '}';
     }
 }

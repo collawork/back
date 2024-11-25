@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProjectParticipantRepository extends JpaRepository<ProjectParticipant, ProjectParticipantId> {
@@ -57,6 +59,23 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
             "WHERE pp.project.id = :projectId AND pp.status = 'PENDING'")
     List<Object[]> findPendingParticipantsByProjectId(@Param("projectId") Long projectId);
 
+
+
+    Optional<ProjectParticipant> findByProjectIdAndUserId(Long projectId, Long userId);
+
+
+    @Query("SELECT pp FROM ProjectParticipant pp WHERE pp.project.id = :projectId AND pp.id.userId IN :userIds")
+    List<ProjectParticipant> findByProjectIdAndUserIdIn(@Param("projectId") Long projectId, @Param("userIds") List<Long> userIds);
+
+    /**
+     * 특정 프로젝트에서 특정 사용자가 지정된 역할을 가지고 있는지 확인.
+     *
+     * @param projectId 프로젝트 ID
+     * @param userId 사용자 ID
+     * @param role 역할 (예: "ADMIN", "MEMBER")
+     * @return 역할 여부 확인 결과 (true: 역할 존재, false: 역할 없음)
+     */
+    boolean existsByProjectIdAndUserIdAndRole(Long projectId, Long userId, ProjectParticipant.Role role);
 
 }
 

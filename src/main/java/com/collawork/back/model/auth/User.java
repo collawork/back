@@ -1,10 +1,16 @@
 package com.collawork.back.model.auth;
 
+import com.collawork.back.model.friends.Category;
+import com.collawork.back.model.project.Notice;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -48,8 +54,9 @@ public class User {
         return id;
     }
 
-    public void setId(Long id) {
+    public User setId(Long id) {
         this.id = id;
+        return null;
     }
 
     public String getUsername() {
@@ -157,4 +164,5 @@ public class User {
                 ", createdAt=" + createdAt +
                 '}';
     }
+
 }

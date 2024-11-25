@@ -1,0 +1,54 @@
+톰캣 콘솔 한글 인코딩
+
+-Dfile.encoding=UTF-8
+
+----------------------------------------
+
+mvc jsp, mysql 의존성 maven gradle 추가 (Connection getConnection() 사용 위함)
+
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0'
+//    이 라이브러리는 JSTL의 API를 포함하고 있습니다. 즉, JSTL의 태그를 사용할 수 있게 해주는 인터페이스와 관련된 클래스들이 포함되어 있습니다.
+    implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
+    // 라이브러리는 JSTL의 구현체를 제공합니다. 즉, JSTL 태그가 실제로 동작할 수 있도록 해주는 구현 코드가 포함되어 있습니다.
+    implementation 'mysql:mysql-connector-java:8.0.33'
+	
+-----------------------------------------
+
+connection-info.properties
+
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/employee
+user=gangnam
+password=gangnam
+
+-----------------------------------------
+
+의존성
+
+implementation("org.springframework:spring-core:5.3.27")
+    implementation("org.springframework:spring-context:5.3.27")
+    implementation("org.springframework:spring-beans:5.3.27")
+    implementation("org.springframework:spring-expression:5.3.27")
+    implementation("org.springframework:spring-aop:5.3.27")
+    implementation("commons-logging:commons-logging:1.2")
+	
+	
+-------------------------------------------
+
+mybatis
+
+// https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+    implementation group: 'com.mysql', name: 'mysql-connector-j', version: '8.3.0'
+    // https://mvnrepository.com/artifact/org.mybatis/mybatis
+    implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.6'
+	
+mapper config
+
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-config.dtd">
+  
+ mybatis mapper
+ <!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
