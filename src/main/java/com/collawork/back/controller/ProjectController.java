@@ -16,7 +16,6 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -700,6 +699,7 @@ public class ProjectController {
             @RequestParam("userId") Long userId) {
 
 
+        System.out.println("다가오는 캘린더 넘어옴");
         List<Calendar> calendars = calendarRepository.findByProjectId(projectId);
         System.out.println("Project calendar :: " + calendars);
 
@@ -762,12 +762,11 @@ public class ProjectController {
     // 등록된 중요 공지사항 조회
     @PostMapping("noticesSend")
     public ResponseEntity<Object> noticesSend(
-            @RequestParam("projectId") Long projectId
-    ){
+            @RequestParam("projectId") Long projectId){
+
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
     }
 
 }
-
