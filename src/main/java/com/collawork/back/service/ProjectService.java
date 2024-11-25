@@ -432,7 +432,7 @@ public class ProjectService {
         ProjectParticipant participant2 = projectParticipantRepository.findByProjectIdAndUserId(projectId,ExistManager)
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
         participant.setRole(ProjectParticipant.Role.valueOf("MEMBER"));
-        projectParticipantRepository.save(participant);
+        projectParticipantRepository.save(participant2);
 
     }
 
