@@ -314,6 +314,8 @@ public class ProjectController {
         List<ProjectParticipant> participants = projectService.getAcceptedParticipants(projectId);
 
         System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
+        System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
+        System.out.println("프로젝트 참여자 조회 시 projectId : " + projectId);
 
         // 사용자 정보 포함 여부 확인
         List<Map<String, Object>> formattedParticipants = participants.stream()
