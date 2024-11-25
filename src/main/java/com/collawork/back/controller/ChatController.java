@@ -48,13 +48,19 @@ public class ChatController {
     //해당 채팅방의 모든 메세지 반환하는 메서드
     @GetMapping("/{chatRoomId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable ("chatRoomId") Long chatRoomId) {
+        System.out.println( chatRoomId );
         List<Message> messages = chatMessageService.getMessagesByChatRoomId(chatRoomId);
+
         for (Message message : messages) {
             System.out.println(message);
         }
 
+
         return ResponseEntity.ok(messages);
+
+
     }
+
 
     //채팅방 이름 가져오는 메서드
     @GetMapping("/roomName/{chatRoomId}")
@@ -115,7 +121,7 @@ public class ChatController {
             Message message = new Message();
             message.setSenderId(senderId);
             message.setChatRoomId(chatRoomId);
-            message.setMessageType(MessageType.file);
+            message.setMessageType(MessageType.FILE);
             message.setFileUrl(fileUrl);
             message.setCreatedAt(timestamp);
 

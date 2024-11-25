@@ -43,7 +43,7 @@ public class ChatMessageService {
             message.setMessageType(MessageType.valueOf(messageDTO.getMessageType().toUpperCase()));
         } catch (IllegalArgumentException e) {
             System.err.println("유효하지 않은 메시지 유형: " + messageDTO.getMessageType());
-            message.setMessageType(MessageType.text);
+            message.setMessageType(MessageType.TEXT);
         }
 
         message.setFileUrl(messageDTO.getFileUrl());

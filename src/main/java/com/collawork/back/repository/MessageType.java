@@ -1,7 +1,7 @@
 package com.collawork.back.repository;
 
 public enum MessageType {
-    text,
-    image,
-    file;
+    TEXT,
+    IMAGE,
+    FILE;
 }
