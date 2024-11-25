@@ -32,7 +32,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String chatRoomId = getChatRoomId(session);
         chatRoomSessions.putIfAbsent(chatRoomId, ConcurrentHashMap.newKeySet());
         chatRoomSessions.get(chatRoomId).add(session);
-
+        System.out.println("웹소켓 연결");
     }
 
     @Override
