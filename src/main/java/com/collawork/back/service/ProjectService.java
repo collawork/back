@@ -432,8 +432,20 @@ public class ProjectService {
         ProjectParticipant participant2 = projectParticipantRepository.findByProjectIdAndUserId(projectId,ExistManager)
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
         participant.setRole(ProjectParticipant.Role.valueOf("MEMBER"));
-        projectParticipantRepository.save(participant);
+        projectParticipantRepository.save(participant2);
 
     }
+
+
+        public void removeUserFromProject(Long userId, Long projectId) {
+            try {
+                projectParticipantRepository.deleteByProjectIdAndUserId(projectId, userId);
+                System.out.println("삭제 진행중 ");
+            } catch (Exception e) {
+                log.error("Failed to remove user {} from project {}", userId, projectId, e);
+                throw new RuntimeException("Error removing user from project", e);
+            }
+        }
+
 
 }

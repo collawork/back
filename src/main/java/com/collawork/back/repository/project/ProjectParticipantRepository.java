@@ -77,5 +77,6 @@ public interface ProjectParticipantRepository extends JpaRepository<ProjectParti
      */
     boolean existsByProjectIdAndUserIdAndRole(Long projectId, Long userId, ProjectParticipant.Role role);
 
+    void deleteByProjectIdAndUserId(Long projectId, Long userId);
 }
 
