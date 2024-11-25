@@ -27,5 +27,5 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
      */
     boolean existsByIdAndProjectId(Long id, Long projectId);
 
-    List<com.mysql.cj.protocol.x.Notice> findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(Long projectId, boolean b);
+    List<Notice> findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(Long projectId, boolean b);
 }

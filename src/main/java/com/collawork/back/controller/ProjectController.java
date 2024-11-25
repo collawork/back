@@ -16,7 +16,6 @@ import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
 import com.collawork.back.service.notification.NotificationService;
-import com.mysql.cj.protocol.x.Notice;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
@@ -752,6 +751,7 @@ public class ProjectController {
             @RequestParam("id") Long userId,
             @RequestParam("projectId") Long projectId){
         try {
+
             projectService.updateProjectCreatedBy(userId, projectId);
             return ResponseEntity.ok("프로젝트 담당자 변경 성공 !");
         } catch (Exception e) {
@@ -762,10 +762,9 @@ public class ProjectController {
     // 등록된 중요 공지사항 조회
     @PostMapping("noticesSend")
     public ResponseEntity<Object> noticesSend(
-            @RequestParam("projectId") Long projectId
-    ){
+            @RequestParam("projectId") Long projectId){
 
-
+        System.out.println("projectId 공지사항 불러오기 :: " + projectId);
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
