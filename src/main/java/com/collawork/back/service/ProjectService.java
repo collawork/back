@@ -61,6 +61,7 @@ public class ProjectService {
         project.setCreatedAt(LocalDateTime.now());
         project.setChatRoomId(chatRoomId);
 
+
         // 프로젝트 저장
         Project savedProject = projectRepository.save(project);
 
