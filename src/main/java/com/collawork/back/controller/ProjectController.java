@@ -198,11 +198,15 @@ public class ProjectController {
         // projectName 으로 project 엔티티 조회 후 가져옴
         List<Project> projectList = projectService.selectByProjectName(projectName);
         System.out.println("projectController 의 프로젝트 정보 조회 ::: " + projectList);
+        for (Project selected : projectList) {
+            System.out.println(selected);
+        }
         if (projectList.isEmpty()) {
             return ResponseEntity.status(403).body("조회된 정보가 없습니다.");
         }
         return ResponseEntity.ok(projectList);
     }
+
 
     /**
      * 프로젝트 참여자 조회 메소드
