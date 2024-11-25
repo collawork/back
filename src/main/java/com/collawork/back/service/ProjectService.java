@@ -428,6 +428,7 @@ public class ProjectService {
         participant.setRole(ProjectParticipant.Role.valueOf("ADMIN"));
         projectParticipantRepository.save(participant);
 
+
         // --2. 기존 관리자 member 로 변경
         ProjectParticipant participant2 = projectParticipantRepository.findByProjectIdAndUserId(projectId,ExistManager)
                 .orElseThrow(() -> new IllegalArgumentException("해당 프로젝트 참가자를 찾을 수 없습니다."));
@@ -448,4 +449,8 @@ public class ProjectService {
         }
 
 
+    public void deleteByProjectId(Long projectId) {
+
+        projectRepository.deleteById(projectId);
+    }
 }

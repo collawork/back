@@ -778,10 +778,25 @@ public class ProjectController {
         try {
             System.out.println("프로젝트 탈퇴로 넘오옴.");
             projectService.removeUserFromProject(userId, projectId);
-            return ResponseEntity.ok("프로젝트 나가기 성공");
+            return ResponseEntity.ok("프로젝트 나가기 성공. ");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 탈퇴 중 오류");
         }
+    }
+
+    // 관리자의 프로젝트 삭제
+    @PostMapping("projectDelete")
+    public ResponseEntity<Object> projectDelete(
+            @RequestParam("projectId") Long projectId){
+
+        try{
+            projectService.deleteByProjectId(projectId);
+            return ResponseEntity.ok("프로젝트 삭제 성공.");
+
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 삭제 중 오류");
+        }
+
     }
 }
 
