@@ -762,9 +762,7 @@ public class ProjectController {
     // 등록된 중요 공지사항 조회
     @PostMapping("noticesSend")
     public ResponseEntity<Object> noticesSend(
-            @RequestParam("projectId") Long projectId
-    ){
-
+            @RequestParam("projectId") Long projectId){
 
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
