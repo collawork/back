@@ -76,7 +76,12 @@ public class ProjectParticipantsService {
     // 초대 처리
     @Transactional
     public void inviteParticipants(Long projectId, List<Long> participantIds) {
-        List<ProjectParticipant> existingParticipants = projectParticipantsRepository.findByProjectIdAndUserIdIn(projectId, participantIds);
+        // 프로젝트 조회
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다: " + projectId));
+
+        List<ProjectParticipant> existingParticipants =
+                projectParticipantsRepository.findByProjectIdAndUserIdIn(projectId, participantIds);
 
         // REJECTED 상태 업데이트
         existingParticipants.stream()
@@ -94,15 +99,21 @@ public class ProjectParticipantsService {
                     User user = userRepository.findById(userId)
                             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
 
-                    return new ProjectParticipant(
+                    ProjectParticipant participant = new ProjectParticipant(
                             new ProjectParticipantId(projectId, userId),
                             ProjectParticipant.Role.MEMBER
                     );
+                    participant.setProject(project);
+                    participant.setUser(user);  // User 설정 추가
+                    participant.setStatus(ProjectParticipant.Status.PENDING);
+
+                    return participant;
                 })
                 .collect(Collectors.toList());
 
         projectParticipantsRepository.saveAll(newParticipants);
     }
+
 
     // 이미 참여 중인 사용자 확인
     public List<Long> getAcceptedParticipantsIds(Long projectId, List<Long> participantIds) {
