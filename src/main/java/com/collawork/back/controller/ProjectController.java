@@ -155,35 +155,42 @@ public class ProjectController {
                                                   HttpServletRequest request) {
         System.out.println("요청 바디: " + requestBody);
 
-        String token = request.getHeader("Authorization");
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
+        // userId 값 추출
+        Object userIdObj = requestBody.get("userId");
+        if (userIdObj == null) {
+            System.out.println("userId가 요청 바디에 없습니다.");
+            return ResponseEntity.badRequest().body("userId가 요청 바디에 없습니다.");
         }
 
-        token = token.replace("Bearer ", "");
-        String email = jwtTokenProvider.getEmailFromToken(token);
-
-        if (email == null) {
-            return ResponseEntity.status(403).body("유효하지 않은 토큰입니다.");
-        }
-
-        Long userId;
         try {
-            userId = Long.valueOf(requestBody.get("userId").toString());
+            Long userId;
 
-        } catch (Exception e) {
+            // userId가 객체인지 확인하고 처리
+            if (userIdObj instanceof Map) {
+                userId = Long.valueOf(((Map<?, ?>) userIdObj).get("id").toString());
+            } else {
+                userId = Long.valueOf(userIdObj.toString());
+            }
+
+            System.out.println("받은 userId: " + userId);
+
+            // 프로젝트 목록 조회
+            List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
+
+            if (projectList == null || projectList.isEmpty()) {
+                return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
+            }
+
+            return ResponseEntity.ok(projectList);
+        } catch (NumberFormatException e) {
+            System.out.println("userId 형식 오류: " + userIdObj);
             return ResponseEntity.badRequest().body("userId 형식이 잘못되었습니다.");
         }
-
-        // 프로젝트 ID와 이름을 모두 조회
-        List<Map<String, Object>> projectList = projectService.selectAcceptedProjectsByUserId(userId);
-
-        if (projectList == null || projectList.isEmpty()) {
-            return ResponseEntity.ok("생성한 프로젝트가 없습니다.");
-        }
-
-        return ResponseEntity.ok(projectList);
     }
+
+
+
+
 
 
     @PostMapping("/projecthomeusers") // 유저 정보 조회
