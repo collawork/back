@@ -8,10 +8,7 @@ import com.collawork.back.repository.ChatRoomRepository;
 import com.collawork.back.dto.ParticipantInviteRequestDTO;
 import com.collawork.back.repository.auth.UserRepository;
 import com.collawork.back.repository.calendar.CalendarRepository;
- import com.collawork.back.repository.project.NoticeRepository;
-import com.collawork.back.repository.project.ProjectParticipantRepository;
-import com.collawork.back.repository.project.ProjectRepository;
-import com.collawork.back.repository.project.VotingRecordRepository;
+import com.collawork.back.repository.project.*;
 import com.collawork.back.security.JwtTokenProvider;
 import com.collawork.back.service.ProjectParticipantsService;
 import com.collawork.back.service.ProjectService;
@@ -72,7 +69,12 @@ public class ProjectController {
     @Autowired
     private NoticeRepository noticeRepository;
 
+    @Autowired
+    private ProjectPercentageRepository percentageRepository;
+
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
+    @Autowired
+    private ProjectPercentageRepository projectPercentageRepository;
 
 
     @GetMapping("/{projectId}")
@@ -189,10 +191,6 @@ public class ProjectController {
     }
 
 
-
-
-
-
     @PostMapping("/projecthomeusers") // 유저 정보 조회
     public ResponseEntity<Object> getProjectHome(@RequestParam("id") Long userId, HttpServletRequest request) {
 
@@ -227,9 +225,7 @@ public class ProjectController {
                                                    HttpServletRequest request) {
 
 
-
         String token = request.getHeader("Authorization");
-
 
 
         if (token == null || !token.startsWith("Bearer ")) {
@@ -650,13 +646,13 @@ public class ProjectController {
             @RequestParam("boardTitle") String boardTitle,
             @RequestParam("boardContents") String boardContents,
             @RequestParam("boardBy") Long boardBy,
-            HttpServletRequest request){
+            HttpServletRequest request) {
 
 
-        boolean result = projectService.insertBoard(projectId, boardTitle,boardContents,boardBy);
+        boolean result = projectService.insertBoard(projectId, boardTitle, boardContents, boardBy);
         if (result) {
             return ResponseEntity.ok("공지사항 등록 성공");
-        }else{
+        } else {
             return ResponseEntity.status(404).body("공지사항 등록 실패");
         }
     }
@@ -665,13 +661,13 @@ public class ProjectController {
     // 투표 생성자 정보 조회
     @PostMapping("votingByUser")
     public ResponseEntity<Object> votingByUser(
-            @RequestParam("userId") Long userId){
+            @RequestParam("userId") Long userId) {
 
 
         Optional<User> user = projectService.findById(userId);
-        if(user.isEmpty()){
+        if (user.isEmpty()) {
             return ResponseEntity.status(404).body(user);
-        }else{
+        } else {
             return ResponseEntity.ok(user);
         }
     }
@@ -679,7 +675,7 @@ public class ProjectController {
     // 투표 상태(진행중 or 진행종료) 값 변경
     @PostMapping("isVoteUpdate")
     public ResponseEntity<Object> isVoteUpdate(
-            @RequestParam("votingId") Long voteId){
+            @RequestParam("votingId") Long voteId) {
         try {
 
             projectService.updateVoteStatus(voteId);
@@ -746,7 +742,7 @@ public class ProjectController {
     @PostMapping("managerModify")
     public ResponseEntity<Object> managerModify(
             @RequestParam("email") String email,
-            @RequestParam("projectId") Long projectId){
+            @RequestParam("projectId") Long projectId) {
         try {
             System.out.println("담당자 변경 메소드 :: " + email);
             projectService.updateProjectCreatedBy(email, projectId);
@@ -760,7 +756,7 @@ public class ProjectController {
     @PostMapping("noticesSend")
     public ResponseEntity<Object> noticesSend(
             @RequestParam("projectId") Long projectId
-    ){
+    ) {
         List<Notice> noticesList = noticeRepository.findTop3ByProjectIdAndImportantOrderByCreatedAtDesc(projectId, true);
         System.out.println("프로젝트에서 중요도 있는 공지사항 조회 :: " + noticesList);
         return ResponseEntity.ok(noticesList);
@@ -771,7 +767,7 @@ public class ProjectController {
     @PostMapping("deleteSend")
     public ResponseEntity<Object> ProjectDeleteUser(
             @RequestParam("userId") Long userId,
-            @RequestParam("projectId") Long projectId){
+            @RequestParam("projectId") Long projectId) {
         try {
             System.out.println("프로젝트 탈퇴로 넘오옴.");
             projectService.removeUserFromProject(userId, projectId);
@@ -785,17 +781,70 @@ public class ProjectController {
     // 관리자의 프로젝트 삭제
     @PostMapping("projectDelete")
     public ResponseEntity<Object> projectDelete(
-            @RequestParam("projectId") Long projectId){
+            @RequestParam("projectId") Long projectId) {
 
-        try{
+        try {
             projectService.deleteByProjectId(projectId);
             return ResponseEntity.ok("프로젝트 삭제 성공.");
 
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 삭제 중 오류");
         }
 
     }
 
+    // 프로젝트 진행률 저장
+    // 이미 projectId 가 저장이 되어있다면 update, 없다면 insert
+    @PostMapping("ingSend")
+    public ResponseEntity<Object> ingSend(
+            @RequestParam("projectId") Long projectId,
+            @RequestParam("state") Long projectIng) {
+
+        try {
+            System.out.println("진행률 업데이트 중");
+
+            // Retrieve the existing project percentage by projectId
+            Optional<ProjectPercentage> existingProject = Optional.ofNullable(projectPercentageRepository.findByProjectId(projectId));
+
+            if (existingProject.isPresent()) {
+                // If project exists, update the percent (projectIng)
+                ProjectPercentage project = existingProject.get();
+                project.setPercent(projectIng); // Update the percent value
+                projectPercentageRepository.save(project); // Save the updated project
+                System.out.println("진행률 업데이트 완료");
+                return ResponseEntity.ok("진행상태 업데이트 성공.");
+            } else {
+                // If project doesn't exist, create a new record with projectId and percent (projectIng)
+                ProjectPercentage newProject = new ProjectPercentage();
+                newProject.setProjectId(projectId);
+                newProject.setPercent(projectIng);
+                projectPercentageRepository.save(newProject); // Save the new record
+                System.out.println("진행률 저장 완료");
+                return ResponseEntity.ok("진행상태 저장 성공.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 진행 상태 등록 중 오류 발생.");
+        }
+    }
+
+    // 프로젝트 진행률 조회
+    @PostMapping("findPercentage")
+    public ResponseEntity<Object> findPercentage(
+            @RequestParam("projectId") Long projectId
+    ){
+        try{
+            Optional<ProjectPercentage> percentage = Optional.ofNullable(projectService.findByProjectId(projectId));
+                System.out.println("진행률 조회 현황 :: " + percentage);
+                return ResponseEntity.ok(percentage);
+
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로젝트 진행 상태 등록 중 오류 ");
+        }
+    }
 }
+
+
+
 

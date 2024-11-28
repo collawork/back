@@ -49,6 +49,9 @@ public class ProjectService {
     @Autowired
     private BoardRepository boardRepository;
 
+    @Autowired
+    private ProjectPercentageRepository projectPercentageRepository;
+
     private static final Logger log = LoggerFactory.getLogger(ProjectService.class);
 
     @Transactional
@@ -464,4 +467,41 @@ public class ProjectService {
 
         projectRepository.deleteById(projectId);
     }
+
+//    public void updateProjectIng(Long projectId, Long projectIng) {
+//
+//        // 프로젝트 진행률 update
+//        Project project = projectRepository.findById(projectId).orElseThrow(()-> new IllegalArgumentException("해당 항목을 찾을 수 없습니다."));
+//        project.setProjectIng(projectIng);
+//        System.out.println("프로젝트 진행률 :: "+projectIng);
+//        projectRepository.save(project);
+//    }
+
+    public void insertProjectIng(Long projectId, Long projectIng) {
+        System.out.println("null 이라 진행률 save 중");
+
+        ProjectPercentage projectPercentage = new ProjectPercentage();
+
+        projectPercentage.setProjectId(projectId);
+        projectPercentage.setPercent(projectIng);
+        projectPercentageRepository.save(projectPercentage);
+
+    }
+
+    public ProjectPercentage findByProjectId(Long projectId) {
+
+        ProjectPercentage result =  projectPercentageRepository.findByProjectId(projectId);
+        return result;
+    }
+
+
+    public void findByProjectIdd(Long projectId, Long projectIng) {
+
+        ProjectPercentage percentageList = projectPercentageRepository.findByProjectId(projectId);
+        percentageList.setPercent(projectIng);
+        projectPercentageRepository.save(percentageList);
+    }
+
+//    public List<ProjectPercentage> findByProjectId(Long projectId) {
+//    }
 }
