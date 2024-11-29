@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -454,18 +456,23 @@ public class ProjectController {
         String projectId = String.valueOf(payload.get("projectId"));
         String createdUser = String.valueOf(payload.get("createdUser"));
         String detail = (String) payload.get("detail");
+
         LocalDateTime date = null;
-        if (payload.get("selectedOption") != null) {
-            date = (LocalDateTime) payload.get("selectedOption");
+        if (payload.get("inputDate") != null) {
+            String inputDateStr = (String) payload.get("inputDate"); // inputDate 를 문자열로 읽음
+            try {
+                date = LocalDate.parse(inputDateStr).atStartOfDay(); // 문자열을 LocalDateTime 으로 변환
+            } catch (DateTimeParseException e) {
+                return ResponseEntity.status(400).body("잘못된 날짜 형식입니다.");
+            }
         }
 
+        System.out.println("날짜가 제대로 넘어왔나?: " + date);
+
         List<String> contents = (List<String>) payload.get("contents");
-
-
         contents.forEach(content -> System.out.println("Content: " + content));
 
         String token = request.getHeader("Authorization");
-
 
         if (token == null || !token.startsWith("Bearer ")) {
             return ResponseEntity.status(403).body("인증 토큰이 없습니다.");
@@ -480,21 +487,23 @@ public class ProjectController {
         List<Voting> result = projectService.votingInsert(votingName, projectId, createdUser, detail, date);
 
         if (result.size() > 0) {
-
-            String listId = result.stream().map(Voting::getId).collect(Collectors.toSet()).toString();
+            String listId = result.stream()
+                    .map(Voting::getId)
+                    .collect(Collectors.toSet())
+                    .toString();
             listId = listId.replaceAll("[\\[\\]]", "");
             boolean result2 = projectService.insertVoteContents(contents, Long.valueOf(listId));
 
-            if (true) {
+            if (result2) {
                 return ResponseEntity.ok("항목 저장에 성공.");
             } else {
-                return ResponseEntity.status(403).body("투표 항목 저장중에 실패 ");
+                return ResponseEntity.status(403).body("투표 항목 저장 중에 실패하였습니다.");
             }
         } else {
             return ResponseEntity.status(403).body("투표 생성 중 오류가 발생했습니다.");
         }
-
     }
+
 
     // 투표 기본 정보 불러오기
     @PostMapping("findVoting")
@@ -803,22 +812,22 @@ public class ProjectController {
         try {
             System.out.println("진행률 업데이트 중");
 
-            // Retrieve the existing project percentage by projectId
+
             Optional<ProjectPercentage> existingProject = Optional.ofNullable(projectPercentageRepository.findByProjectId(projectId));
 
             if (existingProject.isPresent()) {
-                // If project exists, update the percent (projectIng)
+
                 ProjectPercentage project = existingProject.get();
-                project.setPercent(projectIng); // Update the percent value
-                projectPercentageRepository.save(project); // Save the updated project
+                project.setPercent(projectIng);
+                projectPercentageRepository.save(project);
                 System.out.println("진행률 업데이트 완료");
                 return ResponseEntity.ok("진행상태 업데이트 성공.");
             } else {
-                // If project doesn't exist, create a new record with projectId and percent (projectIng)
+
                 ProjectPercentage newProject = new ProjectPercentage();
                 newProject.setProjectId(projectId);
                 newProject.setPercent(projectIng);
-                projectPercentageRepository.save(newProject); // Save the new record
+                projectPercentageRepository.save(newProject);
                 System.out.println("진행률 저장 완료");
                 return ResponseEntity.ok("진행상태 저장 성공.");
             }

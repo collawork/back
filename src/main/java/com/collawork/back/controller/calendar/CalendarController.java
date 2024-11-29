@@ -76,23 +76,27 @@ public class CalendarController {
         }else {
             extendedProps.setDescription(data.get("description").toString());
         }
+
         // 스케쥴의 생성일
         extendedProps.setCreatedAt(ZonedDateTime.now());
         // 스케쥴을 등록한 유저 ID (DB에 저장된 고유값)
         Long createdBy = Long.valueOf(data.get("createdBy").toString());
         extendedProps.setCreatedBy(createdBy);
+
         // 스케쥴의 소속 (해당 스케쥴의 프로젝트 아이디)
-        if(data.containsKey("projectId") && data.get("projectId") != null){
-            extendedProps.setProjectId(Long.parseLong(data.get("projectId").toString()));
-        }else {
+        if(data.get("projectId").toString().equals("")) {
             extendedProps.setProjectId(null);
+        }else {
+            extendedProps.setProjectId(Long.parseLong(data.get("projectId").toString()));
         }
+
         // 스케쥴의 제목
         if(data.get("title") == null) {
             scheduleInfo.setTitle(null);
         }else {
             scheduleInfo.setTitle(data.get("title").toString());
         }
+
         // 스케쥴의 시작 시점과 종료 시점
         // 시분(00:00)이 있는 정보는 ZonedDateTime에 그대로 담고, 그렇지 않은 데이터는 붙여서 담는다.
         try {
@@ -123,8 +127,6 @@ public class CalendarController {
 
         // CalendarDTO에 ExtendedProps를 담는다.
         scheduleInfo.setExtendedProps(extendedProps);
-
-
 
 
         // 토큰..

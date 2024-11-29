@@ -272,7 +272,7 @@ public class ProjectService {
 
 
     public List<Voting> votingInsert(String votingName, String projectId, String createdUser, String detail, LocalDateTime date) {
-        // 마감일을 입력했으면 1, 개인 지정이면 2
+
 
         Voting voting = new Voting();
         voting.setVotingName(votingName);
@@ -502,6 +502,22 @@ public class ProjectService {
         projectPercentageRepository.save(percentageList);
     }
 
-//    public List<ProjectPercentage> findByProjectId(Long projectId) {
-//    }
+    @Transactional
+    public void updateExpiredVotings() {
+        // 현재 날짜/시간 가져오기
+        LocalDateTime now = LocalDateTime.now();
+
+        // 만료된 투표 조회
+        List<Voting> expiredVotings = votingRepository.findExpiredVotings(now);
+
+        if (!expiredVotings.isEmpty()) {
+            // 만료된 투표 ID 목록 추출
+            List<Long> expiredIds = expiredVotings.stream().map(Voting::getId).toList();
+
+            // is_vote를 false로 업데이트
+            votingRepository.updateIsVoteToFalse(expiredIds);
+        }
+    }
+
+
 }
