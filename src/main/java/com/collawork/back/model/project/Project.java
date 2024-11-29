@@ -29,6 +29,9 @@ public class Project {
     @Column(name = "created_at", columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt; // 생성일
 
+    @Column(name = "project_ing")
+    private Long projectIng;
+
 
     public Project() {
     }
@@ -41,14 +44,14 @@ public class Project {
 //    private List<ProjectParticipant> projectParticipants = new ArrayList<>();
 
 
-    public Project(Long id, String projectName, Long createdBy, String projectCode, Long chatRoomId, LocalDateTime createdAt, List<ProjectParticipant> projectParticipants) {
+    public Project(Long id, String projectName, Long createdBy, String projectCode, Long chatRoomId, LocalDateTime createdAt, Long projectIng) {
         this.id = id;
         this.projectName = projectName;
         this.createdBy = createdBy;
         this.projectCode = projectCode;
         this.chatRoomId = chatRoomId;
         this.createdAt = createdAt;
-       // this.projectParticipants = projectParticipants;
+        this.projectIng = projectIng;
     }
 
     public Long getId() {
@@ -98,7 +101,15 @@ public class Project {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-//
+
+    public Long getProjectIng() {
+        return projectIng;
+    }
+
+    public void setProjectIng(Long projectIng) {
+        this.projectIng = projectIng;
+    }
+    //
 //    public List<ProjectParticipant> getProjectParticipants() {
 //        return projectParticipants;
 //    }
@@ -117,6 +128,7 @@ public class Project {
                 ", chatRoomId=" + chatRoomId +
                 ", createdAt=" + createdAt +
                 // ", projectParticipants=" + projectParticipants +
+                ", projectIng=" + projectIng +
                 '}';
     }
 }
