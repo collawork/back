@@ -19,14 +19,23 @@ Spring Boot와 React를 이용하여 웹 협업 프로그램을 제작했습니�
 
 
 💻 개발환경
+
 Version : Java 17
+
 IDE : IntelliJ
+
 Framework : SpringBoot 3.3.5
+
 ORM : JPA
+
 ⚙️ 기술 스택
+
 DataBase : Mysql, JPQL
+
 WS/WAS : Nginx, Tomcat
+
 아이디어 회의 :Notion
+
 📝 프로젝트 아키텍쳐
 ![프로젝트_아키텍쳐](https://github.com/user-attachments/assets/612fbd75-512b-4f2c-bc15-93c74a09e5f4)
 
