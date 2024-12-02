@@ -13,4 +13,6 @@ public interface CalendarRepository extends JpaRepository<Calendar, Long> {
 
 
     List<Calendar> findByProjectId(Long projectId);
+
+    List<Calendar> findByCreatedBy(Long userId);
 }

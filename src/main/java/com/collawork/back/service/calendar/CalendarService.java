@@ -48,13 +48,23 @@ public class CalendarService {
     }
 
 
-    public List<CalendarDTO> eventsByProjectId(Long data) {
+    public List<CalendarDTO> eventsByProjectId(Long data, Long userId) {
         System.out.println("CalendarService: 프로젝트 아이디로 이벤트를 찾는 메소드:::::::::::::::::::::::::::");
 
         CalendarDTO calendarDTO;
         ExtendedProps extendedProps;
         List<CalendarDTO> calendarDTOList = new ArrayList<>();
-        List<Calendar> scheduleList = calendarRepository.findByProjectId(data);
+        List<Calendar> scheduleListByProjectId = calendarRepository.findByProjectId(data);
+        List<Calendar> scheduleList = new ArrayList<>();
+        if(data == null){
+            for (Calendar calendar : scheduleListByProjectId) {
+                if(calendar.getCreatedBy().equals(userId)){
+                    scheduleList.add(calendar);
+                }
+            }
+        }else {scheduleList.addAll(scheduleListByProjectId);}
+
+        // List<Calendar> scheduleListByUserId = calendarRepository.findByCreatedBy(userId);
         if (scheduleList.isEmpty()) {
             return null;
         }

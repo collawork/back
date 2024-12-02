@@ -29,7 +29,8 @@ public class CalendarController {
     private JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/events")
-    public ResponseEntity<Object> EventsByProjectId(@RequestParam("selectedProjectId") String data, HttpServletRequest request) {
+    public ResponseEntity<Object> EventsByProjectId(@RequestParam("selectedProjectId") String data,
+                                                    @RequestParam("userId") String userId, HttpServletRequest request) {
         System.out.println("CalendarController: 프로젝트 아이디로 스케쥴 리스트를 찾는 메소드:::::::::::::::::::::::::::");
 
         // 결과를 받을 DTO 리스트, 프론트에서 사용하는 Fullcalendar API가 제공해 주는 기능과 DB의 컬럼명이 상이하여
@@ -37,12 +38,13 @@ public class CalendarController {
         List<CalendarDTO> result;
 
         // 프로젝트 아이디가 있으면 프로젝트에 속한 스케쥴이고, 없다면 개인 스케쥴이다.
+        // 추가!!! 여기서 개인 userId까지 조회해야 전정한 개인 달력 스케줄이다.
         // 하나의 달력 컴포넌트로 프로젝트 달력과 개인 달력을 출력할 수 있도록 했다.
         Long longValueNull = null;
         if(data.equals("0")){
-            result = calendarService.eventsByProjectId(longValueNull);
+            result = calendarService.eventsByProjectId(longValueNull, Long.parseLong(userId));
         }else{
-            result = calendarService.eventsByProjectId(Long.parseLong(data));
+            result = calendarService.eventsByProjectId(Long.parseLong(data), Long.parseLong(userId));
         }
 
         // 토큰..
