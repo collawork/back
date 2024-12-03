@@ -1,24 +1,43 @@
-Wework
+# WeWork
+<br/>
 Spring Boot와 React를 이용하여 웹 협업 프로그램을 제작했습니다.
+<div align="center">
+<img width="329" alt="image" src="https://github.com/user-attachments/assets/c8a1bf8d-b591-4d69-abfa-200647e15a66">
+</div>
+
+
 
 👨‍🏫 프로젝트 소개
+---
 프로젝트의 진행도 및 업무의 효율을 높이기 위해 협업을 제작했습니다.
 드래그 앤 드롭 및 섹션별 색상과 투명도를 사용자가 직접 편집할 수 있게 자유도를 준 협업 프로그램입니다.
 
+<br/>
+
 ⏲️ 개발 기간
+---
+
 2024.10.23(수) ~ 2024.12.02(월)
 
+<br/>
+
+
 🧑‍🤝‍🧑 개발자 소개
-김동규(팀장) : 회원가입/로그인(소셜), 알림, 프로젝트 초대, 친구 추가, 사용자 및 프로젝트 검색, 마이 프로필 보기/수정, 친구 카테고리 추가
+---
 
-서현준       : 데이터 분석
+| Name             | Responsibilities                                                         |
+|------------------|-------------------------------------------------------------------------|
+| 김동규 (팀장)    | 회원가입/로그인(소셜), 알림, 프로젝트 초대, 친구 추가, 사용자 및 프로젝트 검색, 마이 프로필 보기/수정, 친구 카테고리 |
+| 서현준    | 데이터 분석                                                          |
+| 최서연  [@seo_prog](https://github.com/seo_prog)    | 프로젝트 기능 구현, 투표 시스템 구현                    |
+| 이진우     | 채팅 서비스 기능 구현                                 |
 
-최서연       : 프로젝트 기능 구현, 투표 시스템 구현
 
-이진우       : 채팅 서비스 기능 구현
+<br/>
 
 
 💻 개발환경
+---
 
 Version : Java 17
 
@@ -28,8 +47,10 @@ Framework : SpringBoot 3.3.5
 
 ORM : JPA
 
-⚙️ 기술 스택
+<br/>
 
+⚙️ 기술 스택
+---
 DataBase : Mysql, JPQL
 
 WS/WAS : Nginx, Tomcat
@@ -39,7 +60,16 @@ WS/WAS : Nginx, Tomcat
 📝 프로젝트 아키텍쳐
 ![프로젝트_아키텍쳐](https://github.com/user-attachments/assets/612fbd75-512b-4f2c-bc15-93c74a09e5f4)
 
+<br/>
+
+ 🖥 화면 구성
+---
+
+
+
 📌 주요 기능
+---
+
 1. 회원가입
    - 사용자는 프로필 이미지, 이메일, 이름, 비밀번호, 전화번호, 회사명, 직급, fax를 입력할 수 있다.
 2. 로그인
@@ -66,6 +96,14 @@ WS/WAS : Nginx, Tomcat
    - 현재 날씨 기반으로 배경화면에는 현재 날씨에 맞는 영상(rainy,cloude,sunny...)가 재생된다.
 8. 채팅
     - 사용자는 다른 사용자를 검색 후 1:1 채팅 및 1:다 채팅을 할 수 있다.
+   
+<br/>
+
+
+
 
 ✒️ API
+---
 API 상세설명 및 WBS등 : https://docs.google.com/spreadsheets/d/1z1IQ36cbqNMXYY4yckl_UnJN7kGySikWkomm08jcbAo/edit?gid=1523815437#gid=1523815437
+
+<br/>
