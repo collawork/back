@@ -44,9 +44,6 @@ public class FriendController {
         Optional<Friend> friendship = friendRepository.findFriendshipBetweenUsers(userId, selectedUserId);
         Map<String, Object> response = new HashMap<>();
 
-
-
-
         if (friendship.isPresent()) {
             Friend friend = friendship.get();
             response.put("status", friend.getStatus().name());

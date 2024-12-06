@@ -22,35 +22,32 @@ public class SearchController {
     @Autowired
     private ProjectRepository projectRepository;
 
-    @Autowired
-    private ChatRoomRepository chatRoomRepository;
-
     @GetMapping
-    public ResponseEntity<SearchResult> search(@RequestParam("query") String query) {
+    public ResponseEntity<SearchResult> search(@RequestParam("query") String query, @RequestParam("userId") Long userId) {
+//        System.out.println("검색 쿼리: " + query);
+//        System.out.println("사용자 ID: " + userId);
+
         // 사용자 검색
         List<User> users = userRepository.findByUsernameContaining(query);
+//        System.out.println("검색된 사용자: " + users);
 
         // 프로젝트 검색
-        List<Project> projects = projectRepository.findByProjectNameContaining(query);
+        List<Project> projects = projectRepository.findByProjectNameAndUserId(query, userId);
+//        System.out.println("검색된 프로젝트: " + projects);
 
-        // 채팅방 검색
-//        List<ChatRoom> chatRooms = chatRoomRepository.findByRoomNameContaining(query);
-
-        // chatRooms
         SearchResult result = new SearchResult(users, projects);
         return ResponseEntity.ok(result);
     }
 
+
     static class SearchResult {
         private List<User> users;
         private List<Project> projects;
-//        private List<ChatRoom> chatRooms;
 
-//        List<ChatRoom> chatRooms
+
         public SearchResult(List<User> users, List<Project> projects) {
             this.users = users;
             this.projects = projects;
-//            this.chatRooms = chatRooms;
         }
 
         public List<User> getUsers() {
@@ -61,8 +58,5 @@ public class SearchController {
             return projects;
         }
 
-//        public List<ChatRoom> getChatRooms() {
-//            return chatRooms;
-//        }
     }
 }
